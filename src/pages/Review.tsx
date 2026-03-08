@@ -61,11 +61,14 @@ export default function ReviewPage() {
         });
         if (error) throw error;
         setItems((prev) =>
-          prev.map((it, i) =>
-            i === index
-              ? { ...it, title: data.title, category: data.category, deadline: data.deadline, analysed: true }
-              : it
-          )
+          prev.map((it, i) => {
+            if (i !== index) return it;
+            // Convert AI label ("Next Week") to a real date
+            const dl = DEADLINE_OPTIONS.includes(data.deadline as any)
+              ? deadlineLabelToDate(data.deadline as any)
+              : isDateString(data.deadline) ? data.deadline : deadlineLabelToDate("Next Week");
+            return { ...it, title: data.title, category: data.category, deadline: dl, analysed: true };
+          })
         );
       } catch (err) {
         console.error("Analysis failed for item", index, err);
