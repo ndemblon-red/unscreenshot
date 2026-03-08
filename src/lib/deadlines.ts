@@ -36,6 +36,9 @@ export function isDateString(value: string): boolean {
 export function dateToDeadlineLabel(dateStr: string): string {
   if (!isDateString(dateStr)) return dateStr; // legacy label fallback
 
+  const today = new Date().toISOString().split("T")[0];
+  if (dateStr === today) return "Today";
+
   for (const label of DEADLINE_OPTIONS) {
     if (deadlineLabelToDate(label) === dateStr) return label;
   }

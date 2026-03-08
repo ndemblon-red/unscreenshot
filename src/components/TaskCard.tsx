@@ -50,7 +50,7 @@ export default function TaskCard({
           </span>
           <span className="flex items-center gap-1 text-label text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
-            {deadline}
+            {dateToDeadlineLabel(deadline)}
           </span>
         </div>
       </div>
