@@ -68,14 +68,6 @@ export default function Index() {
     };
   }, []);
 
-  const deadlineOrder: Record<string, number> = {
-    Tomorrow: 1,
-    "Next Week": 2,
-    "Next Month": 3,
-  };
-
-  const getDeadlineWeight = (d: string) => deadlineOrder[d] ?? 4;
-
   const filteredTasks = tasks
     .filter((t) => {
       if (t.status !== activeTab) return false;
@@ -83,7 +75,7 @@ export default function Index() {
       return true;
     })
     .sort((a, b) => {
-      const diff = getDeadlineWeight(a.deadline) - getDeadlineWeight(b.deadline);
+      const diff = a.deadline.localeCompare(b.deadline);
       return sortNewest ? diff : -diff;
     });
 

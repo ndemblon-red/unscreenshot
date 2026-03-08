@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 
-const DEADLINE_OPTIONS = ["Tomorrow", "Next Week", "Next Month"] as const;
+import { DEADLINE_OPTIONS, deadlineLabelToDate, isDateString } from "@/lib/deadlines";
 const ASSIGNABLE_CATEGORIES = CATEGORIES.filter((c) => c !== "Everything");
 
 interface ReviewItem {
@@ -40,7 +40,7 @@ export default function ReviewPage() {
         ...f,
         title: "",
         category: "To Do",
-        deadline: "Next Week",
+        deadline: deadlineLabelToDate("Next Week"),
         analysed: false,
         error: false,
       }))
@@ -61,11 +61,14 @@ export default function ReviewPage() {
         });
         if (error) throw error;
         setItems((prev) =>
-          prev.map((it, i) =>
-            i === index
-              ? { ...it, title: data.title, category: data.category, deadline: data.deadline, analysed: true }
-              : it
-          )
+          prev.map((it, i) => {
+            if (i !== index) return it;
+            // Convert AI label ("Next Week") to a real date
+            const dl = DEADLINE_OPTIONS.includes(data.deadline as any)
+              ? deadlineLabelToDate(data.deadline as any)
+              : isDateString(data.deadline) ? data.deadline : deadlineLabelToDate("Next Week");
+            return { ...it, title: data.title, category: data.category, deadline: dl, analysed: true };
+          })
         );
       } catch (err) {
         console.error("Analysis failed for item", index, err);
@@ -140,7 +143,7 @@ export default function ReviewPage() {
 
   if (items.length === 0) return null;
 
-  const isDateDeadline = current?.deadline && !["Tomorrow", "Next Week", "Next Month"].includes(current.deadline);
+  // customDate controls whether the date picker is shown
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
@@ -213,7 +216,7 @@ export default function ReviewPage() {
                       setItems((prev) =>
                         prev.map((it, i) =>
                           i === currentIndex
-                            ? { ...it, error: false, title: "", category: "To Do", deadline: "Next Week" }
+                            ? { ...it, error: false, title: "", category: "To Do", deadline: deadlineLabelToDate("Next Week") }
                             : it
                         )
                       );
@@ -262,30 +265,31 @@ export default function ReviewPage() {
                 <div>
                   <label className="text-label text-muted-foreground mb-1.5 block">Deadline</label>
                   <div className="flex flex-wrap gap-2">
-                    {DEADLINE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => {
-                          updateField("deadline", opt);
-                          setCustomDate("");
-                        }}
-                        className={`px-3 py-1.5 rounded-pill text-[13px] font-medium transition-all ${
-                          current.deadline === opt
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                    {DEADLINE_OPTIONS.map((opt) => {
+                      const optDate = deadlineLabelToDate(opt);
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() => {
+                            updateField("deadline", optDate);
+                            setCustomDate("");
+                          }}
+                          className={`px-3 py-1.5 rounded-pill text-[13px] font-medium transition-all ${
+                            current.deadline === optDate
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
                     <button
                       onClick={() => {
-                        const today = new Date().toISOString().split("T")[0];
-                        setCustomDate(today);
-                        updateField("deadline", today);
+                        setCustomDate(current.deadline || new Date().toISOString().split("T")[0]);
                       }}
                       className={`px-3 py-1.5 rounded-pill text-[13px] font-medium transition-all ${
-                        isDateDeadline
+                        customDate
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       }`}
@@ -293,10 +297,10 @@ export default function ReviewPage() {
                       Custom
                     </button>
                   </div>
-                  {(isDateDeadline || customDate) && (
+                  {customDate && (
                     <input
                       type="date"
-                      value={isDateDeadline ? current.deadline : customDate}
+                      value={current.deadline}
                       min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => {
                         setCustomDate(e.target.value);
