@@ -1,5 +1,6 @@
 import { Clock, Check, Trash2 } from "lucide-react";
 import { getCategoryClasses } from "@/lib/categories";
+import { dateToDeadlineLabel } from "@/lib/deadlines";
 
 export interface TaskCardProps {
   id: string;
