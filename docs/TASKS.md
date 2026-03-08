@@ -59,18 +59,18 @@
 **Goal:** Saved reminders appear in the task list and the user can filter, sort, change status, and navigate to detail.
 **Test:** Save 5 reminders across different categories. Filter by one category — only matching items show. Sort by date newest/oldest — order changes correctly. Mark one as Done — it moves to the Done tab. Check Archive tab shows items whose deadline has passed.
 
-- [ ] Fetch and display all reminders from Supabase on Task List load
-- [ ] Display reminders in the correct tab based on status (next/done/archive)
+- [x] Fetch and display all reminders from Supabase on Task List load
+- [x] Display reminders in the correct tab based on status (next/done/archive)
 - [ ] Auto-move reminders to Archive where deadline < today and status = next (query-based, on load)
-- [ ] Category filter pills filter the list in place — "Everything" shows all
-- [ ] Sort by date toggle: newest first / oldest first — updates list order in place
-- [ ] "Mark as Done" button on task card updates status in Supabase, moves card to Done tab
-- [ ] Clicking a task card navigates to Reminder Detail screen (Screen 4)
-- [ ] Reminder Detail: display full image, title, category, deadline, created date
-- [ ] Reminder Detail: inline editing of title, category, and deadline — saves to Supabase on change
-- [ ] Empty state displays correctly when a tab or filter has no results
-- [ ] Delete icon on task card triggers Delete Confirmation overlay
-- [ ] Delete Confirmation: shows screenshot thumbnail, confirm deletes from Supabase DB and Storage, cancel dismisses
+- [x] Category filter pills filter the list in place — "Everything" shows all
+- [x] Sort by date toggle: newest first / oldest first — updates list order in place
+- [x] "Mark as Done" button on task card updates status in Supabase, moves card to Done tab
+- [x] Clicking a task card navigates to Reminder Detail screen (Screen 4)
+- [x] Reminder Detail: display full image, title, category, deadline, created date
+- [x] Reminder Detail: inline editing of title, category, and deadline — saves to Supabase on change
+- [x] Empty state displays correctly when a tab or filter has no results
+- [x] Delete icon on task card triggers Delete Confirmation overlay
+- [x] Delete Confirmation: shows screenshot thumbnail, confirm deletes from Supabase DB and Storage, cancel dismisses
 
 ---
 
