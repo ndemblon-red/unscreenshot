@@ -40,7 +40,7 @@ export default function ReviewPage() {
         ...f,
         title: "",
         category: "To Do",
-        deadline: "Next Week",
+        deadline: deadlineLabelToDate("Next Week"),
         analysed: false,
         error: false,
       }))
