@@ -53,6 +53,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("next");
   const [selectedCategory, setSelectedCategory] = useState("Everything");
   const [sortNewest, setSortNewest] = useState(true);
+  const navigate = useNavigate();
 
   const deadlineOrder: Record<string, number> = {
     "Tomorrow": 1,
