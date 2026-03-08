@@ -6,13 +6,13 @@
 **Goal:** Prove the AI can take a screenshot image and return a valid title, category, and deadline before building any UI around it.
 **Test:** Upload 3 different screenshots (a concert poster, a product, a restaurant recommendation) via a simple test harness or console. Verify each returns valid JSON with all three fields populated, no nulls, no crashes.
 
-- [ ] Set up project in Lovable (React + Vite + Tailwind)
-- [ ] Add Anthropic API key to environment variables
-- [ ] Write the system prompt exactly as specified in PLANNING.md
-- [ ] Build a minimal API call function: takes an image file, converts to base64, sends to Claude API with system prompt, returns parsed JSON
-- [ ] Test with 5 images from PRD Section 8 must-pass cases — log results to console
-- [ ] Confirm safe fallback: test with a blank image and a blurry image — verify safe defaults are returned
-- [ ] Confirm JSON always contains title, category, and deadline — add error handling if any field is missing
+- [x] Set up project in Lovable (React + Vite + Tailwind)
+- [x] Add Anthropic API key to environment variables
+- [x] Write the system prompt exactly as specified in PLANNING.md
+- [x] Build a minimal API call function: takes an image file, converts to base64, sends to Claude API with system prompt, returns parsed JSON
+- [x] Test with 5 images from PRD Section 8 must-pass cases — log results to console
+- [x] Confirm safe fallback: test with a blank image and a blurry image — verify safe defaults are returned
+- [x] Confirm JSON always contains title, category, and deadline — add error handling if any field is missing
 
 ---
 
