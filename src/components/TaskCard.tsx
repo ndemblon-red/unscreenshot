@@ -1,5 +1,6 @@
 import { Clock, Check, Trash2 } from "lucide-react";
 import { getCategoryClasses } from "@/lib/categories";
+import { dateToDeadlineLabel } from "@/lib/deadlines";
 
 export interface TaskCardProps {
   id: string;
@@ -49,7 +50,7 @@ export default function TaskCard({
           </span>
           <span className="flex items-center gap-1 text-label text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
-            {deadline}
+            {dateToDeadlineLabel(deadline)}
           </span>
         </div>
       </div>
