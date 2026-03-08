@@ -237,9 +237,9 @@ export default function ReminderDetail() {
               ))}
               <button
                 onClick={() => {
-                  const today = new Date().toISOString().split("T")[0];
                   if (!isCustomDate(deadline)) {
-                    handleDeadlineSelect(today);
+                    const today = new Date().toISOString().split("T")[0];
+                    setDeadline(today);
                   }
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-label transition-colors ${
