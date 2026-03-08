@@ -147,9 +147,24 @@ export default function UploadPage() {
       <div className="flex items-center gap-3">
         <button
           disabled={files.length === 0}
-          onClick={() => {
-            // TODO: Wire to AI analysis + navigate to /review
-            console.log("Analyse", files.length, "screenshots");
+          onClick={async () => {
+            // Convert files to base64 and pass to review
+            const prepared = await Promise.all(
+              files.map(async (f) => {
+                const buffer = await f.file.arrayBuffer();
+                const bytes = new Uint8Array(buffer);
+                let binary = "";
+                bytes.forEach((b) => (binary += String.fromCharCode(b)));
+                const base64 = btoa(binary);
+                return {
+                  file: f.file,
+                  preview: f.preview,
+                  base64,
+                  mimeType: f.file.type,
+                };
+              })
+            );
+            navigate("/review", { state: { files: prepared } });
           }}
           className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
