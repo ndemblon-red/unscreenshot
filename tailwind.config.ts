@@ -57,28 +57,47 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        tag: {
+          events: "hsl(var(--tag-events))",
+          shopping: "hsl(var(--tag-shopping))",
+          restaurants: "hsl(var(--tag-restaurants))",
+          todo: "hsl(var(--tag-todo))",
+          reading: "hsl(var(--tag-reading))",
+          home: "hsl(var(--tag-home))",
+          travel: "hsl(var(--tag-travel))",
+          wishlist: "hsl(var(--tag-wishlist))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        card: "12px",
+        pill: "20px",
+        btn: "8px",
+      },
+      fontSize: {
+        "page-title": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
+        "card-title": ["17px", { lineHeight: "1.4", fontWeight: "600" }],
+        "body": ["15px", { lineHeight: "1.5" }],
+        "label": ["13px", { lineHeight: "1.4" }],
+        "pill": ["12px", { lineHeight: "1", fontWeight: "600", letterSpacing: "0.04em" }],
+      },
+      spacing: {
+        "page-x": "32px",
+        "page-y": "24px",
+        "card-pad": "16px",
+        "card-gap": "12px",
+        "inner-gap": "8px",
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
