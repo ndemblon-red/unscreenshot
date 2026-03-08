@@ -216,7 +216,7 @@ export default function ReviewPage() {
                       setItems((prev) =>
                         prev.map((it, i) =>
                           i === currentIndex
-                            ? { ...it, error: false, title: "", category: "To Do", deadline: "Next Week" }
+                            ? { ...it, error: false, title: "", category: "To Do", deadline: deadlineLabelToDate("Next Week") }
                             : it
                         )
                       );
