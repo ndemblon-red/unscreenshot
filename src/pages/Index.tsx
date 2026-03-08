@@ -142,7 +142,10 @@ export default function Index() {
                 <p className="text-label text-muted-foreground mb-6">
                   Upload a screenshot to create your first reminder
                 </p>
-                <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity">
+                 <button
+                   onClick={() => navigate("/upload")}
+                   className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+                 >
                   <Upload className="w-4 h-4" />
                   Upload your first screenshot
                 </button>
