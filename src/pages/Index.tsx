@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Upload, ArrowUpDown, ImageIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CategoryPills from "@/components/CategoryPills";
@@ -52,6 +53,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("next");
   const [selectedCategory, setSelectedCategory] = useState("Everything");
   const [sortNewest, setSortNewest] = useState(true);
+  const navigate = useNavigate();
 
   const deadlineOrder: Record<string, number> = {
     "Tomorrow": 1,
@@ -75,7 +77,10 @@ export default function Index() {
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-page-title tracking-tight">Unscreenshot</h1>
-        <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity">
+        <button
+          onClick={() => navigate("/upload")}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+        >
           <Upload className="w-4 h-4" />
           Upload Screenshots
         </button>
@@ -137,7 +142,10 @@ export default function Index() {
                 <p className="text-label text-muted-foreground mb-6">
                   Upload a screenshot to create your first reminder
                 </p>
-                <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity">
+                 <button
+                   onClick={() => navigate("/upload")}
+                   className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+                 >
                   <Upload className="w-4 h-4" />
                   Upload your first screenshot
                 </button>
