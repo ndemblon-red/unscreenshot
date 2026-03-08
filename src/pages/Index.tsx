@@ -53,10 +53,21 @@ export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState("Everything");
   const [sortNewest, setSortNewest] = useState(true);
 
+  const deadlineOrder: Record<string, number> = {
+    "Tomorrow": 1,
+    "Next Week": 2,
+    "Next Month": 3,
+  };
+
+  const getDeadlineWeight = (d: string) => deadlineOrder[d] ?? 4;
+
   const filteredTasks = MOCK_TASKS.filter((t) => {
     if (t.status !== activeTab) return false;
     if (selectedCategory !== "Everything" && t.category !== selectedCategory) return false;
     return true;
+  }).sort((a, b) => {
+    const diff = getDeadlineWeight(a.deadline) - getDeadlineWeight(b.deadline);
+    return sortNewest ? diff : -diff;
   });
 
   return (
