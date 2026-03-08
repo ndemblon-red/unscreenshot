@@ -6,6 +6,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { toast } from "sonner";
+import { DEADLINE_OPTIONS, deadlineLabelToDate, dateToDeadlineLabel, isDateString } from "@/lib/deadlines";
 
 type Reminder = {
   id: string;
@@ -17,11 +18,7 @@ type Reminder = {
   created_at: string;
 };
 
-const DEADLINE_OPTIONS = ["Tomorrow", "Next Week", "Next Month"];
 const EDITABLE_CATEGORIES = CATEGORIES.filter((c) => c !== "Everything");
-
-const isCustomDate = (d: string) =>
-  !DEADLINE_OPTIONS.includes(d) && /^\d{4}-\d{2}-\d{2}$/.test(d);
 
 export default function ReminderDetail() {
   const { id } = useParams<{ id: string }>();
