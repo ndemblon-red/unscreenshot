@@ -1,202 +1,140 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { Upload, ArrowUpDown, ImageIcon } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import CategoryPills from "@/components/CategoryPills";
+import TaskCard, { TaskCardProps } from "@/components/TaskCard";
 
-interface AnalysisResult {
-  title: string;
-  category: string;
-  deadline: string;
-}
+// Mock data for static UI milestone
+const MOCK_TASKS: Omit<TaskCardProps, "onMarkDone" | "onDelete" | "onClick">[] = [
+  {
+    id: "1",
+    title: "Buy tickets for Massive Attack",
+    category: "Events",
+    deadline: "14 June",
+    imageUrl: "/placeholder.svg",
+    status: "next",
+  },
+  {
+    id: "2",
+    title: "Try Bancone in Covent Garden",
+    category: "Restaurants",
+    deadline: "Next Month",
+    imageUrl: "/placeholder.svg",
+    status: "next",
+  },
+  {
+    id: "3",
+    title: "Buy Nike Air Max trainers",
+    category: "Shopping",
+    deadline: "Next Week",
+    imageUrl: "/placeholder.svg",
+    status: "next",
+  },
+  {
+    id: "4",
+    title: "Read article on design systems",
+    category: "Reading",
+    deadline: "Tomorrow",
+    imageUrl: "/placeholder.svg",
+    status: "done",
+  },
+  {
+    id: "5",
+    title: "Book flights to Lisbon",
+    category: "Travel",
+    deadline: "Next Month",
+    imageUrl: "/placeholder.svg",
+    status: "archive",
+  },
+];
 
-interface TestResult {
-  fileName: string;
-  status: "pending" | "loading" | "success" | "error";
-  result?: AnalysisResult;
-  error?: string;
-}
+export default function Index() {
+  const [activeTab, setActiveTab] = useState("next");
+  const [selectedCategory, setSelectedCategory] = useState("Everything");
+  const [sortNewest, setSortNewest] = useState(true);
 
-const Index = () => {
-  const [results, setResults] = useState<TestResult[]>([]);
-  const [isAnalysing, setIsAnalysing] = useState(false);
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const fileArray = Array.from(files);
-    
-    // Validate file types
-    const validTypes = ["image/jpeg", "image/png", "image/webp"];
-    const invalidFiles = fileArray.filter(f => !validTypes.includes(f.type));
-    if (invalidFiles.length > 0) {
-      alert("Please upload image files only (JPG, PNG, WEBP)");
-      return;
-    }
-
-    // Initialize results
-    const initialResults: TestResult[] = fileArray.map(f => ({
-      fileName: f.name,
-      status: "pending",
-    }));
-    setResults(initialResults);
-    setIsAnalysing(true);
-
-    // Process each image sequentially
-    for (let i = 0; i < fileArray.length; i++) {
-      const file = fileArray[i];
-
-      setResults(prev =>
-        prev.map((r, idx) => (idx === i ? { ...r, status: "loading" } : r))
-      );
-
-      try {
-        const base64 = await fileToBase64(file);
-        const { data, error } = await supabase.functions.invoke("analyse-screenshot", {
-          body: { imageBase64: base64, mimeType: file.type },
-        });
-
-        if (error) throw new Error(error.message);
-
-        setResults(prev =>
-          prev.map((r, idx) =>
-            idx === i ? { ...r, status: "success", result: data } : r
-          )
-        );
-      } catch (err) {
-        setResults(prev =>
-          prev.map((r, idx) =>
-            idx === i
-              ? { ...r, status: "error", error: err instanceof Error ? err.message : "Unknown error" }
-              : r
-          )
-        );
-      }
-    }
-
-    setIsAnalysing(false);
-  };
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Remove the data:mime;base64, prefix
-        const base64 = result.split(",")[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
+  const filteredTasks = MOCK_TASKS.filter((t) => {
+    if (t.status !== activeTab) return false;
+    if (selectedCategory !== "Everything" && t.category !== selectedCategory) return false;
+    return true;
+  });
 
   return (
-    <div style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-        Milestone 1 — AI Test Harness
-      </h1>
-      <p style={{ fontSize: 15, color: "#6E6E73", marginBottom: 24 }}>
-        Select screenshot images to test AI analysis. Results appear below.
-      </p>
+    <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      {/* Header */}
+      <header className="flex items-center justify-between mb-6">
+        <h1 className="text-page-title tracking-tight">Unscreenshot</h1>
+        <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity">
+          <Upload className="w-4 h-4" />
+          Upload Screenshots
+        </button>
+      </header>
 
-      <label
-        style={{
-          display: "inline-block",
-          padding: "10px 20px",
-          background: "#000",
-          color: "#fff",
-          borderRadius: 8,
-          cursor: isAnalysing ? "not-allowed" : "pointer",
-          opacity: isAnalysing ? 0.5 : 1,
-          fontSize: 15,
-          fontWeight: 600,
-        }}
-      >
-        {isAnalysing ? "Analysing..." : "Select Screenshots"}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          onChange={handleFileSelect}
-          disabled={isAnalysing}
-          style={{ display: "none" }}
-        />
-      </label>
-
-      {results.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          {results.map((r, i) => (
-            <div
-              key={i}
-              style={{
-                background: "#fff",
-                border: "1px solid #E5E5EA",
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 12,
-              }}
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full justify-start bg-transparent gap-0 border-b border-border rounded-none p-0 h-auto mb-4">
+          {["next", "done", "archive"].map((tab) => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="capitalize rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-[15px] font-medium text-muted-foreground data-[state=active]:text-foreground"
             >
-              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>
-                {r.fileName}
-              </div>
-
-              {r.status === "pending" && (
-                <span style={{ color: "#6E6E73", fontSize: 13 }}>Waiting...</span>
-              )}
-
-              {r.status === "loading" && (
-                <span style={{ color: "#007AFF", fontSize: 13 }}>Analysing...</span>
-              )}
-
-              {r.status === "error" && (
-                <span style={{ color: "#FF3B30", fontSize: 13 }}>
-                  Error: {r.error}
-                </span>
-              )}
-
-              {r.status === "success" && r.result && (
-                <div style={{ fontSize: 14, lineHeight: 1.6 }}>
-                  <div>
-                    <strong>Title:</strong> {r.result.title}
-                  </div>
-                  <div>
-                    <strong>Category:</strong>{" "}
-                    <span style={{ 
-                      display: "inline-block",
-                      padding: "2px 8px", 
-                      borderRadius: 20, 
-                      fontSize: 12,
-                      fontWeight: 600,
-                      background: getCategoryColor(r.result.category) + "20",
-                      color: getCategoryColor(r.result.category),
-                    }}>
-                      {r.result.category}
-                    </span>
-                  </div>
-                  <div>
-                    <strong>Deadline:</strong> {r.result.deadline}
-                  </div>
-                </div>
-              )}
-            </div>
+              {tab === "next" ? "Next" : tab === "done" ? "Done" : "Archive"}
+            </TabsTrigger>
           ))}
+        </TabsList>
+
+        {/* Category pills + Sort */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex-1 overflow-hidden">
+            <CategoryPills
+              selected={selectedCategory}
+              onSelect={setSelectedCategory}
+            />
+          </div>
+          <button
+            onClick={() => setSortNewest(!sortNewest)}
+            className="flex items-center gap-1.5 text-label text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5" />
+            {sortNewest ? "Newest" : "Oldest"}
+          </button>
         </div>
-      )}
+
+        {/* Task list content for each tab */}
+        {["next", "done", "archive"].map((tab) => (
+          <TabsContent key={tab} value={tab} className="mt-0">
+            {filteredTasks.length > 0 ? (
+              <div className="flex flex-col gap-card-gap">
+                {filteredTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    {...task}
+                    onMarkDone={(id) => console.log("Mark done:", id)}
+                    onDelete={(id) => console.log("Delete:", id)}
+                    onClick={(id) => console.log("Open:", id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              /* Empty state */
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <ImageIcon className="w-7 h-7 text-muted-foreground" />
+                </div>
+                <p className="text-card-title text-foreground mb-1">No reminders here</p>
+                <p className="text-label text-muted-foreground mb-6">
+                  Upload a screenshot to create your first reminder
+                </p>
+                <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity">
+                  <Upload className="w-4 h-4" />
+                  Upload your first screenshot
+                </button>
+              </div>
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
-};
-
-function getCategoryColor(category: string): string {
-  const colors: Record<string, string> = {
-    Events: "#5856D6",
-    Shopping: "#FF9500",
-    Restaurants: "#34C759",
-    "To Do": "#007AFF",
-    Reading: "#AF52DE",
-    Home: "#FF6B35",
-    Travel: "#32ADE6",
-    Wishlist: "#FF2D55",
-  };
-  return colors[category] || "#6E6E73";
 }
-
-export default Index;
