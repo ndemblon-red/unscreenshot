@@ -38,18 +38,18 @@
 **Goal:** A user can upload screenshots, the AI analyses them, and the review panel shows the AI suggestions ready to confirm or edit.
 **Test:** Upload 3 screenshots. Loading state appears. Review panel opens showing AI-suggested title, category, and deadline for the first image. Edit one field. Click Save. See the item appear in the Next tab on the Task List.
 
-- [ ] Wire up file picker and drag-and-drop to accept JPG, PNG, WEBP up to 10MB
-- [ ] Show selected image thumbnails in the upload grid with working remove (×) buttons
-- [ ] Disable "Analyse Screenshots" button until at least 1 image is selected
-- [ ] On submit: show loading overlay, send each image to AI analysis function from Milestone 1
-- [ ] Handle batch processing: analyse images sequentially, update progress indicator per image
-- [ ] On completion: navigate to Review Panel with first image and AI suggestions pre-filled
-- [ ] Title field is editable, pre-filled with AI suggestion
-- [ ] Category selector shows all 8 categories, AI suggestion pre-selected
-- [ ] Deadline selector shows Tomorrow / Next Week / Next Month / Custom date picker, AI suggestion pre-selected
-- [ ] "Save Reminder" writes reminder to Supabase database + uploads image to Supabase Storage
-- [ ] "Discard" skips without saving, advances to next screenshot
-- [ ] After final screenshot reviewed: navigate back to Task List
+- [x] Wire up file picker and drag-and-drop to accept JPG, PNG, WEBP up to 10MB
+- [x] Show selected image thumbnails in the upload grid with working remove (×) buttons
+- [x] Disable "Analyse Screenshots" button until at least 1 image is selected
+- [x] On submit: show loading overlay, send each image to AI analysis function from Milestone 1
+- [x] Handle batch processing: analyse images sequentially, update progress indicator per image
+- [x] On completion: navigate to Review Panel with first image and AI suggestions pre-filled
+- [x] Title field is editable, pre-filled with AI suggestion
+- [x] Category selector shows all 8 categories, AI suggestion pre-selected
+- [x] Deadline selector shows Tomorrow / Next Week / Next Month / Custom date picker, AI suggestion pre-selected
+- [x] "Save Reminder" writes reminder to Supabase database + uploads image to Supabase Storage
+- [x] "Discard" skips without saving, advances to next screenshot
+- [x] After final screenshot reviewed: navigate back to Task List
 - [ ] Non-image file upload shows clear error: "Please upload image files only"
 - [ ] Network/API error shows inline retry option
 
