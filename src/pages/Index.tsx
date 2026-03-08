@@ -1,76 +1,107 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, ArrowUpDown, ImageIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CategoryPills from "@/components/CategoryPills";
 import TaskCard, { TaskCardProps } from "@/components/TaskCard";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data for static UI milestone
-const MOCK_TASKS: Omit<TaskCardProps, "onMarkDone" | "onDelete" | "onClick">[] = [
-  {
-    id: "1",
-    title: "Buy tickets for Massive Attack",
-    category: "Events",
-    deadline: "14 June",
-    imageUrl: "/placeholder.svg",
-    status: "next",
-  },
-  {
-    id: "2",
-    title: "Try Bancone in Covent Garden",
-    category: "Restaurants",
-    deadline: "Next Month",
-    imageUrl: "/placeholder.svg",
-    status: "next",
-  },
-  {
-    id: "3",
-    title: "Buy Nike Air Max trainers",
-    category: "Shopping",
-    deadline: "Next Week",
-    imageUrl: "/placeholder.svg",
-    status: "next",
-  },
-  {
-    id: "4",
-    title: "Read article on design systems",
-    category: "Reading",
-    deadline: "Tomorrow",
-    imageUrl: "/placeholder.svg",
-    status: "done",
-  },
-  {
-    id: "5",
-    title: "Book flights to Lisbon",
-    category: "Travel",
-    deadline: "Next Month",
-    imageUrl: "/placeholder.svg",
-    status: "archive",
-  },
-];
+type Reminder = {
+  id: string;
+  title: string;
+  category: string;
+  deadline: string;
+  image_url: string;
+  status: string;
+};
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState("next");
   const [selectedCategory, setSelectedCategory] = useState("Everything");
   const [sortNewest, setSortNewest] = useState(true);
+  const [tasks, setTasks] = useState<Omit<TaskCardProps, "onMarkDone" | "onDelete" | "onClick">[]>([]);
   const navigate = useNavigate();
 
+  // Fetch reminders from database
+  useEffect(() => {
+    const fetchReminders = async () => {
+      const { data, error } = await supabase
+        .from("reminders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Failed to fetch reminders:", error);
+        return;
+      }
+
+      if (data) {
+        setTasks(
+          data.map((r: Reminder) => ({
+            id: r.id,
+            title: r.title,
+            category: r.category,
+            deadline: r.deadline,
+            imageUrl: r.image_url,
+            status: r.status as "next" | "done" | "archive",
+          }))
+        );
+      }
+    };
+
+    fetchReminders();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel("reminders_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reminders" },
+        () => {
+          fetchReminders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const deadlineOrder: Record<string, number> = {
-    "Tomorrow": 1,
+    Tomorrow: 1,
     "Next Week": 2,
     "Next Month": 3,
   };
 
   const getDeadlineWeight = (d: string) => deadlineOrder[d] ?? 4;
 
-  const filteredTasks = MOCK_TASKS.filter((t) => {
-    if (t.status !== activeTab) return false;
-    if (selectedCategory !== "Everything" && t.category !== selectedCategory) return false;
-    return true;
-  }).sort((a, b) => {
-    const diff = getDeadlineWeight(a.deadline) - getDeadlineWeight(b.deadline);
-    return sortNewest ? diff : -diff;
-  });
+  const filteredTasks = tasks
+    .filter((t) => {
+      if (t.status !== activeTab) return false;
+      if (selectedCategory !== "Everything" && t.category !== selectedCategory) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const diff = getDeadlineWeight(a.deadline) - getDeadlineWeight(b.deadline);
+      return sortNewest ? diff : -diff;
+    });
+
+  const handleMarkDone = async (id: string) => {
+    const { error } = await supabase
+      .from("reminders")
+      .update({ status: "done" })
+      .eq("id", id);
+    if (error) console.error("Mark done failed:", error);
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase
+      .from("reminders")
+      .delete()
+      .eq("id", id);
+    if (error) console.error("Delete failed:", error);
+  };
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
@@ -103,10 +134,7 @@ export default function Index() {
         {/* Category pills + Sort */}
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-1 overflow-hidden">
-            <CategoryPills
-              selected={selectedCategory}
-              onSelect={setSelectedCategory}
-            />
+            <CategoryPills selected={selectedCategory} onSelect={setSelectedCategory} />
           </div>
           <button
             onClick={() => setSortNewest(!sortNewest)}
@@ -126,14 +154,13 @@ export default function Index() {
                   <TaskCard
                     key={task.id}
                     {...task}
-                    onMarkDone={(id) => console.log("Mark done:", id)}
-                    onDelete={(id) => console.log("Delete:", id)}
+                    onMarkDone={handleMarkDone}
+                    onDelete={handleDelete}
                     onClick={(id) => console.log("Open:", id)}
                   />
                 ))}
               </div>
             ) : (
-              /* Empty state */
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                   <ImageIcon className="w-7 h-7 text-muted-foreground" />
@@ -142,10 +169,10 @@ export default function Index() {
                 <p className="text-label text-muted-foreground mb-6">
                   Upload a screenshot to create your first reminder
                 </p>
-                 <button
-                   onClick={() => navigate("/upload")}
-                   className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
-                 >
+                <button
+                  onClick={() => navigate("/upload")}
+                  className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+                >
                   <Upload className="w-4 h-4" />
                   Upload your first screenshot
                 </button>
