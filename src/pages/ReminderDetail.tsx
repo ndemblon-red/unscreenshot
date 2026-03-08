@@ -228,29 +228,27 @@ export default function ReminderDetail() {
         {editingDeadline ? (
           <div>
             <div className="flex flex-wrap gap-2">
-              {DEADLINE_OPTIONS.map((d) => (
-                <button
-                  key={d}
-                  onClick={() => handleDeadlineSelect(d)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-label transition-colors ${
-                    d === deadline
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <Clock className="w-3.5 h-3.5" />
-                  {d}
-                </button>
-              ))}
+              {DEADLINE_OPTIONS.map((label) => {
+                const labelDate = deadlineLabelToDate(label);
+                return (
+                  <button
+                    key={label}
+                    onClick={() => handleDeadlinePreset(label)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-label transition-colors ${
+                      deadline === labelDate
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    {label}
+                  </button>
+                );
+              })}
               <button
-                onClick={() => {
-                  if (!isCustomDate(deadline)) {
-                    const today = new Date().toISOString().split("T")[0];
-                    setDeadline(today);
-                  }
-                }}
+                onClick={() => setShowCustomPicker(true)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-label transition-colors ${
-                  isCustomDate(deadline)
+                  showCustomPicker
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
@@ -259,12 +257,12 @@ export default function ReminderDetail() {
                 Custom
               </button>
             </div>
-            {isCustomDate(deadline) && (
+            {showCustomPicker && (
               <input
                 type="date"
                 value={deadline}
                 min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => handleDeadlineSelect(e.target.value)}
+                onChange={(e) => handleDeadlineDateSelect(e.target.value)}
                 className="mt-2 px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             )}
@@ -275,7 +273,7 @@ export default function ReminderDetail() {
             className="group flex items-center gap-2 text-label text-muted-foreground"
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>{isCustomDate(deadline) ? new Date(deadline + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : deadline}</span>
+            <span>{dateToDeadlineLabel(deadline)}</span>
             <Pencil className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         )}
