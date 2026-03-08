@@ -140,7 +140,7 @@ export default function ReviewPage() {
 
   if (items.length === 0) return null;
 
-  const isDateDeadline = current?.deadline && !["Tomorrow", "Next Week", "Next Month"].includes(current.deadline);
+  // customDate controls whether the date picker is shown
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
