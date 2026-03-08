@@ -156,7 +156,7 @@ export default function Index() {
                     {...task}
                     onMarkDone={handleMarkDone}
                     onDelete={handleDelete}
-                    onClick={(id) => console.log("Open:", id)}
+                    onClick={(id) => navigate(`/reminder/${id}`)}
                   />
                 ))}
               </div>
