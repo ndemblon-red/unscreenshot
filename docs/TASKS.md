@@ -20,16 +20,16 @@
 **Goal:** Every screen exists with the correct layout, elements, and design applied — no functionality yet, just the shell.
 **Test:** Click through every screen manually. Every element listed in PLANNING.md should be visible. Nothing should be missing or invented.
 
-- [ ] Apply design tokens: colours, typography, spacing, border radius as specified in PLANNING.md
-- [ ] Build Task List screen (Screen 1): header, upload button, tab bar (Next/Done/Archive), category filter pills (all 8 + Everything), sort control, empty state
-- [ ] Build task card component: thumbnail, title, category pill (correct colour per tag), deadline with clock icon, mark as done button, delete icon
-- [ ] Build Upload screen (Screen 2): drag and drop zone, file picker, thumbnail grid with remove buttons, Analyse button, cancel link
-- [ ] Build Review Panel screen (Screen 3): screenshot preview, title input, category selector (all 8 categories), deadline selector (Tomorrow/Next Week/Next Month/Custom), Save and Discard buttons, progress indicator
-- [ ] Build Reminder Detail screen (Screen 4): full image, editable title, editable category, editable deadline, mark as done button, delete button, created date
-- [ ] Build Delete Confirmation overlay (Screen 5): modal with screenshot thumbnail, Delete and Cancel buttons
-- [ ] Build Loading overlay state: per-image spinner, "Analysing X of Y" progress message
+- [x] Apply design tokens: colours, typography, spacing, border radius as specified in PLANNING.md
+- [x] Build Task List screen (Screen 1): header, upload button, tab bar (Next/Done/Archive), category filter pills (all 8 + Everything), sort control, empty state
+- [x] Build task card component: thumbnail, title, category pill (correct colour per tag), deadline with clock icon, mark as done button, delete icon
+- [x] Build Upload screen (Screen 2): drag and drop zone, file picker, thumbnail grid with remove buttons, Analyse button, cancel link
+- [x] Build Review Panel screen (Screen 3): screenshot preview, title input, category selector (all 8 categories), deadline selector (Tomorrow/Next Week/Next Month/Custom), Save and Discard buttons, progress indicator
+- [x] Build Reminder Detail screen (Screen 4): full image, editable title, editable category, editable deadline, mark as done button, delete button, created date
+- [x] Build Delete Confirmation overlay (Screen 5): modal with screenshot thumbnail, Delete and Cancel buttons
+- [x] Build Loading overlay state: per-image spinner, "Analysing X of Y" progress message
 - [ ] Build Error state: inline error per failed image, Try Again and Add Manually options
-- [ ] Verify all category pill colours match PLANNING.md colour tokens
+- [x] Verify all category pill colours match PLANNING.md colour tokens
 - [ ] Verify "Does NOT include" items from PLANNING.md are absent from every screen
 
 ---
