@@ -77,7 +77,10 @@ export default function Index() {
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-page-title tracking-tight">Unscreenshot</h1>
-        <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity">
+        <button
+          onClick={() => navigate("/upload")}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+        >
           <Upload className="w-4 h-4" />
           Upload Screenshots
         </button>
