@@ -88,7 +88,17 @@ export default function ReminderDetail() {
     }
   };
 
-  const handleDeadlineSelect = (d: string) => {
+  const handleDeadlinePreset = (label: string) => {
+    const dateVal = deadlineLabelToDate(label as any);
+    setDeadline(dateVal);
+    setEditingDeadline(false);
+    if (dateVal !== reminder?.deadline) {
+      save({ deadline: dateVal });
+      setReminder((r) => (r ? { ...r, deadline: dateVal } : r));
+    }
+  };
+
+  const handleDeadlineDateSelect = (d: string) => {
     setDeadline(d);
     setEditingDeadline(false);
     if (d !== reminder?.deadline) {
