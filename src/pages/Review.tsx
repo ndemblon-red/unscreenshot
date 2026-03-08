@@ -294,10 +294,10 @@ export default function ReviewPage() {
                       Custom
                     </button>
                   </div>
-                  {(isDateDeadline || customDate) && (
+                  {customDate && (
                     <input
                       type="date"
-                      value={isDateDeadline ? current.deadline : customDate}
+                      value={current.deadline}
                       min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => {
                         setCustomDate(e.target.value);
