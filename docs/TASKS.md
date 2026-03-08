@@ -20,16 +20,16 @@
 **Goal:** Every screen exists with the correct layout, elements, and design applied — no functionality yet, just the shell.
 **Test:** Click through every screen manually. Every element listed in PLANNING.md should be visible. Nothing should be missing or invented.
 
-- [ ] Apply design tokens: colours, typography, spacing, border radius as specified in PLANNING.md
-- [ ] Build Task List screen (Screen 1): header, upload button, tab bar (Next/Done/Archive), category filter pills (all 8 + Everything), sort control, empty state
-- [ ] Build task card component: thumbnail, title, category pill (correct colour per tag), deadline with clock icon, mark as done button, delete icon
-- [ ] Build Upload screen (Screen 2): drag and drop zone, file picker, thumbnail grid with remove buttons, Analyse button, cancel link
-- [ ] Build Review Panel screen (Screen 3): screenshot preview, title input, category selector (all 8 categories), deadline selector (Tomorrow/Next Week/Next Month/Custom), Save and Discard buttons, progress indicator
-- [ ] Build Reminder Detail screen (Screen 4): full image, editable title, editable category, editable deadline, mark as done button, delete button, created date
-- [ ] Build Delete Confirmation overlay (Screen 5): modal with screenshot thumbnail, Delete and Cancel buttons
-- [ ] Build Loading overlay state: per-image spinner, "Analysing X of Y" progress message
+- [x] Apply design tokens: colours, typography, spacing, border radius as specified in PLANNING.md
+- [x] Build Task List screen (Screen 1): header, upload button, tab bar (Next/Done/Archive), category filter pills (all 8 + Everything), sort control, empty state
+- [x] Build task card component: thumbnail, title, category pill (correct colour per tag), deadline with clock icon, mark as done button, delete icon
+- [x] Build Upload screen (Screen 2): drag and drop zone, file picker, thumbnail grid with remove buttons, Analyse button, cancel link
+- [x] Build Review Panel screen (Screen 3): screenshot preview, title input, category selector (all 8 categories), deadline selector (Tomorrow/Next Week/Next Month/Custom), Save and Discard buttons, progress indicator
+- [x] Build Reminder Detail screen (Screen 4): full image, editable title, editable category, editable deadline, mark as done button, delete button, created date
+- [x] Build Delete Confirmation overlay (Screen 5): modal with screenshot thumbnail, Delete and Cancel buttons
+- [x] Build Loading overlay state: per-image spinner, "Analysing X of Y" progress message
 - [ ] Build Error state: inline error per failed image, Try Again and Add Manually options
-- [ ] Verify all category pill colours match PLANNING.md colour tokens
+- [x] Verify all category pill colours match PLANNING.md colour tokens
 - [ ] Verify "Does NOT include" items from PLANNING.md are absent from every screen
 
 ---
@@ -38,18 +38,18 @@
 **Goal:** A user can upload screenshots, the AI analyses them, and the review panel shows the AI suggestions ready to confirm or edit.
 **Test:** Upload 3 screenshots. Loading state appears. Review panel opens showing AI-suggested title, category, and deadline for the first image. Edit one field. Click Save. See the item appear in the Next tab on the Task List.
 
-- [ ] Wire up file picker and drag-and-drop to accept JPG, PNG, WEBP up to 10MB
-- [ ] Show selected image thumbnails in the upload grid with working remove (×) buttons
-- [ ] Disable "Analyse Screenshots" button until at least 1 image is selected
-- [ ] On submit: show loading overlay, send each image to AI analysis function from Milestone 1
-- [ ] Handle batch processing: analyse images sequentially, update progress indicator per image
-- [ ] On completion: navigate to Review Panel with first image and AI suggestions pre-filled
-- [ ] Title field is editable, pre-filled with AI suggestion
-- [ ] Category selector shows all 8 categories, AI suggestion pre-selected
-- [ ] Deadline selector shows Tomorrow / Next Week / Next Month / Custom date picker, AI suggestion pre-selected
-- [ ] "Save Reminder" writes reminder to Supabase database + uploads image to Supabase Storage
-- [ ] "Discard" skips without saving, advances to next screenshot
-- [ ] After final screenshot reviewed: navigate back to Task List
+- [x] Wire up file picker and drag-and-drop to accept JPG, PNG, WEBP up to 10MB
+- [x] Show selected image thumbnails in the upload grid with working remove (×) buttons
+- [x] Disable "Analyse Screenshots" button until at least 1 image is selected
+- [x] On submit: show loading overlay, send each image to AI analysis function from Milestone 1
+- [x] Handle batch processing: analyse images sequentially, update progress indicator per image
+- [x] On completion: navigate to Review Panel with first image and AI suggestions pre-filled
+- [x] Title field is editable, pre-filled with AI suggestion
+- [x] Category selector shows all 8 categories, AI suggestion pre-selected
+- [x] Deadline selector shows Tomorrow / Next Week / Next Month / Custom date picker, AI suggestion pre-selected
+- [x] "Save Reminder" writes reminder to Supabase database + uploads image to Supabase Storage
+- [x] "Discard" skips without saving, advances to next screenshot
+- [x] After final screenshot reviewed: navigate back to Task List
 - [ ] Non-image file upload shows clear error: "Please upload image files only"
 - [ ] Network/API error shows inline retry option
 
@@ -59,18 +59,18 @@
 **Goal:** Saved reminders appear in the task list and the user can filter, sort, change status, and navigate to detail.
 **Test:** Save 5 reminders across different categories. Filter by one category — only matching items show. Sort by date newest/oldest — order changes correctly. Mark one as Done — it moves to the Done tab. Check Archive tab shows items whose deadline has passed.
 
-- [ ] Fetch and display all reminders from Supabase on Task List load
-- [ ] Display reminders in the correct tab based on status (next/done/archive)
+- [x] Fetch and display all reminders from Supabase on Task List load
+- [x] Display reminders in the correct tab based on status (next/done/archive)
 - [ ] Auto-move reminders to Archive where deadline < today and status = next (query-based, on load)
-- [ ] Category filter pills filter the list in place — "Everything" shows all
-- [ ] Sort by date toggle: newest first / oldest first — updates list order in place
-- [ ] "Mark as Done" button on task card updates status in Supabase, moves card to Done tab
-- [ ] Clicking a task card navigates to Reminder Detail screen (Screen 4)
-- [ ] Reminder Detail: display full image, title, category, deadline, created date
-- [ ] Reminder Detail: inline editing of title, category, and deadline — saves to Supabase on change
-- [ ] Empty state displays correctly when a tab or filter has no results
-- [ ] Delete icon on task card triggers Delete Confirmation overlay
-- [ ] Delete Confirmation: shows screenshot thumbnail, confirm deletes from Supabase DB and Storage, cancel dismisses
+- [x] Category filter pills filter the list in place — "Everything" shows all
+- [x] Sort by date toggle: newest first / oldest first — updates list order in place
+- [x] "Mark as Done" button on task card updates status in Supabase, moves card to Done tab
+- [x] Clicking a task card navigates to Reminder Detail screen (Screen 4)
+- [x] Reminder Detail: display full image, title, category, deadline, created date
+- [x] Reminder Detail: inline editing of title, category, and deadline — saves to Supabase on change
+- [x] Empty state displays correctly when a tab or filter has no results
+- [x] Delete icon on task card triggers Delete Confirmation overlay
+- [x] Delete Confirmation: shows screenshot thumbnail, confirm deletes from Supabase DB and Storage, cancel dismisses
 
 ---
 
