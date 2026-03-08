@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 
-const DEADLINE_OPTIONS = ["Tomorrow", "Next Week", "Next Month"] as const;
+import { DEADLINE_OPTIONS, deadlineLabelToDate, isDateString } from "@/lib/deadlines";
 const ASSIGNABLE_CATEGORIES = CATEGORIES.filter((c) => c !== "Everything");
 
 interface ReviewItem {
