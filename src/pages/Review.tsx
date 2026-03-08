@@ -262,30 +262,31 @@ export default function ReviewPage() {
                 <div>
                   <label className="text-label text-muted-foreground mb-1.5 block">Deadline</label>
                   <div className="flex flex-wrap gap-2">
-                    {DEADLINE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => {
-                          updateField("deadline", opt);
-                          setCustomDate("");
-                        }}
-                        className={`px-3 py-1.5 rounded-pill text-[13px] font-medium transition-all ${
-                          current.deadline === opt
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                    {DEADLINE_OPTIONS.map((opt) => {
+                      const optDate = deadlineLabelToDate(opt);
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() => {
+                            updateField("deadline", optDate);
+                            setCustomDate("");
+                          }}
+                          className={`px-3 py-1.5 rounded-pill text-[13px] font-medium transition-all ${
+                            current.deadline === optDate
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
                     <button
                       onClick={() => {
-                        const today = new Date().toISOString().split("T")[0];
-                        setCustomDate(today);
-                        updateField("deadline", today);
+                        setCustomDate(current.deadline || new Date().toISOString().split("T")[0]);
                       }}
                       className={`px-3 py-1.5 rounded-pill text-[13px] font-medium transition-all ${
-                        isDateDeadline
+                        customDate
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       }`}
