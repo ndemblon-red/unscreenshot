@@ -22,9 +22,18 @@ export default function Index() {
   const [tasks, setTasks] = useState<Omit<TaskCardProps, "onMarkDone" | "onDelete" | "onClick">[]>([]);
   const navigate = useNavigate();
 
-  // Fetch reminders from database
+  // Auto-archive expired reminders then fetch
   useEffect(() => {
     const fetchReminders = async () => {
+      const today = new Date().toISOString().split("T")[0];
+
+      // Move overdue "next" reminders to archive
+      await supabase
+        .from("reminders")
+        .update({ status: "archive" })
+        .eq("status", "next")
+        .lt("deadline", today);
+
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
