@@ -50,8 +50,8 @@
 - [x] "Save Reminder" writes reminder to Supabase database + uploads image to Supabase Storage
 - [x] "Discard" skips without saving, advances to next screenshot
 - [x] After final screenshot reviewed: navigate back to Task List
-- [ ] Non-image file upload shows clear error: "Please upload image files only"
-- [ ] Network/API error shows inline retry option
+- [x] Non-image file upload shows clear error: "Please upload image files only"
+- [x] Network/API error shows inline retry option
 
 ---
 
