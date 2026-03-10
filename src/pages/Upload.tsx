@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, X, ArrowLeft, ImageIcon } from "lucide-react";
+import { Upload, X, ArrowLeft, ImageIcon, AlertCircle } from "lucide-react";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -14,21 +14,39 @@ interface QueuedFile {
 export default function UploadPage() {
   const [files, setFiles] = useState<QueuedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [fileErrors, setFileErrors] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const newFiles: QueuedFile[] = [];
+    const errors: string[] = [];
+
     Array.from(incoming).forEach((file) => {
-      if (!ACCEPTED_TYPES.includes(file.type)) return;
-      if (file.size > MAX_FILE_SIZE) return;
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        errors.push(`"${file.name}" — Please upload image files only (JPG, PNG, WEBP)`);
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`"${file.name}" — File exceeds 10MB limit`);
+        return;
+      }
       newFiles.push({
         id: crypto.randomUUID(),
         file,
         preview: URL.createObjectURL(file),
       });
     });
-    setFiles((prev) => [...prev, ...newFiles]);
+
+    if (errors.length > 0) {
+      setFileErrors(errors);
+    } else {
+      setFileErrors([]);
+    }
+
+    if (newFiles.length > 0) {
+      setFiles((prev) => [...prev, ...newFiles]);
+    }
   }, []);
 
   const removeFile = (id: string) => {
@@ -75,8 +93,28 @@ export default function UploadPage() {
           Back
         </button>
         <h1 className="text-page-title tracking-tight">Upload Screenshots</h1>
-        <div className="w-16" /> {/* spacer for centering */}
+        <div className="w-16" />
       </header>
+
+      {/* File validation errors */}
+      {fileErrors.length > 0 && (
+        <div className="mb-4 p-3 rounded-card border border-destructive/30 bg-destructive/5">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+            <div className="flex flex-col gap-1">
+              {fileErrors.map((err, i) => (
+                <p key={i} className="text-[13px] text-destructive">{err}</p>
+              ))}
+            </div>
+          </div>
+          <button
+            onClick={() => setFileErrors([])}
+            className="mt-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Drop zone */}
       <div
@@ -148,7 +186,6 @@ export default function UploadPage() {
         <button
           disabled={files.length === 0}
           onClick={async () => {
-            // Convert files to base64 and pass to review
             const prepared = await Promise.all(
               files.map(async (f) => {
                 const buffer = await f.file.arrayBuffer();
