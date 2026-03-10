@@ -61,7 +61,7 @@
 
 - [x] Fetch and display all reminders from Supabase on Task List load
 - [x] Display reminders in the correct tab based on status (next/done/archive)
-- [ ] Auto-move reminders to Archive where deadline < today and status = next (query-based, on load)
+- [x] Auto-move reminders to Archive where deadline < today and status = next (query-based, on load)
 - [x] Category filter pills filter the list in place — "Everything" shows all
 - [x] Sort by date toggle: newest first / oldest first — updates list order in place
 - [x] "Mark as Done" button on task card updates status in Supabase, moves card to Done tab
