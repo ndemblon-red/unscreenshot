@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, X, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, X, Loader2, AlertCircle, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
@@ -26,6 +26,7 @@ export default function ReviewPage() {
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState("");
 
   // Load files passed from Upload page
@@ -63,7 +64,6 @@ export default function ReviewPage() {
         setItems((prev) =>
           prev.map((it, i) => {
             if (i !== index) return it;
-            // Convert AI label ("Next Week") to a real date
             const dl = DEADLINE_OPTIONS.includes(data.deadline as any)
               ? deadlineLabelToDate(data.deadline as any)
               : isDateString(data.deadline) ? data.deadline : deadlineLabelToDate("Next Week");
@@ -82,7 +82,6 @@ export default function ReviewPage() {
   }, [items]);
 
   const current = items[currentIndex];
-  const analysedCount = items.filter((i) => i.analysed).length;
 
   const updateField = (field: keyof ReviewItem, value: string) => {
     setItems((prev) =>
@@ -93,6 +92,7 @@ export default function ReviewPage() {
   const handleSave = async () => {
     if (!current) return;
     setSaving(true);
+    setSaveError(null);
     try {
       // Upload image to storage
       const ext = current.file.name.split(".").pop() || "jpg";
@@ -117,16 +117,19 @@ export default function ReviewPage() {
       goNext();
     } catch (err) {
       console.error("Save failed:", err);
+      setSaveError("Failed to save reminder. Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDiscard = () => {
+    setSaveError(null);
     goNext();
   };
 
   const goNext = () => {
+    setSaveError(null);
     if (currentIndex < items.length - 1) {
       setCurrentIndex((i) => i + 1);
       setCustomDate("");
@@ -142,8 +145,6 @@ export default function ReviewPage() {
   };
 
   if (items.length === 0) return null;
-
-  // customDate controls whether the date picker is shown
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
@@ -203,12 +204,19 @@ export default function ReviewPage() {
               </div>
             ) : current.error ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-1">
+                  <AlertCircle className="w-6 h-6 text-destructive" />
+                </div>
                 <p className="text-card-title text-foreground">Couldn't analyse this screenshot</p>
-                <div className="flex gap-3">
+                <p className="text-label text-muted-foreground">
+                  The AI couldn't read this image. You can retry or add details yourself.
+                </p>
+                <div className="flex gap-3 mt-2">
                   <button
                     onClick={handleRetry}
-                    className="px-4 py-2 rounded-btn text-[15px] font-medium border border-border hover:bg-muted transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-btn text-[15px] font-medium border border-border hover:bg-muted transition-colors"
                   >
+                    <RotateCcw className="w-3.5 h-3.5" />
                     Try again
                   </button>
                   <button
@@ -311,6 +319,20 @@ export default function ReviewPage() {
                   )}
                 </div>
 
+                {/* Save error */}
+                {saveError && (
+                  <div className="flex items-center gap-2 p-3 rounded-card border border-destructive/30 bg-destructive/5">
+                    <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                    <p className="text-[13px] text-destructive flex-1">{saveError}</p>
+                    <button
+                      onClick={() => setSaveError(null)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="flex gap-3 mt-4">
                   <button
@@ -320,10 +342,12 @@ export default function ReviewPage() {
                   >
                     {saving ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : saveError ? (
+                      <RotateCcw className="w-4 h-4" />
                     ) : (
                       <Check className="w-4 h-4" />
                     )}
-                    Save Reminder
+                    {saveError ? "Retry Save" : "Save Reminder"}
                   </button>
                   <button
                     onClick={handleDiscard}
@@ -343,7 +367,7 @@ export default function ReviewPage() {
       {items.length > 1 && current?.analysed && !current?.error && (
         <div className="flex justify-between mt-8">
           <button
-            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+            onClick={() => { setSaveError(null); setCurrentIndex((i) => Math.max(0, i - 1)); }}
             disabled={currentIndex === 0}
             className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-[15px] disabled:opacity-30"
           >
@@ -351,7 +375,7 @@ export default function ReviewPage() {
             Previous
           </button>
           <button
-            onClick={() => setCurrentIndex((i) => Math.min(items.length - 1, i + 1))}
+            onClick={() => { setSaveError(null); setCurrentIndex((i) => Math.min(items.length - 1, i + 1)); }}
             disabled={currentIndex === items.length - 1}
             className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-[15px] disabled:opacity-30"
           >

@@ -28,7 +28,7 @@
 - [x] Build Reminder Detail screen (Screen 4): full image, editable title, editable category, editable deadline, mark as done button, delete button, created date
 - [x] Build Delete Confirmation overlay (Screen 5): modal with screenshot thumbnail, Delete and Cancel buttons
 - [x] Build Loading overlay state: per-image spinner, "Analysing X of Y" progress message
-- [ ] Build Error state: inline error per failed image, Try Again and Add Manually options
+- [x] Build Error state: inline error per failed image, Try Again and Add Manually options
 - [x] Verify all category pill colours match PLANNING.md colour tokens
 - [ ] Verify "Does NOT include" items from PLANNING.md are absent from every screen
 
@@ -50,8 +50,8 @@
 - [x] "Save Reminder" writes reminder to Supabase database + uploads image to Supabase Storage
 - [x] "Discard" skips without saving, advances to next screenshot
 - [x] After final screenshot reviewed: navigate back to Task List
-- [ ] Non-image file upload shows clear error: "Please upload image files only"
-- [ ] Network/API error shows inline retry option
+- [x] Non-image file upload shows clear error: "Please upload image files only"
+- [x] Network/API error shows inline retry option
 
 ---
 
