@@ -90,6 +90,9 @@
 - [ ] Spacing, typography, and colour audit — compare every screen against PLANNING.md design spec
 - [ ] Category pill colours consistent everywhere: task list, review panel, detail screen, filter bar
 - [ ] Verify "Does NOT include" items are absent from every screen (final check)
+- [x] Offline detection banner — shows when user loses connectivity
+- [x] Offline save queue — queues reminders when offline, auto-syncs on reconnect
+- [x] Pending queue counter badge — shows number of queued reminders waiting to sync
 
 ---
 
