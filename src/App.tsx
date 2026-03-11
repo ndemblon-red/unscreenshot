@@ -8,12 +8,14 @@ import Upload from "./pages/Upload";
 import Review from "./pages/Review";
 import ReminderDetail from "./pages/ReminderDetail";
 import NotFound from "./pages/NotFound";
+import OfflineBanner from "./components/OfflineBanner";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <OfflineBanner />
       <Toaster />
       <Sonner />
       <BrowserRouter>
