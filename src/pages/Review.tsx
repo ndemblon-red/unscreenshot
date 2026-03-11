@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, X, Loader2, AlertCircle, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { enqueue } from "@/lib/save-queue";
+import { toast } from "@/hooks/use-toast";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 
@@ -23,6 +26,7 @@ interface ReviewItem {
 export default function ReviewPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const isOnline = useOnlineStatus();
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -91,10 +95,25 @@ export default function ReviewPage() {
 
   const handleSave = async () => {
     if (!current) return;
+
+    // Queue for later if offline
+    if (!isOnline) {
+      enqueue({
+        id: crypto.randomUUID(),
+        file: current.file,
+        mimeType: current.mimeType,
+        title: current.title || "Review this item",
+        category: current.category,
+        deadline: current.deadline,
+      });
+      toast({ title: "Saved to queue — will sync when you're back online" });
+      goNext();
+      return;
+    }
+
     setSaving(true);
     setSaveError(null);
     try {
-      // Upload image to storage
       const ext = current.file.name.split(".").pop() || "jpg";
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -104,7 +123,6 @@ export default function ReviewPage() {
 
       const { data: urlData } = supabase.storage.from("screenshots").getPublicUrl(path);
 
-      // Save reminder to database
       const { error: dbError } = await supabase.from("reminders").insert({
         title: current.title || "Review this item",
         category: current.category,
