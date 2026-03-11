@@ -95,10 +95,25 @@ export default function ReviewPage() {
 
   const handleSave = async () => {
     if (!current) return;
+
+    // Queue for later if offline
+    if (!isOnline) {
+      enqueue({
+        id: crypto.randomUUID(),
+        file: current.file,
+        mimeType: current.mimeType,
+        title: current.title || "Review this item",
+        category: current.category,
+        deadline: current.deadline,
+      });
+      toast({ title: "Saved to queue — will sync when you're back online" });
+      goNext();
+      return;
+    }
+
     setSaving(true);
     setSaveError(null);
     try {
-      // Upload image to storage
       const ext = current.file.name.split(".").pop() || "jpg";
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -108,7 +123,6 @@ export default function ReviewPage() {
 
       const { data: urlData } = supabase.storage.from("screenshots").getPublicUrl(path);
 
-      // Save reminder to database
       const { error: dbError } = await supabase.from("reminders").insert({
         title: current.title || "Review this item",
         category: current.category,
