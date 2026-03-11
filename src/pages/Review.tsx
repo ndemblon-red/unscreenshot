@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, X, Loader2, AlertCircle, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { enqueue } from "@/lib/save-queue";
+import { toast } from "@/hooks/use-toast";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 
