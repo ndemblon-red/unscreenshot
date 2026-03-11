@@ -11,14 +11,29 @@ export interface QueuedSave {
 
 const QUEUE_KEY = "unscreenshot_save_queue_meta";
 let memoryQueue: QueuedSave[] = [];
+type Listener = (count: number) => void;
+const listeners: Listener[] = [];
+
+function notify() {
+  listeners.forEach((l) => l(memoryQueue.length));
+}
+
+export function subscribeQueueCount(fn: Listener): () => void {
+  listeners.push(fn);
+  fn(memoryQueue.length);
+  return () => {
+    const idx = listeners.indexOf(fn);
+    if (idx > -1) listeners.splice(idx, 1);
+  };
+}
 
 export function enqueue(item: QueuedSave) {
   memoryQueue.push(item);
-  // Persist metadata (not File objects) so we can show count on reload
   try {
     const meta = memoryQueue.map(({ id, title, category, deadline }) => ({ id, title, category, deadline }));
     localStorage.setItem(QUEUE_KEY, JSON.stringify(meta));
   } catch {}
+  notify();
 }
 
 export function getQueue(): QueuedSave[] {
