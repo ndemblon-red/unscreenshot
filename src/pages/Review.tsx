@@ -26,6 +26,7 @@ interface ReviewItem {
 export default function ReviewPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const isOnline = useOnlineStatus();
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saving, setSaving] = useState(false);
