@@ -88,6 +88,7 @@ export async function flushQueue(): Promise<{ saved: number; failed: number }> {
       localStorage.setItem(QUEUE_KEY, JSON.stringify(meta));
     }
   } catch {}
+  notify();
 
   return { saved, failed };
 }
