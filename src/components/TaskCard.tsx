@@ -1,6 +1,6 @@
-import { Clock, Check, Trash2 } from "lucide-react";
+import { Clock, Check, Trash2, AlertCircle } from "lucide-react";
 import { getCategoryClasses } from "@/lib/categories";
-import { dateToDeadlineLabel } from "@/lib/deadlines";
+import { dateToDeadlineLabel, getDeadlineUrgency } from "@/lib/deadlines";
 
 export interface TaskCardProps {
   id: string;
