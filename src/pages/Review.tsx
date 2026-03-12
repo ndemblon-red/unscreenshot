@@ -114,6 +114,9 @@ export default function ReviewPage() {
     setSaving(true);
     setSaveError(null);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
       const ext = current.file.name.split(".").pop() || "jpg";
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -129,6 +132,7 @@ export default function ReviewPage() {
         deadline: current.deadline,
         image_url: urlData.publicUrl,
         status: "next",
+        user_id: session.user.id,
       });
       if (dbError) throw dbError;
 

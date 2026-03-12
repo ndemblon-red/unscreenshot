@@ -7,8 +7,10 @@ import Index from "./pages/Index";
 import Upload from "./pages/Upload";
 import Review from "./pages/Review";
 import ReminderDetail from "./pages/ReminderDetail";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import OfflineBanner from "./components/OfflineBanner";
+import AuthGuard from "./components/AuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -20,11 +22,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/review" element={<Review />} />
-          <Route path="/reminder/:id" element={<ReminderDetail />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
+          <Route path="/upload" element={<AuthGuard><Upload /></AuthGuard>} />
+          <Route path="/review" element={<AuthGuard><Review /></AuthGuard>} />
+          <Route path="/reminder/:id" element={<AuthGuard><ReminderDetail /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
