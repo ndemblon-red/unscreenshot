@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, ArrowUpDown, ImageIcon } from "lucide-react";
+import { Upload, ArrowUpDown, ImageIcon, LogOut } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CategoryPills from "@/components/CategoryPills";
 import TaskCard, { TaskCardProps } from "@/components/TaskCard";
