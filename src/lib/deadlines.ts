@@ -49,3 +49,14 @@ export function dateToDeadlineLabel(dateStr: string): string {
     year: "numeric",
   });
 }
+
+/** Return urgency level for a deadline date. */
+export function getDeadlineUrgency(dateStr: string): "today" | "tomorrow" | null {
+  if (!isDateString(dateStr)) return null;
+  const today = new Date().toISOString().split("T")[0];
+  if (dateStr === today) return "today";
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (dateStr === tomorrow.toISOString().split("T")[0]) return "tomorrow";
+  return null;
+}

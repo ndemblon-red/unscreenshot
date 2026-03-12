@@ -1,6 +1,6 @@
-import { Clock, Check, Trash2 } from "lucide-react";
+import { Clock, Check, Trash2, AlertCircle } from "lucide-react";
 import { getCategoryClasses } from "@/lib/categories";
-import { dateToDeadlineLabel } from "@/lib/deadlines";
+import { dateToDeadlineLabel, getDeadlineUrgency } from "@/lib/deadlines";
 
 export interface TaskCardProps {
   id: string;
@@ -25,9 +25,17 @@ export default function TaskCard({
   onDelete,
   onClick,
 }: TaskCardProps) {
+  const urgency = status === "next" ? getDeadlineUrgency(deadline) : null;
+
   return (
     <div
-      className="flex items-center gap-card-pad bg-card rounded-card border border-border p-card-pad cursor-pointer hover:shadow-sm transition-shadow"
+      className={`flex items-center gap-card-pad bg-card rounded-card border p-card-pad cursor-pointer hover:shadow-sm transition-shadow ${
+        urgency === "today"
+          ? "border-destructive/50 bg-destructive/5"
+          : urgency === "tomorrow"
+          ? "border-orange-400/50 bg-orange-50/50 dark:bg-orange-950/10"
+          : "border-border"
+      }`}
       onClick={() => onClick?.(id)}
     >
       {/* Thumbnail */}
@@ -41,7 +49,20 @@ export default function TaskCard({
 
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        <h3 className="text-card-title truncate">{title}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-card-title truncate">{title}</h3>
+          {urgency === "today" && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pill text-[10px] font-bold uppercase tracking-wide bg-destructive text-destructive-foreground whitespace-nowrap">
+              <AlertCircle className="w-3 h-3" />
+              Due today
+            </span>
+          )}
+          {urgency === "tomorrow" && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pill text-[10px] font-bold uppercase tracking-wide bg-orange-500 text-white whitespace-nowrap">
+              Due tomorrow
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <span
             className={`inline-block px-2 py-0.5 rounded-pill text-pill uppercase ${getCategoryClasses(category)}`}
