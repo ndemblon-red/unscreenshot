@@ -109,13 +109,25 @@ export default function Index() {
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-page-title tracking-tight">Unscreenshot</h1>
-        <button
-          onClick={() => navigate("/upload")}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
-        >
-          <Upload className="w-4 h-4" />
-          Upload Screenshots
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/upload")}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Screenshots
+          </button>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate("/auth");
+            }}
+            className="p-2.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </header>
 
       {/* Tabs */}
