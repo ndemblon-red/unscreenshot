@@ -118,6 +118,13 @@ export default function Index() {
             Upload Screenshots
           </button>
           <button
+            onClick={() => navigate("/account")}
+            className="p-2.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Account"
+          >
+            <User className="w-4 h-4" />
+          </button>
+          <button
             onClick={async () => {
               await supabase.auth.signOut();
               navigate("/auth");

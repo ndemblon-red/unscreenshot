@@ -25,10 +25,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
           <Route path="/upload" element={<AuthGuard><Upload /></AuthGuard>} />
           <Route path="/review" element={<AuthGuard><Review /></AuthGuard>} />
           <Route path="/reminder/:id" element={<AuthGuard><ReminderDetail /></AuthGuard>} />
+          <Route path="/account" element={<AuthGuard><Account /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
