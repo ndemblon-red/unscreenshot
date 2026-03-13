@@ -119,6 +119,16 @@ export default function ReminderDetail() {
     }
   };
 
+  const handleUndoDone = async () => {
+    if (!id) return;
+    const { error } = await supabase.from("reminders").update({ status: "next" }).eq("id", id);
+    if (error) {
+      toast.error("Failed to undo");
+    } else {
+      toast.success("Moved back to Next");
+      setReminder((r) => (r ? { ...r, status: "next" } : r));
+    }
+  };
   const handleDelete = async () => {
     if (!id) return;
     const { error } = await supabase.from("reminders").delete().eq("id", id);
