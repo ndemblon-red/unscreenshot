@@ -55,6 +55,18 @@
 
 ---
 
+## Milestone 3b: Authentication & Account Management
+**Goal:** Users can recover forgotten passwords and manage their account settings.
+**Test:** Click "Forgot password" on sign-in, receive reset email, set new password. Open Account page, change password successfully. Mark a reminder as done, open it, click Undo Done — it moves back to Next.
+
+- [x] Add "Forgot password" mode to Auth page — sends password reset email via Supabase
+- [x] Build Reset Password page (`/reset-password`) — handles PASSWORD_RECOVERY auth event, lets user set new password
+- [x] Build Account page (`/account`) — shows user email, change password form, sign out button
+- [x] Add Account icon link to Task List header
+- [x] Add "Undo Done" button on Reminder Detail for completed reminders — moves status back to "next"
+
+---
+
 ## Milestone 4: Task List — View, Filter, Sort and Status
 **Goal:** Saved reminders appear in the task list and the user can filter, sort, change status, and navigate to detail.
 **Test:** Save 5 reminders across different categories. Filter by one category — only matching items show. Sort by date newest/oldest — order changes correctly. Mark one as Done — it moves to the Done tab. Check Archive tab shows items whose deadline has passed.
