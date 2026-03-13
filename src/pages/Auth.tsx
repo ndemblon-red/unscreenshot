@@ -92,17 +92,28 @@ export default function Auth() {
             ) : (
               <ArrowRight className="w-4 h-4" />
             )}
-            {isLogin ? "Sign In" : "Sign Up"}
+            {forgotMode ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"}
           </button>
         </form>
 
-        <p className="text-label text-muted-foreground text-center mt-6">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+        {isLogin && !forgotMode && (
+          <p className="text-label text-muted-foreground text-center mt-4">
+            <button
+              onClick={() => setForgotMode(true)}
+              className="text-primary hover:underline font-medium"
+            >
+              Forgot password?
+            </button>
+          </p>
+        )}
+
+        <p className="text-label text-muted-foreground text-center mt-4">
+          {forgotMode ? "Remember your password?" : isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => { setForgotMode(false); if (forgotMode) setIsLogin(true); else setIsLogin(!isLogin); }}
             className="text-primary hover:underline font-medium"
           >
-            {isLogin ? "Sign up" : "Sign in"}
+            {forgotMode ? "Sign in" : isLogin ? "Sign up" : "Sign in"}
           </button>
         </p>
       </div>
