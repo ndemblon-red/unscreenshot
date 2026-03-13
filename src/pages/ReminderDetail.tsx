@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Trash2, Clock, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Trash2, Clock, Pencil, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
