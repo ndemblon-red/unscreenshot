@@ -294,6 +294,15 @@ export default function ReminderDetail() {
             Mark as Done
           </button>
         )}
+        {reminder.status === "done" && (
+          <button
+            onClick={handleUndoDone}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+          >
+            <Undo2 className="w-4 h-4" />
+            Undo Done
+          </button>
+        )}
         <button
           onClick={() => setDeleteOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-btn text-[15px] font-medium border border-destructive text-destructive hover:bg-destructive/10 transition-colors"
