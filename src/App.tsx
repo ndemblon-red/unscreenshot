@@ -8,6 +8,8 @@ import Upload from "./pages/Upload";
 import Review from "./pages/Review";
 import ReminderDetail from "./pages/ReminderDetail";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import OfflineBanner from "./components/OfflineBanner";
 import AuthGuard from "./components/AuthGuard";
@@ -23,10 +25,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
           <Route path="/upload" element={<AuthGuard><Upload /></AuthGuard>} />
           <Route path="/review" element={<AuthGuard><Review /></AuthGuard>} />
           <Route path="/reminder/:id" element={<AuthGuard><ReminderDetail /></AuthGuard>} />
+          <Route path="/account" element={<AuthGuard><Account /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

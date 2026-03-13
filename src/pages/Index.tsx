@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, ArrowUpDown, ImageIcon, LogOut } from "lucide-react";
+import { Upload, ArrowUpDown, ImageIcon, LogOut, User } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CategoryPills from "@/components/CategoryPills";
 import TaskCard, { TaskCardProps } from "@/components/TaskCard";
@@ -116,6 +116,13 @@ export default function Index() {
           >
             <Upload className="w-4 h-4" />
             Upload Screenshots
+          </button>
+          <button
+            onClick={() => navigate("/account")}
+            className="p-2.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Account"
+          >
+            <User className="w-4 h-4" />
           </button>
           <button
             onClick={async () => {

@@ -9,6 +9,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,6 +17,16 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      if (forgotMode) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Check your email for a reset link");
+        setForgotMode(false);
+        return;
+      }
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -41,7 +52,7 @@ export default function Auth() {
       <div className="w-full max-w-sm">
         <h1 className="text-page-title tracking-tight text-center mb-2">Unscreenshot</h1>
         <p className="text-label text-muted-foreground text-center mb-8">
-          {isLogin ? "Sign in to your account" : "Create your account"}
+          {forgotMode ? "Enter your email to reset your password" : isLogin ? "Sign in to your account" : "Create your account"}
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -56,18 +67,20 @@ export default function Auth() {
               className="w-full pl-10 pr-3 py-2.5 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full pl-10 pr-3 py-2.5 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
+          {!forgotMode && (
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full pl-10 pr-3 py-2.5 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          )}
 
           <button
             type="submit"
@@ -79,17 +92,28 @@ export default function Auth() {
             ) : (
               <ArrowRight className="w-4 h-4" />
             )}
-            {isLogin ? "Sign In" : "Sign Up"}
+            {forgotMode ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"}
           </button>
         </form>
 
-        <p className="text-label text-muted-foreground text-center mt-6">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+        {isLogin && !forgotMode && (
+          <p className="text-label text-muted-foreground text-center mt-4">
+            <button
+              onClick={() => setForgotMode(true)}
+              className="text-primary hover:underline font-medium"
+            >
+              Forgot password?
+            </button>
+          </p>
+        )}
+
+        <p className="text-label text-muted-foreground text-center mt-4">
+          {forgotMode ? "Remember your password?" : isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => { setForgotMode(false); if (forgotMode) setIsLogin(true); else setIsLogin(!isLogin); }}
             className="text-primary hover:underline font-medium"
           >
-            {isLogin ? "Sign up" : "Sign in"}
+            {forgotMode ? "Sign in" : isLogin ? "Sign up" : "Sign in"}
           </button>
         </p>
       </div>
