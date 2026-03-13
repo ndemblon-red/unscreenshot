@@ -8,6 +8,8 @@ import Upload from "./pages/Upload";
 import Review from "./pages/Review";
 import ReminderDetail from "./pages/ReminderDetail";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import OfflineBanner from "./components/OfflineBanner";
 import AuthGuard from "./components/AuthGuard";
