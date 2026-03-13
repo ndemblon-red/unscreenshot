@@ -52,7 +52,7 @@ export default function Auth() {
       <div className="w-full max-w-sm">
         <h1 className="text-page-title tracking-tight text-center mb-2">Unscreenshot</h1>
         <p className="text-label text-muted-foreground text-center mb-8">
-          {isLogin ? "Sign in to your account" : "Create your account"}
+          {forgotMode ? "Enter your email to reset your password" : isLogin ? "Sign in to your account" : "Create your account"}
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
