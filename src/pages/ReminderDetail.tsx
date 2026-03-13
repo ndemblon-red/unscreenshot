@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Trash2, Clock, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Trash2, Clock, Pencil, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
@@ -119,6 +119,16 @@ export default function ReminderDetail() {
     }
   };
 
+  const handleUndoDone = async () => {
+    if (!id) return;
+    const { error } = await supabase.from("reminders").update({ status: "next" }).eq("id", id);
+    if (error) {
+      toast.error("Failed to undo");
+    } else {
+      toast.success("Moved back to Next");
+      setReminder((r) => (r ? { ...r, status: "next" } : r));
+    }
+  };
   const handleDelete = async () => {
     if (!id) return;
     const { error } = await supabase.from("reminders").delete().eq("id", id);
@@ -292,6 +302,15 @@ export default function ReminderDetail() {
           >
             <Check className="w-4 h-4" />
             Mark as Done
+          </button>
+        )}
+        {reminder.status === "done" && (
+          <button
+            onClick={handleUndoDone}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity"
+          >
+            <Undo2 className="w-4 h-4" />
+            Undo Done
           </button>
         )}
         <button
