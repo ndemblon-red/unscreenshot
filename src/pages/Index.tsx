@@ -19,6 +19,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("next");
   const [selectedCategory, setSelectedCategory] = useState("Everything");
   const [sortNewest, setSortNewest] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [tasks, setTasks] = useState<Omit<TaskCardProps, "onMarkDone" | "onDelete" | "onClick">[]>([]);
   const navigate = useNavigate();
 
