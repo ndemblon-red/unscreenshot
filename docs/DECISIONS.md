@@ -97,6 +97,16 @@ After every significant decision during your build, add an entry. A "significant
 ## Future Decisions
 *(Continue logging here as you build. This is where the real learning happens.)*
 
+### March 2026 — Added search bar to MVP despite original exclusion
+
+**Context:** PLANNING.md originally listed "No search bar" under Screen 1's "Does NOT include" section.
+**Options considered:** Keep without search; add collapsible search icon in header; add persistent search bar above category pills.
+**Decision:** Added a persistent search input above category pills that filters reminders by title in real-time.
+**Why:** As the reminder list grows, finding specific items by scrolling or filtering by category alone becomes impractical. A simple title search is low-effort to build and high-value for daily use.
+**What I'd revisit:** Could extend to search by category or deadline text if users need it.
+
+---
+
 ### [Date] — [Short title]
 **Context:**
 **Options considered:**
