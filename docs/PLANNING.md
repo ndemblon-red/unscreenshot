@@ -13,6 +13,7 @@
 - App logo + wordmark "Unscreenshot" — top left
 - "Upload Screenshots" button — top right, primary action, always visible
 - Tab bar: Next | Done | Archive — below header, full width
+- Search bar — text input with search icon, filters reminders by title in real-time as user types, with clear (×) button
 - Category filter pills: Everything | Restaurants | Shopping | To Do | Events | Reading | Home | Travel | Wishlist — horizontal scrollable row below tabs
 - Sort control: "Sort by date" toggle (newest first / oldest first) — right side above task list
 - Task list — scrollable, fills remaining screen

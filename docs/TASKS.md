@@ -67,6 +67,16 @@
 
 ---
 
+## Milestone 3c: Search
+**Goal:** Users can search reminders by title from the home screen.
+**Test:** Type a query in the search bar — only matching reminders show. Clear the search — all reminders return.
+
+- [x] Add search input with search icon above category filter pills on Task List
+- [x] Filter reminders by title in real-time as user types
+- [x] Add clear (×) button to reset search query
+
+---
+
 ## Milestone 4: Task List — View, Filter, Sort and Status
 **Goal:** Saved reminders appear in the task list and the user can filter, sort, change status, and navigate to detail.
 **Test:** Save 5 reminders across different categories. Filter by one category — only matching items show. Sort by date newest/oldest — order changes correctly. Mark one as Done — it moves to the Done tab. Check Archive tab shows items whose deadline has passed.
