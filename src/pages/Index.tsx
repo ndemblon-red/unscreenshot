@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, ArrowUpDown, ImageIcon, LogOut, User } from "lucide-react";
+import { Upload, ArrowUpDown, ImageIcon, LogOut, User, Search, X } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CategoryPills from "@/components/CategoryPills";
 import TaskCard, { TaskCardProps } from "@/components/TaskCard";
@@ -19,6 +19,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("next");
   const [selectedCategory, setSelectedCategory] = useState("Everything");
   const [sortNewest, setSortNewest] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [tasks, setTasks] = useState<Omit<TaskCardProps, "onMarkDone" | "onDelete" | "onClick">[]>([]);
   const navigate = useNavigate();
 
@@ -81,6 +82,7 @@ export default function Index() {
     .filter((t) => {
       if (t.status !== activeTab) return false;
       if (selectedCategory !== "Everything" && t.category !== selectedCategory) return false;
+      if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     })
     .sort((a, b) => {
@@ -150,6 +152,26 @@ export default function Index() {
             </TabsTrigger>
           ))}
         </TabsList>
+
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search reminders…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-9 py-2 rounded-btn border border-border bg-background text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
         {/* Category pills + Sort */}
         <div className="flex items-center gap-4 mb-4">
