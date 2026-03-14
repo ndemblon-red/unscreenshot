@@ -82,6 +82,7 @@ export default function Index() {
     .filter((t) => {
       if (t.status !== activeTab) return false;
       if (selectedCategory !== "Everything" && t.category !== selectedCategory) return false;
+      if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     })
     .sort((a, b) => {
