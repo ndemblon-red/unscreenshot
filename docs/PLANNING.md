@@ -26,7 +26,6 @@
 - Empty state — when no items exist in current tab/filter: illustration + message + "Upload your first screenshot" CTA
 
 **Does NOT include:**
-- No search bar
 - No user account / profile / avatar
 - No settings panel
 - No notifications or badges
