@@ -1,89 +1,43 @@
 
 
-# Launch Plan — Unscreenshot Desktop
+# Plan: Add Langfuse Observability to Screenshot Analysis
 
-## Current State
+## What This Does
 
-Core product is functional: upload screenshots, AI analysis, review/edit, task list with tabs/filter/sort/search, auth with password reset, offline support. Database has RLS policies scoped to authenticated users. One security finding: leaked password protection is disabled.
+Langfuse is an open-source LLM observability platform. We'll instrument the `analyse-screenshot` edge function to log every AI call — tracking input, output, latency, errors, and costs — so you can monitor and debug your AI pipeline from the Langfuse Cloud dashboard.
 
-Milestones 1–4 and 3b/3c are complete. Milestones 5 (polish) and 6 (test validation) are untouched.
+## Steps
 
----
+### 1. Add Langfuse Secrets
+Store three secrets using the secrets tool:
+- `LANGFUSE_SECRET_KEY` — your Langfuse secret key
+- `LANGFUSE_PUBLIC_KEY` — your Langfuse public key
+- `LANGFUSE_HOST` — your Langfuse Cloud URL (e.g. `https://cloud.langfuse.com`)
 
-## Launch Milestones
+### 2. Instrument the Edge Function
+Update `supabase/functions/analyse-screenshot/index.ts` to:
 
-### Milestone 7: Version Control & Hosting
-- Connect project to GitHub via Lovable settings (Settings → GitHub → Connect)
-- Publish the app via Lovable (Share → Publish) to get a live URL
-- Optionally connect a custom domain (Settings → Domains)
+- Read the three Langfuse env vars at the start of each request
+- Create a Langfuse trace with metadata (user agent, timestamp)
+- Wrap the Anthropic API call in a Langfuse **generation** span that records:
+  - Model name (`claude-sonnet-4-20250514`)
+  - Input (system prompt + user message, image mime type — not the full base64)
+  - Output (raw AI response text)
+  - Latency (start/end timestamps)
+  - Token usage (from Anthropic's response `usage` field)
+  - Error status if the call fails
+- Log the validation step (whether output was modified by `validateAndFix`)
+- Flush Langfuse at the end of the request (Langfuse batches events and requires an explicit flush in serverless environments)
 
-*No code changes needed — this is configuration only.*
+Since Deno edge functions can't use the `langfuse` npm SDK directly without complexity, we'll use the **Langfuse REST API** (`POST /api/public/ingestion`) to send trace and generation events. This is lightweight — just one `fetch` call at the end — and avoids any SDK compatibility issues.
 
----
+### 3. Graceful Degradation
+Langfuse logging will be fire-and-forget. If the Langfuse secrets are missing or the API call fails, the function continues normally — observability never blocks the user's screenshot analysis.
 
-### Milestone 8: Security Hardening
-- Enable leaked password protection (auth security finding from scan)
-- Audit storage bucket policies — currently public read/insert/delete on `screenshots`; tighten to authenticated users only, scoped to own files
-- Confirm email verification is required before sign-in (currently the default)
+## Technical Details
 
----
-
-### Milestone 9: Payments — Free vs Paid Plans
-- Integrate Stripe via Lovable's built-in Stripe tooling
-- Define two plans:
-  - **Free**: limited to N reminders (e.g. 20) or N analyses per month
-  - **Paid**: unlimited reminders and analyses
-- Create a `subscriptions` table or use Stripe's customer/subscription tracking
-- Add a simple pricing/upgrade page accessible from Account
-- Gate the upload flow: check quota before allowing analysis
-- Show current plan and usage on Account page
-
-*Requires deciding on the free tier limit and pricing before implementation.*
-
----
-
-### Milestone 10: Polish & Edge Cases (existing Milestone 5)
-All unchecked items from the current Milestone 5:
-- Test blurry, blank, corrupted, past-date, large-batch, and sensitive-content images
-- Verify delete confirmation works on both card and detail views
-- Audit loading states and error states for every async action
-- Typography, spacing, and colour audit against design spec
-- Verify "Does NOT include" items are absent
-
----
-
-### Milestone 11: Test Set Validation (existing Milestone 6)
-Run all 17 PRD Section 8 test cases manually, document results, fix failures.
-
----
-
-### Milestone 12: Launch Readiness
-- Set up a custom email domain so auth emails come from your brand (not default sender)
-- Add a basic landing/marketing page or redirect for unauthenticated visitors
-- Add `<meta>` tags (title, description, OG image) for link sharing
-- Review error logging — ensure edge function errors are visible in logs
-- Final end-to-end walkthrough: sign up → upload → review → manage → done → delete → account
-
----
-
-## Decisions Needed Before Implementation
-
-| Decision | Options | Impact |
-|---|---|---|
-| Free tier limit | 20 reminders total / 10 analyses per month / 5 active reminders | Determines DB schema and gating logic |
-| Paid plan price | $5/mo, $8/mo, or annual option | Stripe product/price setup |
-| AI provider | Keep Anthropic (current) or switch to Lovable AI (no API key needed) | Switching saves the user from managing their own API key; Lovable AI supports equivalent models |
-
----
-
-## Suggested Order of Work
-
-```text
-1. GitHub + Publish        (config only, 5 min)
-2. Security hardening      (migration + config, 30 min)
-3. Stripe + plans          (new feature, needs decisions first)
-4. Polish & edge cases     (existing M5 tasks)
-5. Test set validation     (existing M6 tasks)
-6. Email domain + meta     (launch polish)
-```
+- **No new files** — only `supabase/functions/analyse-screenshot/index.ts` is modified
+- **No database changes**
+- The Langfuse ingestion payload will include: trace ID, generation span with model/input/output/usage/latency
+- Image base64 will NOT be sent to Langfuse (too large); only the mime type and a reference will be logged
 
