@@ -3,17 +3,49 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Lock, ArrowLeft, LogOut } from "lucide-react";
+import { getCategoryClasses } from "@/lib/categories";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface Stats {
+  total: number;
+  completed: number;
+  byCategory: Record<string, number>;
+}
 
 export default function Account() {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setEmail(data.user?.email ?? "");
     });
+  }, []);
+
+  useEffect(() => {
+    async function loadStats() {
+      const { data, error } = await supabase
+        .from("reminders")
+        .select("status, category");
+      if (error) {
+        console.error("Failed to load stats", error);
+        setStatsLoading(false);
+        return;
+      }
+      const total = data.length;
+      const completed = data.filter((r) => r.status === "done").length;
+      const byCategory: Record<string, number> = {};
+      for (const r of data) {
+        byCategory[r.category] = (byCategory[r.category] || 0) + 1;
+      }
+      setStats({ total, completed, byCategory });
+      setStatsLoading(false);
+    }
+    loadStats();
   }, []);
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -56,6 +88,55 @@ export default function Account() {
       <h1 className="text-page-title tracking-tight mb-1">Account</h1>
       <p className="text-label text-muted-foreground mb-8">{email}</p>
 
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="border border-border rounded-btn p-5">
+          <p className="text-label text-muted-foreground mb-1">Total Reminders</p>
+          {statsLoading ? (
+            <Skeleton className="h-8 w-16" />
+          ) : (
+            <p className="text-page-title tracking-tight">{stats?.total ?? 0}</p>
+          )}
+        </div>
+        <div className="border border-border rounded-btn p-5">
+          <p className="text-label text-muted-foreground mb-1">Completed</p>
+          {statsLoading ? (
+            <Skeleton className="h-8 w-16" />
+          ) : (
+            <p className="text-page-title tracking-tight">{stats?.completed ?? 0}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="border border-border rounded-btn p-5 mb-6">
+        <h2 className="text-card-title mb-4">By Category</h2>
+        {statsLoading ? (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-6 w-full" />
+            ))}
+          </div>
+        ) : stats && Object.keys(stats.byCategory).length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {Object.entries(stats.byCategory)
+              .sort(([, a], [, b]) => b - a)
+              .map(([cat, count]) => (
+                <div key={cat} className="flex items-center justify-between">
+                  <span
+                    className={`px-3 py-1 rounded-pill text-pill uppercase ${getCategoryClasses(cat)}`}
+                  >
+                    {cat}
+                  </span>
+                  <span className="text-label text-muted-foreground">{count}</span>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <p className="text-label text-muted-foreground">No reminders yet</p>
+        )}
+      </div>
+
+      {/* Change Password */}
       <div className="border border-border rounded-btn p-5">
         <h2 className="text-card-title mb-4">Change password</h2>
         <form onSubmit={handleChangePassword} className="flex flex-col gap-4 max-w-sm">
