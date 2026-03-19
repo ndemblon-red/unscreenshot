@@ -161,7 +161,7 @@ export default function ReminderDetail() {
       {/* Header */}
       <header className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
           className="p-2 -ml-2 rounded-btn hover:bg-muted transition-colors"
           aria-label="Back"
         >
