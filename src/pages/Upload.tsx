@@ -235,16 +235,12 @@ export default function UploadPage() {
           onClick={async () => {
             const prepared = await Promise.all(
               files.map(async (f) => {
-                const buffer = await f.file.arrayBuffer();
-                const bytes = new Uint8Array(buffer);
-                let binary = "";
-                bytes.forEach((b) => (binary += String.fromCharCode(b)));
-                const base64 = btoa(binary);
+                const { base64, mimeType } = await compressImage(f.file);
                 return {
                   file: f.file,
                   preview: f.preview,
                   base64,
-                  mimeType: f.file.type,
+                  mimeType,
                 };
               })
             );
