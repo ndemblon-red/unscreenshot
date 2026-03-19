@@ -67,7 +67,7 @@ export default function Account() {
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
       <header className="flex items-center justify-between mb-8">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
           className="flex items-center gap-1.5 text-label text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

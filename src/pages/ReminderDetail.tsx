@@ -48,7 +48,7 @@ export default function ReminderDetail() {
         .single();
       if (error || !data) {
         console.error("Failed to fetch reminder:", error);
-        navigate("/");
+        navigate("/app");
         return;
       }
       setReminder(data as Reminder);
@@ -115,7 +115,7 @@ export default function ReminderDetail() {
       toast.error("Failed to mark as done");
     } else {
       toast.success("Marked as done");
-      navigate("/");
+      navigate("/app");
     }
   };
 
@@ -136,7 +136,7 @@ export default function ReminderDetail() {
       toast.error("Failed to delete");
     } else {
       toast.success("Deleted");
-      navigate("/");
+      navigate("/app");
     }
   };
 
@@ -161,7 +161,7 @@ export default function ReminderDetail() {
       {/* Header */}
       <header className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
           className="p-2 -ml-2 rounded-btn hover:bg-muted transition-colors"
           aria-label="Back"
         >

@@ -156,7 +156,7 @@ export default function ReviewPage() {
       setCurrentIndex((i) => i + 1);
       setCustomDate("");
     } else {
-      navigate("/");
+      navigate("/app");
     }
   };
 
@@ -173,7 +173,7 @@ export default function ReviewPage() {
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-[15px]"
         >
           <ArrowLeft className="w-4 h-4" />
