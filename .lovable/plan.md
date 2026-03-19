@@ -1,43 +1,28 @@
 
 
-# Plan: Add Langfuse Observability to Screenshot Analysis
+# Plan: Add Stats Dashboard to Account Page
 
-## What This Does
+Add a simple analytics section to the existing Account page showing reminder statistics pulled from the database.
 
-Langfuse is an open-source LLM observability platform. We'll instrument the `analyse-screenshot` edge function to log every AI call — tracking input, output, latency, errors, and costs — so you can monitor and debug your AI pipeline from the Langfuse Cloud dashboard.
+## What Gets Built
+
+Three stat cards above the "Change password" section:
+
+1. **Total Reminders** — count of all reminders for the user
+2. **Completed** — count where status = 'done'
+3. **Category Breakdown** — small list showing count per category with colored pills
 
 ## Steps
 
-### 1. Add Langfuse Secrets
-Store three secrets using the secrets tool:
-- `LANGFUSE_SECRET_KEY` — your Langfuse secret key
-- `LANGFUSE_PUBLIC_KEY` — your Langfuse public key
-- `LANGFUSE_HOST` — your Langfuse Cloud URL (e.g. `https://cloud.langfuse.com`)
+### 1. Update `src/pages/Account.tsx`
+- Add a `useEffect` that queries `reminders` table grouped by status and category for the current user
+- Render three stat cards in a grid above the password section:
+  - Total count and Completed count as large numbers
+  - Category breakdown as a list with `getCategoryClasses` pills and counts
+- Use existing design tokens (border, rounded-btn, text-card-title) for consistency
+- Show skeleton/loading state while data loads
 
-### 2. Instrument the Edge Function
-Update `supabase/functions/analyse-screenshot/index.ts` to:
-
-- Read the three Langfuse env vars at the start of each request
-- Create a Langfuse trace with metadata (user agent, timestamp)
-- Wrap the Anthropic API call in a Langfuse **generation** span that records:
-  - Model name (`claude-sonnet-4-20250514`)
-  - Input (system prompt + user message, image mime type — not the full base64)
-  - Output (raw AI response text)
-  - Latency (start/end timestamps)
-  - Token usage (from Anthropic's response `usage` field)
-  - Error status if the call fails
-- Log the validation step (whether output was modified by `validateAndFix`)
-- Flush Langfuse at the end of the request (Langfuse batches events and requires an explicit flush in serverless environments)
-
-Since Deno edge functions can't use the `langfuse` npm SDK directly without complexity, we'll use the **Langfuse REST API** (`POST /api/public/ingestion`) to send trace and generation events. This is lightweight — just one `fetch` call at the end — and avoids any SDK compatibility issues.
-
-### 3. Graceful Degradation
-Langfuse logging will be fire-and-forget. If the Langfuse secrets are missing or the API call fails, the function continues normally — observability never blocks the user's screenshot analysis.
-
-## Technical Details
-
-- **No new files** — only `supabase/functions/analyse-screenshot/index.ts` is modified
-- **No database changes**
-- The Langfuse ingestion payload will include: trace ID, generation span with model/input/output/usage/latency
-- Image base64 will NOT be sent to Langfuse (too large); only the mime type and a reference will be logged
+### 2. No database or backend changes needed
+- RLS already scopes queries to the authenticated user
+- All data is available from the existing `reminders` table
 
