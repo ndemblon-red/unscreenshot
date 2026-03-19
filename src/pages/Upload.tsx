@@ -4,11 +4,58 @@ import { Upload, X, ArrowLeft, ImageIcon, AlertCircle } from "lucide-react";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_DIMENSION = 1568; // Anthropic recommended max
+const TARGET_BASE64_SIZE = 4 * 1024 * 1024; // 4MB to stay safely under 5MB limit
 
 interface QueuedFile {
   id: string;
   file: File;
   preview: string;
+}
+
+/**
+ * Compress and resize an image file to stay under Anthropic's 5MB base64 limit.
+ * Returns { base64, mimeType } with the processed image.
+ */
+async function compressImage(file: File): Promise<{ base64: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let { width, height } = img;
+
+        // Scale down if exceeds max dimension
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          const scale = MAX_DIMENSION / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Try JPEG at decreasing quality until under target size
+        let quality = 0.85;
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+        while (dataUrl.length * 0.75 > TARGET_BASE64_SIZE && quality > 0.3) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL("image/jpeg", quality);
+        }
+
+        // Strip the data URL prefix to get raw base64
+        const base64 = dataUrl.split(",")[1];
+        resolve({ base64, mimeType: "image/jpeg" });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 export default function UploadPage() {
