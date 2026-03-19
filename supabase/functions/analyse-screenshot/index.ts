@@ -85,21 +85,24 @@ interface AnalysisResult {
   deadline: string;
 }
 
-function validateAndFix(result: Partial<AnalysisResult>): AnalysisResult {
+function validateAndFix(result: Partial<AnalysisResult>): { validated: AnalysisResult; wasModified: boolean } {
   const safeDefaults: AnalysisResult = {
     title: "Review this item",
     category: "To Do",
     deadline: "Next Week",
   };
 
+  let wasModified = false;
+
   let title = result.title?.trim() || safeDefaults.title;
-  if (title.length === 0) title = safeDefaults.title;
+  if (title.length === 0) { title = safeDefaults.title; wasModified = true; }
+  if (title !== result.title?.trim()) wasModified = true;
 
   let category = result.category?.trim() || safeDefaults.category;
-  if (!VALID_CATEGORIES.includes(category)) category = safeDefaults.category;
+  if (!VALID_CATEGORIES.includes(category)) { category = safeDefaults.category; wasModified = true; }
+  if (category !== result.category?.trim()) wasModified = true;
 
   let deadline = result.deadline?.trim() || safeDefaults.deadline;
-  // Validate deadline is either a known string or a valid YYYY-MM-DD date
   if (!VALID_DEADLINES.includes(deadline)) {
     const dateMatch = deadline.match(/^\d{4}-\d{2}-\d{2}$/);
     if (dateMatch) {
@@ -108,19 +111,68 @@ function validateAndFix(result: Partial<AnalysisResult>): AnalysisResult {
       today.setHours(0, 0, 0, 0);
       if (isNaN(parsed.getTime()) || parsed < today) {
         deadline = safeDefaults.deadline;
+        wasModified = true;
       }
     } else {
       deadline = safeDefaults.deadline;
+      wasModified = true;
     }
   }
+  if (deadline !== result.deadline?.trim()) wasModified = true;
 
-  return { title, category, deadline };
+  return { validated: { title, category, deadline }, wasModified };
 }
+
+// --- Langfuse helpers ---
+
+function generateId(): string {
+  return crypto.randomUUID();
+}
+
+interface LangfuseConfig {
+  secretKey: string;
+  publicKey: string;
+  host: string;
+}
+
+function getLangfuseConfig(): LangfuseConfig | null {
+  const secretKey = Deno.env.get("LANGFUSE_SECRET_KEY");
+  const publicKey = Deno.env.get("LANGFUSE_PUBLIC_KEY");
+  const host = Deno.env.get("LANGFUSE_HOST");
+  if (!secretKey || !publicKey || !host) return null;
+  return { secretKey, publicKey, host };
+}
+
+async function flushToLangfuse(
+  config: LangfuseConfig,
+  events: Record<string, unknown>[]
+): Promise<void> {
+  try {
+    const auth = btoa(`${config.publicKey}:${config.secretKey}`);
+    await fetch(`${config.host}/api/public/ingestion`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${auth}`,
+      },
+      body: JSON.stringify({ batch: events }),
+    });
+  } catch (e) {
+    console.warn("Langfuse flush failed (non-blocking):", e);
+  }
+}
+
+// --- Main handler ---
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const langfuse = getLangfuseConfig();
+  const traceId = generateId();
+  const generationId = generateId();
+  const requestStartTime = new Date().toISOString();
 
   try {
     const { imageBase64, mimeType } = await req.json();
@@ -139,6 +191,8 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const generationStartTime = new Date().toISOString();
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -173,9 +227,40 @@ serve(async (req) => {
       }),
     });
 
+    const generationEndTime = new Date().toISOString();
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Anthropic API error:", response.status, errorText);
+
+      // Log failed generation to Langfuse
+      if (langfuse) {
+        await flushToLangfuse(langfuse, [
+          {
+            id: generateId(),
+            type: "trace-create",
+            timestamp: requestStartTime,
+            body: { id: traceId, name: "analyse-screenshot", input: { mimeType }, metadata: { status: "error", httpStatus: response.status } },
+          },
+          {
+            id: generateId(),
+            type: "generation-create",
+            timestamp: generationStartTime,
+            body: {
+              id: generationId,
+              traceId,
+              name: "anthropic-vision",
+              model: "claude-sonnet-4-20250514",
+              startTime: generationStartTime,
+              endTime: generationEndTime,
+              input: { system: SYSTEM_PROMPT, userMessage: "Analyse this screenshot and return the JSON.", imageMimeType: mimeType },
+              statusMessage: `API error: ${response.status}`,
+              level: "ERROR",
+            },
+          },
+        ]);
+      }
+
       return new Response(
         JSON.stringify({ error: "AI analysis failed. Please try again." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -184,6 +269,7 @@ serve(async (req) => {
 
     const data = await response.json();
     const rawText = data.content?.[0]?.text || "";
+    const usage = data.usage || {};
 
     let parsed: Partial<AnalysisResult>;
     try {
@@ -193,13 +279,76 @@ serve(async (req) => {
       parsed = {};
     }
 
-    const result = validateAndFix(parsed);
+    const { validated: result, wasModified } = validateAndFix(parsed);
+    const requestEndTime = new Date().toISOString();
+
+    // Log successful generation to Langfuse
+    if (langfuse) {
+      await flushToLangfuse(langfuse, [
+        {
+          id: generateId(),
+          type: "trace-create",
+          timestamp: requestStartTime,
+          body: {
+            id: traceId,
+            name: "analyse-screenshot",
+            input: { mimeType },
+            output: result,
+            metadata: { validationModified: wasModified },
+          },
+        },
+        {
+          id: generateId(),
+          type: "generation-create",
+          timestamp: generationStartTime,
+          body: {
+            id: generationId,
+            traceId,
+            name: "anthropic-vision",
+            model: "claude-sonnet-4-20250514",
+            modelParameters: { max_tokens: 256 },
+            startTime: generationStartTime,
+            endTime: generationEndTime,
+            completionStartTime: generationEndTime,
+            input: {
+              system: SYSTEM_PROMPT,
+              userMessage: "Analyse this screenshot and return the JSON.",
+              imageMimeType: mimeType,
+            },
+            output: rawText,
+            usage: {
+              input: usage.input_tokens,
+              output: usage.output_tokens,
+            },
+            level: "DEFAULT",
+            metadata: { validationModified: wasModified },
+          },
+        },
+      ]);
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("analyse-screenshot error:", e);
+
+    // Log exception to Langfuse
+    if (langfuse) {
+      await flushToLangfuse(langfuse, [
+        {
+          id: generateId(),
+          type: "trace-create",
+          timestamp: requestStartTime,
+          body: {
+            id: traceId,
+            name: "analyse-screenshot",
+            metadata: { status: "exception", error: e instanceof Error ? e.message : "Unknown error" },
+          },
+        },
+      ]);
+    }
+
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
