@@ -156,7 +156,7 @@ export default function ReviewPage() {
       setCurrentIndex((i) => i + 1);
       setCustomDate("");
     } else {
-      navigate("/");
+      navigate("/app");
     }
   };
 
