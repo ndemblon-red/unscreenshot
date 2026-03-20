@@ -1,7 +1,6 @@
 import { Camera, Brain, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroMockup from "@/assets/hero-mockup.png";
-
-const PAYMENT_LINK = "https://buy.stripe.com/test_28E3cv9LBbnV8Hw2QjfAc00";
 
 const steps = [
   {
@@ -37,12 +36,12 @@ export default function Landing() {
             <p className="text-[17px] md:text-[19px] text-muted-foreground leading-relaxed mb-8 max-w-md">
               Upload your screenshots. AI turns them into reminders. You get an email before the deadline. That's it.
             </p>
-            <a
-              href={PAYMENT_LINK}
+            <Link
+              to="/auth"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-btn text-[16px] font-medium hover:opacity-90 transition-opacity"
             >
               Turn my screenshots into reminders
-            </a>
+            </Link>
           </div>
 
           {/* Hero mockup */}
@@ -99,12 +98,12 @@ export default function Landing() {
         <p className="text-[17px] text-muted-foreground mb-8 max-w-md mx-auto">
           Turn your camera roll into a to-do list that actually follows up.
         </p>
-        <a
-          href={PAYMENT_LINK}
+        <Link
+          to="/auth"
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-btn text-[16px] font-medium hover:opacity-90 transition-opacity"
         >
           Turn my screenshots into reminders
-        </a>
+        </Link>
       </section>
     </div>
   );
