@@ -1,7 +1,6 @@
 import { Camera, Brain, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroMockup from "@/assets/hero-mockup.png";
-
-const PAYMENT_LINK = "https://buy.stripe.com/test_28E3cv9LBbnV8Hw2QjfAc00";
 
 const steps = [
   {
