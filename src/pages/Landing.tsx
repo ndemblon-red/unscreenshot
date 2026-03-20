@@ -36,12 +36,12 @@ export default function Landing() {
             <p className="text-[17px] md:text-[19px] text-muted-foreground leading-relaxed mb-8 max-w-md">
               Upload your screenshots. AI turns them into reminders. You get an email before the deadline. That's it.
             </p>
-            <a
-              href={PAYMENT_LINK}
+            <Link
+              to="/auth"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-btn text-[16px] font-medium hover:opacity-90 transition-opacity"
             >
               Turn my screenshots into reminders
-            </a>
+            </Link>
           </div>
 
           {/* Hero mockup */}
