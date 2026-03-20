@@ -1,4 +1,5 @@
 import { Camera, Brain, Mail } from "lucide-react";
+import heroMockup from "@/assets/hero-mockup.png";
 
 const PAYMENT_LINK = "https://buy.stripe.com/test_28E3cv9LBbnV8Hw2QjfAc00";
 
@@ -44,16 +45,13 @@ export default function Landing() {
             </a>
           </div>
 
-          {/* Visual placeholder */}
-          <div className="hidden md:flex items-center justify-center">
-            <div className="w-full max-w-sm aspect-[3/4] rounded-card border-2 border-dashed border-border bg-muted/30 flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <Camera className="w-7 h-7 text-muted-foreground" />
-              </div>
-              <p className="text-label text-muted-foreground text-center px-6">
-                Your screenshots go here. AI does the rest.
-              </p>
-            </div>
+          {/* Hero mockup */}
+          <div className="flex items-center justify-center">
+            <img
+              src={heroMockup}
+              alt="App screenshot showing reminders organized by category with deadlines"
+              className="w-full max-w-xs md:max-w-sm drop-shadow-2xl"
+            />
           </div>
         </div>
       </section>
