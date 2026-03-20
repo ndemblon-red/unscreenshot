@@ -98,12 +98,12 @@ export default function Landing() {
         <p className="text-[17px] text-muted-foreground mb-8 max-w-md mx-auto">
           Turn your camera roll into a to-do list that actually follows up.
         </p>
-        <a
-          href={PAYMENT_LINK}
+        <Link
+          to="/auth"
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-btn text-[16px] font-medium hover:opacity-90 transition-opacity"
         >
           Turn my screenshots into reminders
-        </a>
+        </Link>
       </section>
     </div>
   );
