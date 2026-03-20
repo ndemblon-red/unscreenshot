@@ -1,4 +1,5 @@
 import { Camera, Brain, Mail } from "lucide-react";
+
 import { Link } from "react-router-dom";
 import heroMockup from "@/assets/hero-mockup.png";
 
