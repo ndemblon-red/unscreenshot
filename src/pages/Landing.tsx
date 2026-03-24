@@ -1,6 +1,5 @@
 import { Camera, Brain, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroMockup from "@/assets/hero-mockup.png";
 
 const steps = [
   {
@@ -25,7 +24,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
       <section className="min-h-[90vh] flex items-center justify-center px-6 md:px-12 lg:px-20">
-        <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+        <div className="max-w-2xl w-full text-center mx-auto">
           {/* Text */}
           <div>
             <h1 className="text-[32px] md:text-[48px] leading-[1.1] tracking-tight font-bold mb-6">
@@ -44,14 +43,6 @@ export default function Landing() {
             </Link>
           </div>
 
-          {/* Hero mockup */}
-          <div className="flex items-center justify-center">
-            <img
-              src={heroMockup}
-              alt="App screenshot showing reminders organized by category with deadlines"
-              className="w-full max-w-xs md:max-w-sm drop-shadow-2xl"
-            />
-          </div>
         </div>
       </section>
 
