@@ -89,13 +89,24 @@ export default function ReminderDetail() {
     }
   };
 
+  const saveDeadlineWithStatusCheck = (newDeadline: string) => {
+    const today = new Date().toISOString().split("T")[0];
+    const shouldReactivate = reminder?.status === "archive" && newDeadline >= today;
+    const fields: Partial<Reminder> = { deadline: newDeadline };
+    if (shouldReactivate) fields.status = "next";
+    save(fields);
+    setReminder((r) =>
+      r ? { ...r, deadline: newDeadline, ...(shouldReactivate ? { status: "next" } : {}) } : r
+    );
+    if (shouldReactivate) toast.success("Moved back to Next");
+  };
+
   const handleDeadlinePreset = (label: string) => {
     const dateVal = deadlineLabelToDate(label as any);
     setDeadline(dateVal);
     setEditingDeadline(false);
     if (dateVal !== reminder?.deadline) {
-      save({ deadline: dateVal });
-      setReminder((r) => (r ? { ...r, deadline: dateVal } : r));
+      saveDeadlineWithStatusCheck(dateVal);
     }
   };
 
@@ -103,8 +114,7 @@ export default function ReminderDetail() {
     setDeadline(d);
     setEditingDeadline(false);
     if (d !== reminder?.deadline) {
-      save({ deadline: d });
-      setReminder((r) => (r ? { ...r, deadline: d } : r));
+      saveDeadlineWithStatusCheck(d);
     }
   };
 
