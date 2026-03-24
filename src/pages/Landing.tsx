@@ -43,14 +43,6 @@ export default function Landing() {
             </Link>
           </div>
 
-          {/* Hero mockup */}
-          <div className="flex items-center justify-center">
-            <img
-              src={heroMockup}
-              alt="App screenshot showing reminders organized by category with deadlines"
-              className="w-full max-w-xs md:max-w-sm drop-shadow-2xl"
-            />
-          </div>
         </div>
       </section>
 
