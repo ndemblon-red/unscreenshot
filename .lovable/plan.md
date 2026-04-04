@@ -1,39 +1,22 @@
 
+## Completed Features
 
-## Add Due Time to Reminders
+### ✅ Due Time for Reminders (April 2026)
 
-Currently deadlines are stored as `YYYY-MM-DD` text. We need to add a time component so cards show "Tomorrow 9am" and custom dates allow custom time selection.
+Added specific due times to reminders. Deadlines now stored as `YYYY-MM-DDTHH:MM` (e.g. `2026-04-05T09:00`) instead of `YYYY-MM-DD`. No database migration needed — the column is TEXT.
 
-### Approach
+**What was done:**
+- **`src/lib/deadlines.ts`** — Added `extractDate()`, `extractTime()` helpers. Presets default to 9:00 AM. Labels now show time (e.g. "Tomorrow · 9 AM", "15 March 2026 · 2:30 PM"). Backward compat: old `YYYY-MM-DD` values treated as `T09:00`.
+- **`src/pages/Review.tsx`** — Custom date picker now shows a time input (defaults to 09:00). Date + time combined into `YYYY-MM-DDTHH:MM` on save.
+- **`src/pages/ReminderDetail.tsx`** — Same time input added for custom dates. Preset buttons produce `T09:00` timestamps.
+- **`supabase/functions/check-deadlines/index.ts`** — Updated to handle both `YYYY-MM-DD` and `YYYY-MM-DDTHH:MM` formats for due-today/tomorrow comparisons.
+- **`src/components/TaskCard.tsx`** — No changes needed; already uses `dateToDeadlineLabel()` which now returns time-inclusive labels.
 
-**Keep the `deadline` column as-is** (text) but change the format from `YYYY-MM-DD` to `YYYY-MM-DDTHH:MM` (e.g. `2026-04-05T09:00`). No database migration needed — it's already a text field. Existing date-only values are handled gracefully with fallback parsing.
+---
 
-### Changes
+## Upcoming
 
-**1. Update `src/lib/deadlines.ts`**
-- `deadlineLabelToDate()` → returns `YYYY-MM-DDTHH:MM` with `T09:00` appended (presets default to 9am)
-- `isDateString()` → also accept `YYYY-MM-DDTHH:MM` format
-- `dateToDeadlineLabel()` → append time to labels, e.g. "Tomorrow · 9:00 AM", "15 March 2026 · 2:30 PM". For preset matches at 9am, show "Tomorrow · 9 AM"
-- `getDeadlineUrgency()` → extract date portion for comparison (unchanged logic)
-- Add helper `extractDate(deadline)` and `extractTime(deadline)` for parsing
-- Backward compat: treat existing `YYYY-MM-DD` values as `T09:00`
-
-**2. Update `src/components/TaskCard.tsx`**
-- No structural changes needed — it already calls `dateToDeadlineLabel()` which will now return time-inclusive labels like "Tomorrow · 9 AM"
-
-**3. Update `src/pages/Review.tsx`**
-- Default deadline already uses `deadlineLabelToDate("Next Week")` which will now include `T09:00`
-- When user picks a custom date, show a time input field after date selection (default 9:00 AM)
-- Combine date + time into `YYYY-MM-DDTHH:MM` before saving
-
-**4. Update `src/pages/ReminderDetail.tsx`**
-- Preset buttons work as before (now produce `T09:00` timestamps)
-- Custom date picker: add a time input that appears alongside the date input
-- Combine date + time on save
-
-**5. Update `supabase/functions/check-deadlines/index.ts`**
-- Extract date portion from deadline for "due today" / "due tomorrow" comparisons (currently compares full string to `YYYY-MM-DD`, needs to handle the new format)
-
-### No migration needed
-The `deadline` column is `TEXT` — the format change is handled entirely in application code with backward compatibility for old `YYYY-MM-DD` values.
-
+- **Milestone 5:** Polish & edge cases (blurry images, past dates, UI audit)
+- **Milestone 6:** PRD test set validation
+- **Shared Reminders:** Internal (between users) and external (email) sharing
+- **Time-aware sorting:** Sort same-day reminders by time
