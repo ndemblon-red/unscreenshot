@@ -1,12 +1,31 @@
 /**
- * Deadline utilities — maps semantic labels to real YYYY-MM-DD dates
+ * Deadline utilities — maps semantic labels to real YYYY-MM-DDTHH:MM strings
  * and derives labels back from dates for display.
+ *
+ * Format: "YYYY-MM-DDTHH:MM" (e.g. "2026-04-05T09:00")
+ * Legacy "YYYY-MM-DD" values are treated as T09:00 for backward compat.
  */
 
 export const DEADLINE_OPTIONS = ["Tomorrow", "Next Week", "Next Month"] as const;
 export type DeadlineOption = (typeof DEADLINE_OPTIONS)[number];
 
-/** Convert a semantic label to a YYYY-MM-DD string. */
+/** Extract the date portion (YYYY-MM-DD) from a deadline string. */
+export function extractDate(deadline: string): string {
+  return deadline.split("T")[0];
+}
+
+/** Extract the time portion (HH:MM) from a deadline string. Defaults to "09:00". */
+export function extractTime(deadline: string): string {
+  const parts = deadline.split("T");
+  return parts.length > 1 && /^\d{2}:\d{2}$/.test(parts[1]) ? parts[1] : "09:00";
+}
+
+/** Check if a string is a valid deadline (YYYY-MM-DD or YYYY-MM-DDTHH:MM). */
+export function isDateString(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(value);
+}
+
+/** Convert a semantic label to a YYYY-MM-DDTHH:MM string (defaults to 09:00). */
 export function deadlineLabelToDate(label: DeadlineOption): string {
   const d = new Date();
   switch (label) {
@@ -20,43 +39,54 @@ export function deadlineLabelToDate(label: DeadlineOption): string {
       d.setMonth(d.getMonth() + 1);
       break;
   }
-  return d.toISOString().split("T")[0];
+  return d.toISOString().split("T")[0] + "T09:00";
 }
 
-/** Check if a string is a YYYY-MM-DD date. */
-export function isDateString(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+/** Format a time string like "09:00" or "14:30" to "9 AM" or "2:30 PM". */
+function formatTime(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return m === 0 ? `${hour12} ${suffix}` : `${hour12}:${m.toString().padStart(2, "0")} ${suffix}`;
 }
 
 /**
- * Derive a friendly label from a YYYY-MM-DD date.
- * Returns "Tomorrow" / "Next Week" / "Next Month" if the date matches,
- * otherwise returns a formatted date string like "15 March 2026".
+ * Derive a friendly label from a deadline string.
+ * Returns e.g. "Tomorrow · 9 AM", "Next Week · 9 AM",
+ * "15 March 2026 · 2:30 PM", or "Today · 9 AM".
  */
 export function dateToDeadlineLabel(dateStr: string): string {
   if (!isDateString(dateStr)) return dateStr; // legacy label fallback
 
+  const datePart = extractDate(dateStr);
+  const timePart = extractTime(dateStr);
+  const timeLabel = formatTime(timePart);
+
   const today = new Date().toISOString().split("T")[0];
-  if (dateStr === today) return "Today";
+  if (datePart === today) return `Today · ${timeLabel}`;
 
   for (const label of DEADLINE_OPTIONS) {
-    if (deadlineLabelToDate(label) === dateStr) return label;
+    if (extractDate(deadlineLabelToDate(label)) === datePart) {
+      return `${label} · ${timeLabel}`;
+    }
   }
 
-  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-GB", {
+  const formatted = new Date(datePart + "T00:00:00").toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
+  return `${formatted} · ${timeLabel}`;
 }
 
 /** Return urgency level for a deadline date. */
 export function getDeadlineUrgency(dateStr: string): "today" | "tomorrow" | null {
   if (!isDateString(dateStr)) return null;
+  const datePart = extractDate(dateStr);
   const today = new Date().toISOString().split("T")[0];
-  if (dateStr === today) return "today";
+  if (datePart === today) return "today";
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  if (dateStr === tomorrow.toISOString().split("T")[0]) return "tomorrow";
+  if (datePart === tomorrow.toISOString().split("T")[0]) return "tomorrow";
   return null;
 }

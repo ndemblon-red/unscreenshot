@@ -17,11 +17,12 @@ Deno.serve(async (req: Request) => {
     const tomorrow = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
 
     // Fetch reminders due today or tomorrow that are still active (status = 'next')
+    // Deadlines may be YYYY-MM-DD (legacy) or YYYY-MM-DDTHH:MM (new format)
     const { data: reminders, error: remindersError } = await supabase
       .from("reminders")
       .select("id, user_id, title, deadline, category")
       .eq("status", "next")
-      .in("deadline", [today, tomorrow]);
+      .or(`deadline.eq.${today},deadline.eq.${tomorrow},deadline.like.${today}T%,deadline.like.${tomorrow}T%`);
 
     if (remindersError) {
       console.error("Error fetching reminders:", remindersError);
@@ -79,7 +80,8 @@ Deno.serve(async (req: Request) => {
     for (const reminder of reminders) {
       if (!reminder.user_id) continue;
 
-      const notificationType = reminder.deadline === today ? "due_today" : "due_tomorrow";
+      const deadlineDate = reminder.deadline?.split("T")[0] || reminder.deadline;
+      const notificationType = deadlineDate === today ? "due_today" : "due_tomorrow";
       const key = `${reminder.id}:${notificationType}`;
 
       if (alreadyNotified.has(key)) continue;
