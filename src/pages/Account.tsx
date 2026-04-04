@@ -28,6 +28,8 @@ export default function Account() {
   const [email, setEmail] = useState("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [notifications, setNotifications] = useState<NotificationEntry[]>([]);
+  const [notifLoading, setNotifLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
