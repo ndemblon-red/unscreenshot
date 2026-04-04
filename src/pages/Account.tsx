@@ -2,14 +2,24 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Lock, ArrowLeft, LogOut } from "lucide-react";
+import { Loader2, Lock, ArrowLeft, LogOut, Bell } from "lucide-react";
 import { getCategoryClasses } from "@/lib/categories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface Stats {
   total: number;
   completed: number;
   byCategory: Record<string, number>;
+}
+
+interface NotificationEntry {
+  id: string;
+  reminder_id: string;
+  notification_type: string;
+  status: string;
+  created_at: string;
+  recipient_email: string | null;
 }
 
 export default function Account() {
@@ -18,6 +28,8 @@ export default function Account() {
   const [email, setEmail] = useState("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [notifications, setNotifications] = useState<NotificationEntry[]>([]);
+  const [notifLoading, setNotifLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,6 +58,23 @@ export default function Account() {
       setStatsLoading(false);
     }
     loadStats();
+  }, []);
+
+  useEffect(() => {
+    async function loadNotifications() {
+      const { data, error } = await supabase
+        .from("notification_log")
+        .select("id, reminder_id, notification_type, status, created_at, recipient_email")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) {
+        console.error("Failed to load notifications", error);
+      } else {
+        setNotifications(data || []);
+      }
+      setNotifLoading(false);
+    }
+    loadNotifications();
   }, []);
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -137,7 +166,7 @@ export default function Account() {
       </div>
 
       {/* Change Password */}
-      <div className="border border-border rounded-btn p-5">
+      <div className="border border-border rounded-btn p-5 mb-6">
         <h2 className="text-card-title mb-4">Change password</h2>
         <form onSubmit={handleChangePassword} className="flex flex-col gap-4 max-w-sm">
           <div className="relative">
@@ -161,6 +190,47 @@ export default function Account() {
             Update Password
           </button>
         </form>
+      </div>
+
+      {/* Recent Notifications */}
+      <div className="border border-border rounded-btn p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Bell className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-card-title">Recent Notifications</h2>
+        </div>
+        {notifLoading ? (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : notifications.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {notifications.map((n) => (
+              <div
+                key={n.id}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[14px] text-foreground">
+                    {n.notification_type === "due_today" ? "Due today" : "Due tomorrow"}
+                  </span>
+                  <span className="text-[12px] text-muted-foreground">
+                    {new Date(n.created_at).toLocaleDateString()} · {n.recipient_email || "No email"}
+                  </span>
+                </div>
+                <Badge
+                  variant={n.status === "sent" ? "default" : n.status === "failed" ? "destructive" : "secondary"}
+                  className="text-[11px]"
+                >
+                  {n.status}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-label text-muted-foreground">No notifications yet. These will appear when reminders are approaching their deadlines.</p>
+        )}
       </div>
     </div>
   );
