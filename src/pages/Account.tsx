@@ -166,6 +166,19 @@ export default function Account() {
                 value: count,
                 color: CATEGORY_COLORS[cat] ?? "hsl(var(--muted))",
               }));
+            const totalCount = chartData.reduce((sum, d) => sum + d.value, 0);
+            const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+              if (percent < 0.05) return null;
+              const RADIAN = Math.PI / 180;
+              const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+              return (
+                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
+                  {Math.round(percent * 100)}%
+                </text>
+              );
+            };
             return (
               <div className="flex items-center gap-6">
                 <div className="w-[180px] h-[180px] shrink-0">
@@ -180,6 +193,8 @@ export default function Account() {
                         paddingAngle={2}
                         dataKey="value"
                         stroke="none"
+                        label={renderLabel}
+                        labelLine={false}
                       >
                         {chartData.map((entry, index) => (
                           <Cell key={index} fill={entry.color} />
