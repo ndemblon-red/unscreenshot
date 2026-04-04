@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 
-import { DEADLINE_OPTIONS, deadlineLabelToDate, isDateString } from "@/lib/deadlines";
+import { DEADLINE_OPTIONS, deadlineLabelToDate, isDateString, extractDate, extractTime } from "@/lib/deadlines";
 const ASSIGNABLE_CATEGORIES = CATEGORIES.filter((c) => c !== "Everything");
 
 interface ReviewItem {
