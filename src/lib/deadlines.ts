@@ -70,11 +70,26 @@ export function dateToDeadlineLabel(dateStr: string): string {
   tomorrow.setDate(tomorrow.getDate() + 1);
   if (datePart === tomorrow.toISOString().split("T")[0]) return `Tomorrow · ${timeLabel}`;
 
-  // Within next 6 days → "Next Thursday · 9 AM"
+  const todayDate = new Date(today + "T00:00:00");
   const target = new Date(datePart + "T00:00:00");
-  const diffDays = Math.round((target.getTime() - new Date(today + "T00:00:00").getTime()) / 86400000);
-  if (diffDays >= 2 && diffDays <= 6) {
-    const weekday = target.toLocaleDateString("en-GB", { weekday: "long" });
+  const weekday = target.toLocaleDateString("en-GB", { weekday: "long" });
+
+  // Compute Monday of current week (Mon=1…Sun=0→7)
+  const todayDay = todayDate.getDay() || 7; // convert Sun=0 to 7
+  const currentMonday = new Date(todayDate);
+  currentMonday.setDate(todayDate.getDate() - (todayDay - 1));
+  const nextMonday = new Date(currentMonday);
+  nextMonday.setDate(currentMonday.getDate() + 7);
+  const nextSunday = new Date(nextMonday);
+  nextSunday.setDate(nextMonday.getDate() + 6);
+
+  // Later this week (same Mon–Sun block, after tomorrow)
+  if (target >= todayDate && target < nextMonday && target > tomorrow) {
+    return `${weekday} · ${timeLabel}`;
+  }
+
+  // Next calendar week
+  if (target >= nextMonday && target <= nextSunday) {
     return `Next ${weekday} · ${timeLabel}`;
   }
 
