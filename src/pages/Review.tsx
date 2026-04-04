@@ -32,6 +32,7 @@ export default function ReviewPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState("");
+  const [customTime, setCustomTime] = useState("09:00");
 
   // Load files passed from Upload page
   useEffect(() => {
