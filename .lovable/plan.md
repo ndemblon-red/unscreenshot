@@ -1,22 +1,32 @@
 
-## Completed Features
 
-### ✅ Due Time for Reminders (April 2026)
+## Smarter Deadline Labels
 
-Added specific due times to reminders. Deadlines now stored as `YYYY-MM-DDTHH:MM` (e.g. `2026-04-05T09:00`) instead of `YYYY-MM-DD`. No database migration needed — the column is TEXT.
+Replace generic "Next Week" / "Next Month" labels with actual day/date names for much more useful card text.
 
-**What was done:**
-- **`src/lib/deadlines.ts`** — Added `extractDate()`, `extractTime()` helpers. Presets default to 9:00 AM. Labels now show time (e.g. "Tomorrow · 9 AM", "15 March 2026 · 2:30 PM"). Backward compat: old `YYYY-MM-DD` values treated as `T09:00`.
-- **`src/pages/Review.tsx`** — Custom date picker now shows a time input (defaults to 09:00). Date + time combined into `YYYY-MM-DDTHH:MM` on save.
-- **`src/pages/ReminderDetail.tsx`** — Same time input added for custom dates. Preset buttons produce `T09:00` timestamps.
-- **`supabase/functions/check-deadlines/index.ts`** — Updated to handle both `YYYY-MM-DD` and `YYYY-MM-DDTHH:MM` formats for due-today/tomorrow comparisons.
-- **`src/components/TaskCard.tsx`** — No changes needed; already uses `dateToDeadlineLabel()` which now returns time-inclusive labels.
+### New label rules
 
----
+| Scenario | Current | Proposed |
+|---|---|---|
+| Due today | Today · 9 AM | **Today · 9 AM** (unchanged) |
+| Due tomorrow | Tomorrow · 9 AM | **Tomorrow · 9 AM** (unchanged) |
+| Due within 7 days | Next Week · 9 AM | **Next Thursday · 9 AM** |
+| Due beyond 7 days | Next Month · 9 AM | **21 May 2026 · 9 AM** |
 
-## Upcoming
+### Logic change
 
-- **Milestone 5:** Polish & edge cases (blurry images, past dates, UI audit)
-- **Milestone 6:** PRD test set validation
-- **Shared Reminders:** Internal (between users) and external (email) sharing
-- **Time-aware sorting:** Sort same-day reminders by time
+Update `dateToDeadlineLabel()` in `src/lib/deadlines.ts`:
+
+1. **Today** → "Today · {time}" (no change)
+2. **Tomorrow** → "Tomorrow · {time}" (no change)
+3. **Within the next 6 days** (day after tomorrow through 6 days out) → "Next {Weekday} · {time}" e.g. "Next Thursday · 9 AM"
+4. **Everything else** → "{day} {Month} {year} · {time}" e.g. "21 May 2026 · 9 AM"
+
+Remove the current loop that matches against preset labels — it's no longer needed since we derive the label purely from the date's proximity to today.
+
+### Files changed
+
+- **`src/lib/deadlines.ts`** — rewrite `dateToDeadlineLabel()` with the new proximity-based logic. One file, ~15 lines changed.
+
+No other files need changes — `TaskCard`, `Review`, and `ReminderDetail` all call this function already.
+
