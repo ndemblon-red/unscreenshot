@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Lock, ArrowLeft, LogOut, Bell } from "lucide-react";
+import { Loader2, Lock, ArrowLeft, LogOut, Bell, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
@@ -60,20 +60,22 @@ export default function Account() {
     loadStats();
   }, []);
 
-  useEffect(() => {
-    async function loadNotifications() {
-      const { data, error } = await supabase
-        .from("notification_log")
-        .select("id, reminder_id, notification_type, status, created_at, recipient_email")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (error) {
-        console.error("Failed to load notifications", error);
-      } else {
-        setNotifications(data || []);
-      }
-      setNotifLoading(false);
+  const loadNotifications = async () => {
+    setNotifLoading(true);
+    const { data, error } = await supabase
+      .from("notification_log")
+      .select("id, reminder_id, notification_type, status, created_at, recipient_email")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) {
+      console.error("Failed to load notifications", error);
+    } else {
+      setNotifications(data || []);
     }
+    setNotifLoading(false);
+  };
+
+  useEffect(() => {
     loadNotifications();
   }, []);
 
@@ -247,6 +249,14 @@ export default function Account() {
         <div className="flex items-center gap-2 mb-4">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-card-title">Recent Notifications</h2>
+          <button
+            onClick={loadNotifications}
+            disabled={notifLoading}
+            className="ml-auto p-1.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Refresh notifications"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${notifLoading ? "animate-spin" : ""}`} />
+          </button>
         </div>
         {notifLoading ? (
           <div className="flex flex-col gap-2">
