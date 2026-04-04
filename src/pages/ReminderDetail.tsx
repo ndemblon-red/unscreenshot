@@ -280,13 +280,25 @@ export default function ReminderDetail() {
               </button>
             </div>
             {showCustomPicker && (
-              <input
-                type="date"
-                value={deadline}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => handleDeadlineDateSelect(e.target.value)}
-                className="mt-2 px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="date"
+                  value={extractDate(deadline)}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => handleDeadlineDateSelect(e.target.value + "T" + customTime)}
+                  className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <input
+                  type="time"
+                  value={customTime}
+                  onChange={(e) => {
+                    const newTime = e.target.value;
+                    setCustomTime(newTime);
+                    handleDeadlineDateSelect(extractDate(deadline) + "T" + newTime);
+                  }}
+                  className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
             )}
           </div>
         ) : (

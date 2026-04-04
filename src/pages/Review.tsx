@@ -317,7 +317,9 @@ export default function ReviewPage() {
                     })}
                     <button
                       onClick={() => {
-                        setCustomDate(current.deadline || new Date().toISOString().split("T")[0]);
+                        const d = extractDate(current.deadline) || new Date().toISOString().split("T")[0];
+                        setCustomDate(d);
+                        setCustomTime(extractTime(current.deadline));
                       }}
                       className={`px-3 py-1.5 rounded-pill text-[13px] font-medium transition-all ${
                         customDate
