@@ -62,16 +62,24 @@ export function dateToDeadlineLabel(dateStr: string): string {
   const timePart = extractTime(dateStr);
   const timeLabel = formatTime(timePart);
 
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = now.toISOString().split("T")[0];
   if (datePart === today) return `Today · ${timeLabel}`;
 
-  for (const label of DEADLINE_OPTIONS) {
-    if (extractDate(deadlineLabelToDate(label)) === datePart) {
-      return `${label} · ${timeLabel}`;
-    }
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (datePart === tomorrow.toISOString().split("T")[0]) return `Tomorrow · ${timeLabel}`;
+
+  // Within next 6 days → "Next Thursday · 9 AM"
+  const target = new Date(datePart + "T00:00:00");
+  const diffDays = Math.round((target.getTime() - new Date(today + "T00:00:00").getTime()) / 86400000);
+  if (diffDays >= 2 && diffDays <= 6) {
+    const weekday = target.toLocaleDateString("en-GB", { weekday: "long" });
+    return `Next ${weekday} · ${timeLabel}`;
   }
 
-  const formatted = new Date(datePart + "T00:00:00").toLocaleDateString("en-GB", {
+  // Everything else → "21 May 2026 · 9 AM"
+  const formatted = target.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
