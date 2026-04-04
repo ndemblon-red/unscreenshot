@@ -220,7 +220,7 @@ export default function Account() {
                         style={{ backgroundColor: item.color }}
                       />
                       <span className="text-[13px] text-muted-foreground">{item.name}</span>
-                      <span className="text-[13px] font-medium text-foreground ml-auto">{item.value}</span>
+                      <span className="text-[13px] font-medium text-foreground ml-auto">{item.value} · {Math.round((item.value / totalCount) * 100)}%</span>
                     </div>
                   ))}
                 </div>
