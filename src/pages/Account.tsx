@@ -2,14 +2,24 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Lock, ArrowLeft, LogOut } from "lucide-react";
+import { Loader2, Lock, ArrowLeft, LogOut, Bell } from "lucide-react";
 import { getCategoryClasses } from "@/lib/categories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface Stats {
   total: number;
   completed: number;
   byCategory: Record<string, number>;
+}
+
+interface NotificationEntry {
+  id: string;
+  reminder_id: string;
+  notification_type: string;
+  status: string;
+  created_at: string;
+  recipient_email: string | null;
 }
 
 export default function Account() {
