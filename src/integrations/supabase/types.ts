@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      notification_log: {
+        Row: {
+          created_at: string
+          id: string
+          notification_type: string
+          recipient_email: string | null
+          reminder_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_type: string
+          recipient_email?: string | null
+          reminder_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_type?: string
+          recipient_email?: string | null
+          reminder_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reminders: {
         Row: {
           category: string
