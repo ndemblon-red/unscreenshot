@@ -6,7 +6,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { toast } from "sonner";
-import { DEADLINE_OPTIONS, deadlineLabelToDate, dateToDeadlineLabel, isDateString } from "@/lib/deadlines";
+import { DEADLINE_OPTIONS, deadlineLabelToDate, dateToDeadlineLabel, isDateString, extractDate, extractTime } from "@/lib/deadlines";
 
 type Reminder = {
   id: string;
