@@ -146,20 +146,70 @@ export default function Account() {
             ))}
           </div>
         ) : stats && Object.keys(stats.byCategory).length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {Object.entries(stats.byCategory)
+          (() => {
+            const CATEGORY_COLORS: Record<string, string> = {
+              Events: "#5856D6",
+              Shopping: "#FF9500",
+              Restaurants: "#34C759",
+              "To Do": "#007AFF",
+              Reading: "#AF52DE",
+              Home: "#FF6B35",
+              Travel: "#32ADE6",
+              Wishlist: "#FF2D55",
+            };
+            const chartData = Object.entries(stats.byCategory)
               .sort(([, a], [, b]) => b - a)
-              .map(([cat, count]) => (
-                <div key={cat} className="flex items-center justify-between">
-                  <span
-                    className={`px-3 py-1 rounded-pill text-pill uppercase ${getCategoryClasses(cat)}`}
-                  >
-                    {cat}
-                  </span>
-                  <span className="text-label text-muted-foreground">{count}</span>
+              .map(([cat, count]) => ({
+                name: cat,
+                value: count,
+                color: CATEGORY_COLORS[cat] ?? "hsl(var(--muted))",
+              }));
+            return (
+              <div className="flex items-center gap-6">
+                <div className="w-[180px] h-[180px] shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={80}
+                        paddingAngle={2}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={index} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--background))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                        }}
+                        formatter={(value: number, name: string) => [value, name]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-          </div>
+                <div className="flex flex-col gap-2">
+                  {chartData.map((item) => (
+                    <div key={item.name} className="flex items-center gap-2">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-[13px] text-muted-foreground">{item.name}</span>
+                      <span className="text-[13px] font-medium text-foreground ml-auto">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()
         ) : (
           <p className="text-label text-muted-foreground">No reminders yet</p>
         )}
