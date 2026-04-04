@@ -166,7 +166,7 @@ export default function Account() {
       </div>
 
       {/* Change Password */}
-      <div className="border border-border rounded-btn p-5">
+      <div className="border border-border rounded-btn p-5 mb-6">
         <h2 className="text-card-title mb-4">Change password</h2>
         <form onSubmit={handleChangePassword} className="flex flex-col gap-4 max-w-sm">
           <div className="relative">
@@ -190,6 +190,47 @@ export default function Account() {
             Update Password
           </button>
         </form>
+      </div>
+
+      {/* Recent Notifications */}
+      <div className="border border-border rounded-btn p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Bell className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-card-title">Recent Notifications</h2>
+        </div>
+        {notifLoading ? (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : notifications.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {notifications.map((n) => (
+              <div
+                key={n.id}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[14px] text-foreground">
+                    {n.notification_type === "due_today" ? "Due today" : "Due tomorrow"}
+                  </span>
+                  <span className="text-[12px] text-muted-foreground">
+                    {new Date(n.created_at).toLocaleDateString()} · {n.recipient_email || "No email"}
+                  </span>
+                </div>
+                <Badge
+                  variant={n.status === "sent" ? "default" : n.status === "failed" ? "destructive" : "secondary"}
+                  className="text-[11px]"
+                >
+                  {n.status}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-label text-muted-foreground">No notifications yet. These will appear when reminders are approaching their deadlines.</p>
+        )}
       </div>
     </div>
   );
