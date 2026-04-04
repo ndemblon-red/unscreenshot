@@ -60,6 +60,23 @@ export default function Account() {
     loadStats();
   }, []);
 
+  useEffect(() => {
+    async function loadNotifications() {
+      const { data, error } = await supabase
+        .from("notification_log")
+        .select("id, reminder_id, notification_type, status, created_at, recipient_email")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) {
+        console.error("Failed to load notifications", error);
+      } else {
+        setNotifications(data || []);
+      }
+      setNotifLoading(false);
+    }
+    loadNotifications();
+  }, []);
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
