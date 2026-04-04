@@ -36,6 +36,7 @@ export default function ReminderDetail() {
   const [editingCategory, setEditingCategory] = useState(false);
   const [editingDeadline, setEditingDeadline] = useState(false);
   const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customTime, setCustomTime] = useState("09:00");
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
