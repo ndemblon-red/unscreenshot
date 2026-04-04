@@ -249,6 +249,14 @@ export default function Account() {
         <div className="flex items-center gap-2 mb-4">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-card-title">Recent Notifications</h2>
+          <button
+            onClick={loadNotifications}
+            disabled={notifLoading}
+            className="ml-auto p-1.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Refresh notifications"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${notifLoading ? "animate-spin" : ""}`} />
+          </button>
         </div>
         {notifLoading ? (
           <div className="flex flex-col gap-2">
