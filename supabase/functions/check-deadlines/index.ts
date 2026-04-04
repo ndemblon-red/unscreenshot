@@ -80,7 +80,8 @@ Deno.serve(async (req: Request) => {
     for (const reminder of reminders) {
       if (!reminder.user_id) continue;
 
-      const notificationType = reminder.deadline === today ? "due_today" : "due_tomorrow";
+      const deadlineDate = reminder.deadline?.split("T")[0] || reminder.deadline;
+      const notificationType = deadlineDate === today ? "due_today" : "due_tomorrow";
       const key = `${reminder.id}:${notificationType}`;
 
       if (alreadyNotified.has(key)) continue;
