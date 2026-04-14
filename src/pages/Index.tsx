@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, ArrowUpDown, ImageIcon, LogOut, User, Search, X } from "lucide-react";
+import { Upload, ArrowUpDown, ImageIcon, User, Search, X } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CategoryPills from "@/components/CategoryPills";
@@ -127,16 +127,6 @@ export default function Index() {
             aria-label="Account"
           >
             <User className="w-4 h-4" />
-          </button>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate("/auth");
-            }}
-            className="p-2.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            aria-label="Sign out"
-          >
-            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </header>
