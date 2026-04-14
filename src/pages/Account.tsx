@@ -5,7 +5,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import StatsCards from "@/components/account/StatsCards";
 import CategoryChart from "@/components/account/CategoryChart";
 import ChangePasswordForm from "@/components/account/ChangePasswordForm";
-import NotificationList from "@/components/account/NotificationList";
+import NotificationBell from "@/components/NotificationBell";
 
 interface Stats {
   total: number;
