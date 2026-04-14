@@ -171,15 +171,18 @@ export default function ReminderDetail() {
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
       {/* Header */}
-      <header className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => navigate("/app")}
-          className="p-2 -ml-2 rounded-btn hover:bg-muted transition-colors"
-          aria-label="Back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-page-title tracking-tight">Reminder</h1>
+      <header className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/app")}
+            className="p-2 -ml-2 rounded-btn hover:bg-muted transition-colors"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-page-title tracking-tight">Reminder</h1>
+        </div>
+        <NotificationBell />
       </header>
 
       {/* Screenshot */}
