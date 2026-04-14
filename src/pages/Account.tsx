@@ -88,7 +88,18 @@ export default function Account() {
 
       <ChangePasswordForm />
 
-      {/* Notifications are now accessible via the bell icon in the header */}
+      <div className="mt-10 pt-6 border-t border-border">
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            navigate("/auth");
+          }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-btn border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors text-[15px] font-medium"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }
