@@ -1,19 +1,21 @@
 
 
-## Change cron job from daily to every minute
+## Fix: Custom deadline picker saves too eagerly on ReminderDetail
 
-**What**: Update the `check-deadlines` cron schedule from `0 8 * * *` (once daily at 8 AM) to `* * * * *` (every minute), matching your mobile app.
+**Problem**: When editing a reminder's deadline with the custom date/time picker, changing the date immediately saves and closes the picker (via `handleDeadlineDateSelect` which calls `setEditingDeadline(false)`). This means you can't set both date and time before saving. The time input is even worse — changing the hour fires `onChange`, which saves and closes before you can set the minutes.
 
-**Downsides** (minimal in this case):
-- **Edge function invocations**: ~1,440 calls/day instead of 1. However, the function already deduplicates via `notification_log`, so most calls will be no-ops (early return with "No due reminders" or "All already notified") costing negligible compute.
-- **Database load**: Each call runs 1-2 lightweight queries. At once per minute this is trivial.
-- **Cost**: Edge function invocations on Lovable Cloud's free/pro tier should handle this easily. Each no-op call takes <100ms.
+**Root cause**: `handleDeadlineDateSelect` (used by both date and time inputs) calls `setEditingDeadline(false)` and saves to the database on every change. The Review page doesn't have this problem because it only updates local state without closing.
 
-**Bottom line**: No meaningful downsides. The deduplication logic is already solid, so running every minute just means notifications get logged within ~60 seconds of a deadline window opening rather than waiting until 8 AM.
+**Fix**: Stop auto-closing and auto-saving on every input change. Instead, update local state only, and add an explicit "Done" button to commit the custom deadline.
 
-### Changes
+### Changes (1 file)
 
-1. **Update cron schedule** (SQL via insert tool, not migration):
-   - Unschedule the existing job (`cron.unschedule(1)`)
-   - Create a new job with `* * * * *` schedule, same HTTP call
+**`src/pages/ReminderDetail.tsx`**:
+
+1. Change the date `onChange` handler to only update local state (`setDeadline`) — do NOT call `handleDeadlineDateSelect`
+2. Change the time `onChange` handler to only update local state (`setCustomTime` + `setDeadline`) — do NOT call `handleDeadlineDateSelect`
+3. Add a "Done" button below the date/time inputs that:
+   - Calls `setEditingDeadline(false)` and `setShowCustomPicker(false)`
+   - Calls `saveDeadlineWithStatusCheck(deadline)` if the value changed
+4. Keep `handleDeadlinePreset` unchanged (presets should still save immediately since they're one-click actions)
 
