@@ -1,47 +1,18 @@
 
 
-## In-App Notification Center
+## Move Logout Button to Account Page
 
-**What**: Replace the basic "Recent Notifications" list on the Account page with a proper notification bell + dropdown accessible from every page, plus a dedicated notifications view.
+**What**: Remove the logout button from the main app header (Index page) and keep it only on the Account page. The Account page already has a logout button in its header — we'll enhance it by also adding a more prominent logout option in the page body.
 
-### Design
+### Changes
 
-- **Bell icon with badge** in the main app header (Index page header, ReminderDetail header, Account header) showing unread count
-- **Dropdown panel** on click: shows latest ~10 notifications with title, due label, and timestamp; each links to the reminder
-- **"Mark all read" button** in the dropdown
-- **Unread tracking**: Add a `read` boolean column to `notification_log` (default `false`)
-- Remove the `NotificationList` from the Account page (or keep it as a "View all" link target)
+**`src/pages/Index.tsx`**:
+- Remove `LogOut` from imports
+- Remove the logout button from the header (keep Upload, NotificationBell, User/Account button)
 
-### Database Changes
+**`src/pages/Account.tsx`**:
+- Keep the existing logout button in the header
+- Add a second, more prominent "Sign out" button at the bottom of the page in a dedicated section below ChangePasswordForm, styled as a secondary/destructive action with label text for clarity
 
-1. **Migration**: Add `read` column to `notification_log`:
-   ```sql
-   ALTER TABLE notification_log ADD COLUMN read boolean NOT NULL DEFAULT false;
-   ```
-2. **RLS policy**: Allow authenticated users to UPDATE their own notifications (for marking as read):
-   ```sql
-   CREATE POLICY "Users can update own notifications"
-   ON notification_log FOR UPDATE TO authenticated
-   USING (auth.uid() = user_id)
-   WITH CHECK (auth.uid() = user_id);
-   ```
-
-### Frontend Changes
-
-1. **`src/components/NotificationBell.tsx`** (new) — Bell icon + unread badge + popover dropdown
-   - Fetches `notification_log` where `user_id = auth.uid()`, ordered by `created_at desc`, limit 10
-   - Shows unread count as a red badge
-   - Each item shows reminder title (fetched via join or separate query) + "Due today/tomorrow" + relative time
-   - "Mark all read" button updates `read = true` for all unread
-   - Clicking a notification navigates to `/reminder/:id` and marks it read
-
-2. **`src/components/account/NotificationList.tsx`** — Either remove or simplify to link to a full notifications page
-
-3. **Update headers** in `Index.tsx`, `ReminderDetail.tsx`, `Account.tsx` — Add `<NotificationBell />` to each page header
-
-4. **Realtime subscription** — Subscribe to `notification_log` inserts so the bell updates live without refresh
-
-### Complexity
-
-This is moderate — roughly 1 new component, 1 migration, and small header updates across 3 pages. The existing `notification_log` table already has all the data; we just need the `read` column and a better UI.
+This keeps logout accessible from the Account page (both in the header quick-access and the main body), while cleaning up the main app header to focus on core actions: Upload, Notifications, and Account navigation.
 
