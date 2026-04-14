@@ -1,21 +1,47 @@
 
 
-## Fix: Custom deadline picker saves too eagerly on ReminderDetail
+## In-App Notification Center
 
-**Problem**: When editing a reminder's deadline with the custom date/time picker, changing the date immediately saves and closes the picker (via `handleDeadlineDateSelect` which calls `setEditingDeadline(false)`). This means you can't set both date and time before saving. The time input is even worse — changing the hour fires `onChange`, which saves and closes before you can set the minutes.
+**What**: Replace the basic "Recent Notifications" list on the Account page with a proper notification bell + dropdown accessible from every page, plus a dedicated notifications view.
 
-**Root cause**: `handleDeadlineDateSelect` (used by both date and time inputs) calls `setEditingDeadline(false)` and saves to the database on every change. The Review page doesn't have this problem because it only updates local state without closing.
+### Design
 
-**Fix**: Stop auto-closing and auto-saving on every input change. Instead, update local state only, and add an explicit "Done" button to commit the custom deadline.
+- **Bell icon with badge** in the main app header (Index page header, ReminderDetail header, Account header) showing unread count
+- **Dropdown panel** on click: shows latest ~10 notifications with title, due label, and timestamp; each links to the reminder
+- **"Mark all read" button** in the dropdown
+- **Unread tracking**: Add a `read` boolean column to `notification_log` (default `false`)
+- Remove the `NotificationList` from the Account page (or keep it as a "View all" link target)
 
-### Changes (1 file)
+### Database Changes
 
-**`src/pages/ReminderDetail.tsx`**:
+1. **Migration**: Add `read` column to `notification_log`:
+   ```sql
+   ALTER TABLE notification_log ADD COLUMN read boolean NOT NULL DEFAULT false;
+   ```
+2. **RLS policy**: Allow authenticated users to UPDATE their own notifications (for marking as read):
+   ```sql
+   CREATE POLICY "Users can update own notifications"
+   ON notification_log FOR UPDATE TO authenticated
+   USING (auth.uid() = user_id)
+   WITH CHECK (auth.uid() = user_id);
+   ```
 
-1. Change the date `onChange` handler to only update local state (`setDeadline`) — do NOT call `handleDeadlineDateSelect`
-2. Change the time `onChange` handler to only update local state (`setCustomTime` + `setDeadline`) — do NOT call `handleDeadlineDateSelect`
-3. Add a "Done" button below the date/time inputs that:
-   - Calls `setEditingDeadline(false)` and `setShowCustomPicker(false)`
-   - Calls `saveDeadlineWithStatusCheck(deadline)` if the value changed
-4. Keep `handleDeadlinePreset` unchanged (presets should still save immediately since they're one-click actions)
+### Frontend Changes
+
+1. **`src/components/NotificationBell.tsx`** (new) — Bell icon + unread badge + popover dropdown
+   - Fetches `notification_log` where `user_id = auth.uid()`, ordered by `created_at desc`, limit 10
+   - Shows unread count as a red badge
+   - Each item shows reminder title (fetched via join or separate query) + "Due today/tomorrow" + relative time
+   - "Mark all read" button updates `read = true` for all unread
+   - Clicking a notification navigates to `/reminder/:id` and marks it read
+
+2. **`src/components/account/NotificationList.tsx`** — Either remove or simplify to link to a full notifications page
+
+3. **Update headers** in `Index.tsx`, `ReminderDetail.tsx`, `Account.tsx` — Add `<NotificationBell />` to each page header
+
+4. **Realtime subscription** — Subscribe to `notification_log` inserts so the bell updates live without refresh
+
+### Complexity
+
+This is moderate — roughly 1 new component, 1 migration, and small header updates across 3 pages. The existing `notification_log` table already has all the data; we just need the `read` column and a better UI.
 
