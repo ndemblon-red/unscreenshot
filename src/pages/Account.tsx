@@ -5,7 +5,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import StatsCards from "@/components/account/StatsCards";
 import CategoryChart from "@/components/account/CategoryChart";
 import ChangePasswordForm from "@/components/account/ChangePasswordForm";
-import NotificationList from "@/components/account/NotificationList";
+import NotificationBell from "@/components/NotificationBell";
 
 interface Stats {
   total: number;
@@ -57,16 +57,19 @@ export default function Account() {
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            navigate("/auth");
-          }}
-          className="p-2.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          aria-label="Sign out"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate("/auth");
+            }}
+            className="p-2.5 rounded-btn text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </header>
 
       <h1 className="text-page-title tracking-tight mb-1">Account</h1>
@@ -85,7 +88,7 @@ export default function Account() {
 
       <ChangePasswordForm />
 
-      <NotificationList />
+      {/* Notifications are now accessible via the bell icon in the header */}
     </div>
   );
 }
