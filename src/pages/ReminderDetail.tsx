@@ -280,24 +280,39 @@ export default function ReminderDetail() {
               </button>
             </div>
             {showCustomPicker && (
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="date"
-                  value={extractDate(deadline)}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => handleDeadlineDateSelect(e.target.value + "T" + customTime)}
-                  className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
-                <input
-                  type="time"
-                  value={customTime}
-                  onChange={(e) => {
-                    const newTime = e.target.value;
-                    setCustomTime(newTime);
-                    handleDeadlineDateSelect(extractDate(deadline) + "T" + newTime);
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={extractDate(deadline)}
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setDeadline(e.target.value + "T" + customTime)}
+                    className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <input
+                    type="time"
+                    value={customTime}
+                    onChange={(e) => {
+                      const newTime = e.target.value;
+                      setCustomTime(newTime);
+                      setDeadline(extractDate(deadline) + "T" + newTime);
+                    }}
+                    className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingDeadline(false);
+                    setShowCustomPicker(false);
+                    if (deadline !== reminder?.deadline) {
+                      saveDeadlineWithStatusCheck(deadline);
+                    }
                   }}
-                  className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
+                  className="self-start flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-label bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  Done
+                </button>
               </div>
             )}
           </div>
