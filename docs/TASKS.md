@@ -235,3 +235,35 @@
 - Requires VAPID key pair generation and storage as secrets
 - Complements existing in-app bell notifications — does not replace them
 - Users must explicitly grant permission; provide clear opt-in UI
+
+---
+
+## Future: Custom Categories
+
+**Goal:** Allow users to create, edit, and delete their own categories instead of being limited to the fixed set of 8.
+
+**Steps (not yet started):**
+1. Create a user_categories table to store custom categories per user
+2. Seed default categories on signup so existing behaviour is preserved
+3. Add category management UI to the Account page (create, rename, delete with reassignment)
+4. Update AI system prompt to use the user's category list instead of the hardcoded set
+5. Update category pills, filters, and colour assignment to support dynamic categories
+
+**Details:**
+- Requires database schema change and updated AI prompt logic
+- Deleting a category should prompt reassignment of existing reminders
+- Colour assignment needs a strategy for user-created categories beyond the original 8
+
+---
+
+## Future: Home Page Redesign
+
+**Goal:** Revisit and fix the landing page at `/` to better communicate the product value and convert visitors.
+
+**Steps (not yet started):**
+1. Audit current landing page against design tokens and copy guidelines
+2. Identify layout, messaging, or visual issues
+3. Redesign and implement fixes
+
+**Details:**
+- Scope TBD — needs a review of what specifically is broken or underperforming
