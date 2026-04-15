@@ -95,7 +95,7 @@ export default function Landing() {
 
             {/* Fake category pills */}
             <div className="px-4 md:px-6 pt-3 flex gap-2 overflow-hidden">
-              {["Everything", "Restaurants", "Shopping", "Events", "Reading"].map((cat, i) => (
+              {["Everything", "Restaurants", "Shopping", "To Do", "Events", "Reading", "Home", "Travel", "Wishlist"].map((cat, i) => (
                 <span
                   key={cat}
                   className={`px-2.5 py-1 rounded-full text-[11px] md:text-[12px] font-medium whitespace-nowrap ${
@@ -113,7 +113,7 @@ export default function Landing() {
             <div className="p-4 md:px-6 md:pb-6 md:pt-3 space-y-2.5">
               {[
                 {
-                  title: "Book table at Dishoom",
+                  title: "Book table for dinner",
                   cat: "Restaurants",
                   catClass: "bg-tag-restaurants text-white",
                   deadline: "Today · 9 AM",
