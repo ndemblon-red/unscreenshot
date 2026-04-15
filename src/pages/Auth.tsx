@@ -111,13 +111,34 @@ export default function Auth() {
         )}
 
         <p className="text-label text-muted-foreground text-center mt-4">
-          {forgotMode ? "Remember your password?" : isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-          <button
-            onClick={() => { setForgotMode(false); if (forgotMode) setIsLogin(true); else setIsLogin(!isLogin); }}
-            className="text-primary hover:underline font-medium"
-          >
-            {forgotMode ? "Sign in" : isLogin ? "Sign up" : "Sign in"}
-          </button>
+          {forgotMode ? (
+            <>
+              Remember your password?{" "}
+              <button
+                onClick={() => { setForgotMode(false); setIsLogin(true); }}
+                className="text-primary hover:underline font-medium"
+              >
+                Sign in
+              </button>
+            </>
+          ) : isLogin ? (
+            <>
+              Don't have an account?{" "}
+              <Link to="/pricing" className="text-primary hover:underline font-medium">
+                Sign up
+              </Link>
+            </>
+          ) : (
+            <>
+              Already have an account?{" "}
+              <button
+                onClick={() => setIsLogin(true)}
+                className="text-primary hover:underline font-medium"
+              >
+                Sign in
+              </button>
+            </>
+          )}
         </p>
       </div>
     </div>
