@@ -1,24 +1,36 @@
 
 
-## Simple App Icon for Unscreenshot
+## Pricing Page and Payment Flow
 
-Inspired by iOS Reminders' clean aesthetic — a bold, recognizable shape on a colored background that works at all sizes (favicon, header, PWA icon).
+Add a dedicated `/pricing` page and integrate it into the existing navigation, with support for discount codes instead of a free tier.
 
-### Concept
+### Approach
 
-A rounded square with the primary color as background, containing a minimal white icon that combines a "screenshot" frame (corner brackets) with a checkmark or bell — conveying "screenshots turned into actions." Think iOS system app quality: flat color, single glyph, no text.
+1. **Pricing link in Landing page header** — Add "Pricing" next to "Sign in" in the header nav
+2. **New `/pricing` page** — Clean, minimal page showing a single paid plan with placeholder pricing. Includes a discount code input field that unlocks a discount (or full free access). Matches the existing design language.
+3. **Bottom CTA on Landing** — Add a "View pricing" secondary link near the existing CTA
+4. **Route setup** — Add `/pricing` to App.tsx (public, no auth guard)
 
-### Deliverables
+### Pricing page structure
 
-1. **Create `public/icon.svg`** — a clean vector icon (rounded rect + glyph), using the app's primary blue or the events purple as the fill
-2. **Update `index.html`** — replace the default favicon with the new icon
-3. **Delete `public/favicon.ico`** if present, so browsers don't override
-4. **Update the Landing page header** — optionally display the icon mark next to "Unscreenshot"
+- Header with logo + nav (same as landing)
+- Single plan card (price TBD — placeholder like "$X/mo")
+- Feature list (upload screenshots, AI analysis, deadline notifications, etc.)
+- Discount code input with "Apply" button — validates against a stored code
+- CTA button → links to `/auth` for signup
+- Footer (same as landing)
+
+### Discount code backend (later step)
+
+For now, the page will be **UI only** with placeholder pricing and a non-functional discount code field. When you're ready to set prices and enable payments, we'll:
+- Set up a payment provider (Paddle or Stripe)
+- Create a `discount_codes` table to validate codes
+- Wire up the checkout flow
 
 ### Technical details
 
-- Hand-coded SVG (no AI generation needed — cleaner results for geometric icons)
-- Viewbox: 512×512 for crisp rendering at all sizes
-- Single-color glyph on solid background — scales down to 16×16 favicon cleanly
-- Two concept options to choose from: screenshot-frame + checkmark, or screenshot-frame + bell
+- New file: `src/pages/Pricing.tsx`
+- Edit: `src/App.tsx` (add route)
+- Edit: `src/pages/Landing.tsx` (add "Pricing" link to header + footer)
+- Edit: `src/pages/Auth.tsx` (add "Pricing" link to header if appropriate)
 
