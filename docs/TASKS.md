@@ -30,7 +30,7 @@
 - [x] Build Loading overlay state: per-image spinner, "Analysing X of Y" progress message
 - [x] Build Error state: inline error per failed image, Try Again and Add Manually options
 - [x] Verify all category pill colours match PLANNING.md colour tokens
-- [ ] Verify "Does NOT include" items from PLANNING.md are absent from every screen
+- [x] Verify "Does NOT include" items from PLANNING.md are absent from every screen
 
 ---
 
@@ -56,14 +56,16 @@
 ---
 
 ## Milestone 3b: Authentication & Account Management
-**Goal:** Users can recover forgotten passwords and manage their account settings.
-**Test:** Click "Forgot password" on sign-in, receive reset email, set new password. Open Account page, change password successfully. Mark a reminder as done, open it, click Undo Done — it moves back to Next.
+**Goal:** Users can sign up, log in, recover forgotten passwords, and manage their account settings.
+**Test:** Sign up, verify email, log in. Click "Forgot password" on sign-in, receive reset email, set new password. Open Account page, change password successfully. Mark a reminder as done, open it, click Undo Done — it moves back to Next.
 
+- [x] Add email/password auth via Supabase Auth (sign up + sign in)
 - [x] Add "Forgot password" mode to Auth page — sends password reset email via Supabase
 - [x] Build Reset Password page (`/reset-password`) — handles PASSWORD_RECOVERY auth event, lets user set new password
 - [x] Build Account page (`/account`) — shows user email, change password form, sign out button
 - [x] Add Account icon link to Task List header
 - [x] Add "Undo Done" button on Reminder Detail for completed reminders — moves status back to "next"
+- [x] Add RLS policies to scope reminders to authenticated user
 
 ---
 
@@ -74,6 +76,48 @@
 - [x] Add search input with search icon above category filter pills on Task List
 - [x] Filter reminders by title in real-time as user types
 - [x] Add clear (×) button to reset search query
+
+---
+
+## Milestone 3d: Landing Page
+**Goal:** A public landing page explains the product and directs visitors to sign up.
+**Test:** Visit `/` — see hero, pain statement, how-it-works, and CTA. Click CTA — navigate to `/auth`.
+
+- [x] Build public landing page at `/` with hero section, pain statement, how-it-works steps, and CTA
+- [x] Restructure routing: public landing at `/`, authenticated app at `/app`
+- [x] Apply minimal, dry design language consistent with the rest of the app
+
+---
+
+## Milestone 3e: Image Compression
+**Goal:** Large screenshots are compressed client-side before AI analysis to stay under Anthropic's 5MB base64 limit.
+**Test:** Upload a 10MB Retina screenshot — it should compress and analyse successfully without 502 errors.
+
+- [x] Add client-side image resizing (max 1568px longest edge)
+- [x] Iterative JPEG quality reduction until base64 < 4MB target
+- [x] Integrated into upload flow before navigation to review
+
+---
+
+## Milestone 3f: Observability
+**Goal:** AI analysis calls are traced for latency, token usage, and error monitoring.
+**Test:** Run an analysis — verify trace appears in Langfuse dashboard with model, duration, and token counts.
+
+- [x] Integrate Langfuse Cloud in analyse-screenshot edge function
+- [x] Trace model, latency, token counts, and errors
+- [x] Exclude image data from traces for privacy
+
+---
+
+## Milestone 3g: Deadline Notifications
+**Goal:** Users receive in-app alerts when reminders are approaching their deadline.
+**Test:** Create a reminder due today — bell icon shows unread badge. Open notification list — see the alert. Mark as read — badge clears.
+
+- [x] Build `check-deadlines` edge function with pg_cron schedule
+- [x] Create `notification_log` table with RLS
+- [x] Build NotificationBell component with unread badge and popover list
+- [x] Realtime subscription for new notifications
+- [x] Mark individual/all notifications as read
 
 ---
 
@@ -104,17 +148,18 @@
 - [ ] Test and fix: blank white image — safe defaults, no hang
 - [ ] Test and fix: corrupted file — flagged as unprocessable, manual entry option shown
 - [ ] Test and fix: screenshot with a past date — deadline defaults to Next Week, not a past date
-- [ ] Test and fix: batch of 15+ screenshots — all process, UI queue handles gracefully
+- [ ] Test and fix: batch of 10 screenshots — all process, UI handles gracefully (capped at 10 per batch)
 - [ ] Test and fix: screenshot with sensitive/personal content — safe neutral title returned
-- [ ] Add confirmation behaviour: delete confirmation overlay works on both task card and detail screen
-- [ ] Loading states: every async action (upload, analyse, save, delete) has a visible loading indicator
+- [x] Add confirmation behaviour: delete confirmation overlay works on both task card and detail screen
+- [x] Loading states: every async action (upload, analyse, save, delete) has a visible loading indicator
 - [ ] Error states: every failure mode has a user-facing message — no silent failures, no raw error text shown to user
 - [ ] Spacing, typography, and colour audit — compare every screen against PLANNING.md design spec
-- [ ] Category pill colours consistent everywhere: task list, review panel, detail screen, filter bar
-- [ ] Verify "Does NOT include" items are absent from every screen (final check)
+- [x] Category pill colours consistent everywhere: task list, review panel, detail screen, filter bar
+- [x] Verify "Does NOT include" items are absent from every screen (final check)
 - [x] Offline detection banner — shows when user loses connectivity
 - [x] Offline save queue — queues reminders when offline, auto-syncs on reconnect
 - [x] Pending queue counter badge — shows number of queued reminders waiting to sync
+- [x] Upload batch limit — capped at 10 screenshots per batch with toast feedback
 
 ---
 
@@ -132,7 +177,7 @@
 - [ ] Run edge case 1: blurry image — verify safe defaults, no crash
 - [ ] Run edge case 2: map/location pin — verify sensible title and category
 - [ ] Run edge case 3: past date visible — verify deadline is not set in the past
-- [ ] Run edge case 4: 15+ image batch — verify all process, no UI breakdown
+- [ ] Run edge case 4: 10-image batch — verify all process, no UI breakdown
 - [ ] Run edge case 5: sensitive/personal info — verify no sensitive content in task card
 - [ ] Run must-fail-safely case 1: non-image file — verify clear error message, no crash
 - [ ] Run must-fail-safely case 2: adult content image — verify safe neutral title returned
@@ -140,3 +185,20 @@
 - [ ] Run must-fail-safely case 4: network failure mid-analysis — verify retry button shown, no data lost
 - [ ] Run must-fail-safely case 5: corrupted image — verify unprocessable flag shown, manual entry option available
 - [ ] Document any failures and fix before marking Milestone 6 complete
+
+---
+
+## Future: Google Picker API Integration
+
+**Goal:** Let users import screenshots directly from Google Photos via the Google Picker API.
+
+**Steps (not yet started):**
+1. Register app in Google Cloud Console; enable Google Picker API
+2. Add a "Google Photos" button alongside existing drag-and-drop on Upload page
+3. Use existing Google auth or a scoped picker-only token to authenticate
+4. Configure picker to show only the user's Photos library, filtered to images
+5. Download selected images client-side, convert to existing `QueuedFile` format, feed into current upload/review flow
+
+**Details:**
+- Medium-effort feature; no changes to current upload architecture
+- Adds an additional image source alongside drag-and-drop
