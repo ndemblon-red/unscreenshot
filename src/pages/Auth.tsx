@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
@@ -50,7 +50,10 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-page-x">
       <div className="w-full max-w-sm">
-        <h1 className="text-page-title tracking-tight text-center mb-2">Unscreenshot</h1>
+        <Link to="/" className="flex items-center justify-center gap-2 mb-2">
+          <img src="/icon.svg" alt="Unscreenshot" className="w-8 h-8 rounded-lg" />
+          <h1 className="text-page-title tracking-tight">Unscreenshot</h1>
+        </Link>
         <p className="text-label text-muted-foreground text-center mb-8">
           {forgotMode ? "Enter your email to reset your password" : isLogin ? "Sign in to your account" : "Create your account"}
         </p>
