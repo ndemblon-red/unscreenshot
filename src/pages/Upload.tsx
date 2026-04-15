@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Upload, X, ArrowLeft, ImageIcon, AlertCircle } from "lucide-react";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 10;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_DIMENSION = 1568; // Anthropic recommended max
 const TARGET_BASE64_SIZE = 4 * 1024 * 1024; // 4MB to stay safely under 5MB limit
@@ -69,7 +70,16 @@ export default function UploadPage() {
     const newFiles: QueuedFile[] = [];
     const errors: string[] = [];
 
-    Array.from(incoming).forEach((file) => {
+    const remaining = MAX_FILES - files.length;
+    if (remaining <= 0) {
+      setFileErrors(["Maximum 10 screenshots per batch already reached."]);
+      return;
+    }
+
+    const accepted = Array.from(incoming);
+
+    accepted.forEach((file) => {
+      if (newFiles.length >= remaining) return;
       if (!ACCEPTED_TYPES.includes(file.type)) {
         errors.push(`"${file.name}" — Please upload image files only (JPG, PNG, WEBP)`);
         return;
@@ -85,16 +95,17 @@ export default function UploadPage() {
       });
     });
 
-    if (errors.length > 0) {
-      setFileErrors(errors);
-    } else {
-      setFileErrors([]);
+    const truncated = accepted.length - errors.length - newFiles.length;
+    if (truncated > 0) {
+      errors.push(`Maximum 10 screenshots per batch. Only the first ${newFiles.length} were added.`);
     }
+
+    setFileErrors(errors.length > 0 ? errors : []);
 
     if (newFiles.length > 0) {
       setFiles((prev) => [...prev, ...newFiles]);
     }
-  }, []);
+  }, [files.length]);
 
   const removeFile = (id: string) => {
     setFiles((prev) => {
@@ -165,17 +176,18 @@ export default function UploadPage() {
 
       {/* Drop zone */}
       <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onClick={() => inputRef.current?.click()}
+        onDrop={files.length >= MAX_FILES ? undefined : handleDrop}
+        onDragOver={files.length >= MAX_FILES ? undefined : handleDragOver}
+        onDragLeave={files.length >= MAX_FILES ? undefined : handleDragLeave}
+        onClick={() => files.length < MAX_FILES && inputRef.current?.click()}
         className={`
           relative flex flex-col items-center justify-center gap-3 rounded-card border-2 border-dashed
-          cursor-pointer transition-colors py-16 mb-6
-          ${
-            isDragging
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary/50 hover:bg-muted/30"
+          transition-colors py-16 mb-6
+          ${files.length >= MAX_FILES
+            ? "border-border bg-muted/20 cursor-not-allowed opacity-50"
+            : isDragging
+              ? "border-primary bg-primary/5 cursor-pointer"
+              : "border-border hover:border-primary/50 hover:bg-muted/30 cursor-pointer"
           }
         `}
       >
@@ -183,10 +195,12 @@ export default function UploadPage() {
           <Upload className="w-6 h-6 text-muted-foreground" />
         </div>
         <p className="text-card-title text-foreground">
-          Drop screenshots here or click to browse
+          {files.length >= MAX_FILES
+            ? "Batch limit reached"
+            : "Drop screenshots here or click to browse"}
         </p>
         <p className="text-label text-muted-foreground">
-          JPG, PNG, WEBP — max 10MB each
+          JPG, PNG, WEBP — max 10MB each, up to 10 per batch
         </p>
         <input
           ref={inputRef}
@@ -195,6 +209,7 @@ export default function UploadPage() {
           multiple
           onChange={handleFileInput}
           className="hidden"
+          disabled={files.length >= MAX_FILES}
         />
       </div>
 
