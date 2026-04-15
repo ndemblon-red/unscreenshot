@@ -70,7 +70,16 @@ export default function UploadPage() {
     const newFiles: QueuedFile[] = [];
     const errors: string[] = [];
 
-    Array.from(incoming).forEach((file) => {
+    const remaining = MAX_FILES - files.length;
+    if (remaining <= 0) {
+      setFileErrors(["Maximum 10 screenshots per batch already reached."]);
+      return;
+    }
+
+    const accepted = Array.from(incoming);
+
+    accepted.forEach((file) => {
+      if (newFiles.length >= remaining) return;
       if (!ACCEPTED_TYPES.includes(file.type)) {
         errors.push(`"${file.name}" — Please upload image files only (JPG, PNG, WEBP)`);
         return;
@@ -86,16 +95,17 @@ export default function UploadPage() {
       });
     });
 
-    if (errors.length > 0) {
-      setFileErrors(errors);
-    } else {
-      setFileErrors([]);
+    const truncated = accepted.length - errors.length - newFiles.length;
+    if (truncated > 0) {
+      errors.push(`Maximum 10 screenshots per batch. Only the first ${newFiles.length} were added.`);
     }
+
+    setFileErrors(errors.length > 0 ? errors : []);
 
     if (newFiles.length > 0) {
       setFiles((prev) => [...prev, ...newFiles]);
     }
-  }, []);
+  }, [files.length]);
 
   const removeFile = (id: string) => {
     setFiles((prev) => {
