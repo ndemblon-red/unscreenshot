@@ -176,17 +176,18 @@ export default function UploadPage() {
 
       {/* Drop zone */}
       <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onClick={() => inputRef.current?.click()}
+        onDrop={files.length >= MAX_FILES ? undefined : handleDrop}
+        onDragOver={files.length >= MAX_FILES ? undefined : handleDragOver}
+        onDragLeave={files.length >= MAX_FILES ? undefined : handleDragLeave}
+        onClick={() => files.length < MAX_FILES && inputRef.current?.click()}
         className={`
           relative flex flex-col items-center justify-center gap-3 rounded-card border-2 border-dashed
-          cursor-pointer transition-colors py-16 mb-6
-          ${
-            isDragging
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary/50 hover:bg-muted/30"
+          transition-colors py-16 mb-6
+          ${files.length >= MAX_FILES
+            ? "border-border bg-muted/20 cursor-not-allowed opacity-50"
+            : isDragging
+              ? "border-primary bg-primary/5 cursor-pointer"
+              : "border-border hover:border-primary/50 hover:bg-muted/30 cursor-pointer"
           }
         `}
       >
@@ -194,10 +195,12 @@ export default function UploadPage() {
           <Upload className="w-6 h-6 text-muted-foreground" />
         </div>
         <p className="text-card-title text-foreground">
-          Drop screenshots here or click to browse
+          {files.length >= MAX_FILES
+            ? "Batch limit reached"
+            : "Drop screenshots here or click to browse"}
         </p>
         <p className="text-label text-muted-foreground">
-          JPG, PNG, WEBP — max 10MB each
+          JPG, PNG, WEBP — max 10MB each, up to 10 per batch
         </p>
         <input
           ref={inputRef}
@@ -206,6 +209,7 @@ export default function UploadPage() {
           multiple
           onChange={handleFileInput}
           className="hidden"
+          disabled={files.length >= MAX_FILES}
         />
       </div>
 
