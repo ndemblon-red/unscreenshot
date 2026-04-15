@@ -1,25 +1,19 @@
 
 
-## Move Logout Button to Account Page ✅
+## Add Upload Batch Limit (10 Screenshots)
 
-**Status**: Complete
+**What**: Cap the number of screenshots per upload to 10, with clear feedback when the limit is reached.
 
-Removed the logout button from the main app header (Index page) and kept it only on the Account page — both in the header and as a prominent sign-out button at the bottom of the page body.
+### Changes
 
----
+**`src/pages/Upload.tsx`**:
+- Add `const MAX_FILES = 10` constant
+- In `addFiles()`, check if adding new files would exceed 10 total. If so, take only enough to reach 10 and show an error message: "Maximum 10 screenshots per batch. Only the first N were added."
+- Disable the drop zone / file input when 10 files are already queued
+- Update the helper text to mention the limit: "JPG, PNG, WEBP — max 10MB each, up to 10 per batch"
 
-## Google Picker API Integration (Future)
+### Details
+- Simple, single-file change
+- No backend or database changes needed
+- The limit is enforced client-side in the existing `addFiles` callback
 
-**Status**: Not started — planned for later
-
-Integrate the Google Picker API to let users browse and select images directly from their Google Photos/Drive on the Upload page.
-
-### Steps
-
-1. **Google Cloud Console setup**: Create OAuth 2.0 credentials and enable the Google Picker API
-2. **Frontend**: Load the Google Picker JS library, add an "Import from Google Photos" button on the Upload page
-3. **OAuth flow**: Use existing Google auth or a scoped picker-only token to authenticate
-4. **Picker config**: Configure the picker to show only the user's Photos library, filtered to images
-5. **Selected images**: Download selected images client-side, convert to the existing `QueuedFile` format, and feed into the current upload/review flow
-
-This is a medium-effort feature that adds an additional image source alongside drag-and-drop without changing the current upload architecture.
