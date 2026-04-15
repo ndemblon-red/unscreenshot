@@ -24,10 +24,10 @@ export default function Landing() {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
       <header className="w-full px-6 md:px-12 lg:px-20 py-5 flex items-center justify-between max-w-6xl mx-auto">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <img src="/icon.svg" alt="Unscreenshot" className="w-7 h-7 rounded-lg" />
           <span className="text-[17px] font-semibold tracking-tight">Unscreenshot</span>
-        </div>
+        </Link>
         <Link
           to="/auth"
           className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
