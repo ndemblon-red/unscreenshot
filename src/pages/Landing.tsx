@@ -38,7 +38,7 @@ export default function Landing() {
         <div className="max-w-2xl w-full text-center mx-auto">
           <h1 className="text-[32px] md:text-[48px] leading-[1.1] tracking-tight font-bold mb-6">
             You screenshot everything.{" "}
-            <span className="text-muted-foreground">You action nothing.</span>
+            <span className="text-tag-events">You action nothing.</span>
           </h1>
           <p className="text-[17px] md:text-[19px] text-muted-foreground leading-relaxed mb-8 max-w-lg mx-auto">
             Upload your screenshots. AI turns them into reminders with deadlines. You get nudged before they expire. That's it.
