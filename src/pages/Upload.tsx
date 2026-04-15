@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Upload, X, ArrowLeft, ImageIcon, AlertCircle } from "lucide-react";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 10;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_DIMENSION = 1568; // Anthropic recommended max
 const TARGET_BASE64_SIZE = 4 * 1024 * 1024; // 4MB to stay safely under 5MB limit
