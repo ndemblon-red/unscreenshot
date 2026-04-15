@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, X, ArrowLeft, ImageIcon, AlertCircle } from "lucide-react";
+import { Upload, X, ArrowLeft, ImageIcon, AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
@@ -55,7 +56,12 @@ async function compressImage(file: File): Promise<{ base64: string; mimeType: st
       }
     };
     img.onerror = () => reject(new Error("Failed to load image"));
-    img.src = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
+    // Clean up the internal object URL once the image has loaded or failed
+    const cleanup = () => URL.revokeObjectURL(objectUrl);
+    img.addEventListener("load", cleanup, { once: true });
+    img.addEventListener("error", cleanup, { once: true });
   });
 }
 
@@ -63,6 +69,7 @@ export default function UploadPage() {
   const [files, setFiles] = useState<QueuedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [fileErrors, setFileErrors] = useState<string[]>([]);
+  const [compressing, setCompressing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -246,25 +253,48 @@ export default function UploadPage() {
       {/* Actions */}
       <div className="flex items-center gap-3">
         <button
-          disabled={files.length === 0}
+          disabled={files.length === 0 || compressing}
           onClick={async () => {
-            const prepared = await Promise.all(
-              files.map(async (f) => {
-                const { base64, mimeType } = await compressImage(f.file);
-                return {
-                  file: f.file,
-                  preview: f.preview,
-                  base64,
-                  mimeType,
-                };
-              })
-            );
-            navigate("/review", { state: { files: prepared } });
+            setCompressing(true);
+            try {
+              const results = await Promise.allSettled(
+                files.map(async (f) => {
+                  const { base64, mimeType } = await compressImage(f.file);
+                  return {
+                    file: f.file,
+                    preview: f.preview,
+                    base64,
+                    mimeType,
+                  };
+                })
+              );
+
+              const succeeded = results
+                .filter((r): r is PromiseFulfilledResult<{ file: File; preview: string; base64: string; mimeType: string }> => r.status === "fulfilled")
+                .map((r) => r.value);
+
+              const failedCount = results.filter((r) => r.status === "rejected").length;
+
+              if (failedCount > 0) {
+                toast.error(`${failedCount} file${failedCount !== 1 ? "s" : ""} couldn't be processed and ${failedCount !== 1 ? "were" : "was"} skipped.`);
+              }
+
+              if (succeeded.length === 0) {
+                setFileErrors(["All files failed to process. Please try different images."]);
+                return;
+              }
+
+              navigate("/review", { state: { files: succeeded } });
+            } catch {
+              toast.error("Something went wrong while processing images.");
+            } finally {
+              setCompressing(false);
+            }
           }}
           className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-btn text-[15px] font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <ImageIcon className="w-4 h-4" />
-          Analyse Screenshots
+          {compressing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+          {compressing ? "Compressing…" : "Analyse Screenshots"}
         </button>
         <button
           onClick={() => navigate("/app")}
