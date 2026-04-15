@@ -77,39 +77,135 @@ After every significant decision during your build, add an entry. A "significant
 
 ---
 
-### March 2026 — No user accounts in v1
-
-**Context:** Deciding whether to require login/authentication from day one.
-
-**Options considered:**
-- Full auth from the start — email/password or OAuth (Google, Apple)
-- No auth — single shared instance, suitable for personal or demo use
-- Local-only — store everything in the browser with no backend
-
-**Decision:** No authentication in v1. All data stored in a single Supabase instance without user accounts.
-
-**Why:** Auth adds significant build complexity and friction for early users. The goal of v1 is to validate that the AI analysis is good enough and that the core flow delivers value. A single-instance app is perfectly usable for personal use or a small test group. Adding auth in v2 is straightforward once the core product is proven.
-
-**What I'd revisit:** The moment the app is shared with more than one person, auth becomes necessary. Add it as the first v2 feature.
-
----
-
-## Future Decisions
-*(Continue logging here as you build. This is where the real learning happens.)*
-
 ### March 2026 — Added search bar to MVP despite original exclusion
 
 **Context:** PLANNING.md originally listed "No search bar" under Screen 1's "Does NOT include" section.
+
 **Options considered:** Keep without search; add collapsible search icon in header; add persistent search bar above category pills.
+
 **Decision:** Added a persistent search input above category pills that filters reminders by title in real-time.
+
 **Why:** As the reminder list grows, finding specific items by scrolling or filtering by category alone becomes impractical. A simple title search is low-effort to build and high-value for daily use.
+
 **What I'd revisit:** Could extend to search by category or deadline text if users need it.
 
 ---
 
-### [Date] — [Short title]
-**Context:**
+### March 2026 — Auth added to v1, reversing original "no auth" plan
+
+**Context:** The original plan explicitly deferred authentication to v2. However, once the app was functional and ready to share with others, user isolation became necessary.
+
 **Options considered:**
-**Decision:**
-**Why:**
-**What I'd revisit:**
+- Keep no auth — single shared Supabase instance, acceptable for solo use
+- Add basic email/password auth with RLS
+- Add OAuth only (Google/Apple)
+
+**Decision:** Added email/password authentication with Supabase Auth. All reminders are now scoped to the authenticated user via RLS policies. Includes forgot-password flow and password reset page.
+
+**Why:** Sharing the app with even one other person would mean shared data. Auth was the minimum requirement to make this usable beyond a single user. Email/password is the simplest to implement and doesn't require third-party OAuth setup.
+
+**What I'd revisit:** Add Google OAuth as a convenience option once the core auth flow is stable.
+
+---
+
+### March 2026 — Landing page and route restructure
+
+**Context:** With auth added, the app needed a public entry point separate from the authenticated task list.
+
+**Options considered:**
+- Keep `/` as the task list, add `/login` separately
+- Move app to `/app`, use `/` as a public landing page
+- Use a modal overlay for auth on the existing task list
+
+**Decision:** Public landing page at `/`, authenticated app at `/app`. Landing page is minimal — hero, pain statement, how-it-works steps, CTA to `/auth`.
+
+**Why:** A dedicated landing page lets the product explain itself before asking for a login. Moving the app to `/app` creates a clean separation between marketing and product. The landing page follows the same dry, minimal design language as the rest of the app.
+
+**What I'd revisit:** If conversion from landing to signup is low, test removing the landing page and going straight to auth.
+
+---
+
+### March 2026 — Client-side image compression before AI analysis
+
+**Context:** Anthropic's API has a 5MB base64 payload limit. Large screenshots (especially from Retina displays) were causing 502 errors during analysis.
+
+**Options considered:**
+- Reject images over 5MB with an error message
+- Compress server-side in the edge function before sending to Anthropic
+- Compress client-side before upload
+
+**Decision:** Client-side compression: resize to max 1568px on longest edge, reduce JPEG quality iteratively until base64 output is under 4MB target.
+
+**Why:** Client-side compression reduces upload time and edge function payload size simultaneously. No server resources consumed for resizing. The 1568px cap matches Anthropic's recommended input size for vision models, so there's no quality loss for analysis purposes.
+
+**What I'd revisit:** If compression artefacts cause AI accuracy issues, consider server-side sharp/libvips processing with more control over output quality.
+
+---
+
+### March 2026 — Langfuse for LLM observability
+
+**Context:** Needed visibility into AI analysis performance — latency, token usage, error rates — without building custom logging infrastructure.
+
+**Options considered:**
+- Console logging only
+- Custom metrics table in Supabase
+- Langfuse Cloud integration
+
+**Decision:** Integrated Langfuse Cloud in the analyse-screenshot edge function. Traces capture model, latency, token counts, and errors. Image data is excluded from traces for privacy.
+
+**Why:** Langfuse is purpose-built for LLM observability and provides dashboards, cost tracking, and error alerting out of the box. Far less effort than building custom logging. Fire-and-forget integration means it doesn't affect request latency.
+
+**What I'd revisit:** If Langfuse costs become significant or if we need tighter integration with other monitoring, consider switching to a self-hosted alternative.
+
+---
+
+### April 2026 — In-app deadline notifications (bell icon + cron)
+
+**Context:** Users needed a way to know when reminders were approaching their deadline without manually checking the task list.
+
+**Options considered:**
+- Email notifications only
+- Push notifications (browser)
+- In-app notification bell with a backend cron job
+- Combination of in-app + email
+
+**Decision:** Built in-app notifications first: a bell icon with unread badge on the task list and account pages, powered by a `check-deadlines` edge function running on pg_cron. Notifications are logged to a `notification_log` table.
+
+**Why:** In-app notifications are the simplest to implement and don't require email infrastructure or browser permission prompts. The cron + notification_log pattern is extensible — email notifications can be added later by reading from the same log table.
+
+**What I'd revisit:** Add email notifications as a follow-up once email infrastructure (custom domain, transactional email provider) is set up.
+
+---
+
+### April 2026 — Upload batch limit capped at 10 screenshots
+
+**Context:** Needed to decide whether to cap the number of screenshots per upload batch and, if so, what the limit should be.
+
+**Options considered:**
+- No limit — let users upload as many as they want
+- 5 per batch — conservative, fast processing
+- 10 per batch — balanced limit
+- 20+ per batch — generous but risks long processing times
+
+**Decision:** Cap at 10 screenshots per batch. Drop zone disables at 10. Excess files are silently truncated with a toast explaining the limit.
+
+**Why:** 10 is enough to clear a meaningful backlog in one session without creating excessive AI API costs or long wait times. At ~5 seconds per analysis, 10 images means ~50 seconds of processing — acceptable. 20+ would push past a minute, which feels too long for a single batch.
+
+**What I'd revisit:** If users consistently hit the limit and request more, consider raising to 15 or adding a queue system that processes in background.
+
+---
+
+### April 2026 — Sign-out moved to Account page
+
+**Context:** The sign-out button was initially in the main task list header. As the header gained more icons (upload, notifications, account), it became cluttered.
+
+**Options considered:**
+- Keep sign-out in main header
+- Move to a dropdown menu in the header
+- Move to the Account page
+
+**Decision:** Moved sign-out to the Account page. Main header now has only Upload, Notification Bell, and Account icons.
+
+**Why:** Sign-out is an infrequent action. Keeping it in the main header used prime real estate for something users rarely need. The Account page is the natural home for account-level actions like password changes and sign-out.
+
+**What I'd revisit:** If users report difficulty finding sign-out, add it to a header dropdown menu as well.
