@@ -202,3 +202,36 @@
 **Details:**
 - Medium-effort feature; no changes to current upload architecture
 - Adds an additional image source alongside drag-and-drop
+
+---
+
+## Future: Recurring Reminders
+
+**Goal:** Allow users to set reminders that repeat on a schedule (daily, weekly, monthly) so recurring tasks don't need to be re-created each time.
+
+**Steps (not yet started):**
+1. Add recurrence fields to reminders (frequency, interval, end condition)
+2. When a recurring reminder is marked as done, auto-create the next occurrence with the updated deadline
+3. Add recurrence UI to the review panel and reminder detail (e.g. "Repeat: Weekly")
+4. Handle edge cases: editing a single occurrence vs. all future occurrences
+
+**Details:**
+- Requires a database schema change (new columns or a recurrence rules table)
+- AI analysis would not set recurrence — this is a manual user choice
+
+---
+
+## Future: Web Push Notifications
+
+**Goal:** Send browser push notifications to remind users of approaching deadlines, even when the app is not open.
+
+**Steps (not yet started):**
+1. Register a service worker and request Notification permission from the user
+2. Store push subscription endpoints per user in the database
+3. Extend `check-deadlines` edge function to send web push via the Web Push protocol
+4. Add notification preferences to Account page (enable/disable, timing before deadline)
+
+**Details:**
+- Requires VAPID key pair generation and storage as secrets
+- Complements existing in-app bell notifications — does not replace them
+- Users must explicitly grant permission; provide clear opt-in UI
