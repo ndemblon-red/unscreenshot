@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Rounded square background using events purple -->
+  <rect width="512" height="512" rx="108" fill="hsl(271, 91%, 65%)"/>
+  
+  <!-- Screenshot frame corners (white) -->
+  <!-- Top-left -->
+  <path d="M128 168 L128 128 L168 128" fill="none" stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Top-right -->
+  <path d="M344 128 L384 128 L384 168" fill="none" stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Bottom-left -->
+  <path d="M128 344 L128 384 L168 384" fill="none" stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Bottom-right -->
+  <path d="M344 384 L384 384 L384 344" fill="none" stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Checkmark (white) -->
+  <path d="M196 264 L240 308 L320 212" fill="none" stroke="white" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
