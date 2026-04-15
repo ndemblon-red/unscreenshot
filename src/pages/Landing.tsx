@@ -69,25 +69,118 @@ export default function Landing() {
               </div>
               <div className="w-[42px]" />
             </div>
-            {/* Fake task list */}
-            <div className="p-4 md:p-6 space-y-3">
+
+            {/* Fake app header */}
+            <div className="px-4 md:px-6 pt-4 md:pt-5 flex items-center justify-between">
+              <span className="text-[17px] md:text-[20px] font-bold tracking-tight">Unscreenshot</span>
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1.5 rounded-btn bg-primary text-primary-foreground text-[12px] md:text-[13px] font-medium">
+                  Upload Screenshots
+                </div>
+              </div>
+            </div>
+
+            {/* Fake tabs */}
+            <div className="px-4 md:px-6 mt-3 flex gap-0 border-b border-border">
+              <div className="px-4 py-2 text-[13px] md:text-[14px] font-medium text-foreground border-b-2 border-primary">
+                Next
+              </div>
+              <div className="px-4 py-2 text-[13px] md:text-[14px] font-medium text-muted-foreground">
+                Done
+              </div>
+              <div className="px-4 py-2 text-[13px] md:text-[14px] font-medium text-muted-foreground">
+                Archive
+              </div>
+            </div>
+
+            {/* Fake category pills */}
+            <div className="px-4 md:px-6 pt-3 flex gap-2 overflow-hidden">
+              {["Everything", "Restaurants", "Shopping", "Events", "Reading"].map((cat, i) => (
+                <span
+                  key={cat}
+                  className={`px-2.5 py-1 rounded-full text-[11px] md:text-[12px] font-medium whitespace-nowrap ${
+                    i === 0
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {cat}
+                </span>
+              ))}
+            </div>
+
+            {/* Fake task cards */}
+            <div className="p-4 md:px-6 md:pb-6 md:pt-3 space-y-2.5">
               {[
-                { title: "Book table at Dishoom", cat: "Restaurants", color: "bg-tag-restaurants", deadline: "Tomorrow · 9 AM" },
-                { title: "Buy running shoes from screenshot", cat: "Shopping", color: "bg-tag-shopping", deadline: "Sat · 9 AM" },
-                { title: "Register for React conference", cat: "Events", color: "bg-tag-events", deadline: "23 Apr · 9 AM" },
-                { title: "Read article on system design", cat: "Reading", color: "bg-tag-reading", deadline: "Next Week" },
+                {
+                  title: "Book table at Dishoom",
+                  cat: "Restaurants",
+                  catClass: "bg-tag-restaurants text-white",
+                  deadline: "Today · 9 AM",
+                  urgency: "today" as const,
+                  img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=120&h=120&fit=crop",
+                },
+                {
+                  title: "Buy running shoes",
+                  cat: "Shopping",
+                  catClass: "bg-tag-shopping text-white",
+                  deadline: "Tomorrow · 9 AM",
+                  urgency: "tomorrow" as const,
+                  img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&h=120&fit=crop",
+                },
+                {
+                  title: "Register for React conf",
+                  cat: "Events",
+                  catClass: "bg-tag-events text-white",
+                  deadline: "23 Apr · 9 AM",
+                  urgency: null,
+                  img: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=120&h=120&fit=crop",
+                },
+                {
+                  title: "Read system design article",
+                  cat: "Reading",
+                  catClass: "bg-tag-reading text-white",
+                  deadline: "Next Week",
+                  urgency: null,
+                  img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=120&h=120&fit=crop",
+                },
               ].map((task, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3"
+                  className={`flex items-center gap-3 rounded-card border p-3 ${
+                    task.urgency === "today"
+                      ? "border-destructive/50 bg-destructive/5"
+                      : task.urgency === "tomorrow"
+                      ? "border-orange-400/50 bg-orange-50/50"
+                      : "border-border bg-background"
+                  }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-2 h-2 rounded-full ${task.color} shrink-0`} />
-                    <span className="text-[14px] md:text-[15px] font-medium truncate">{task.title}</span>
+                  {/* Thumbnail */}
+                  <div className="w-11 h-11 md:w-14 md:h-14 rounded-btn overflow-hidden flex-shrink-0 bg-muted">
+                    <img src={task.img} alt={task.title} className="w-full h-full object-cover" />
                   </div>
-                  <span className="text-[12px] md:text-[13px] text-muted-foreground whitespace-nowrap ml-4">
-                    {task.deadline}
-                  </span>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] md:text-[14px] font-medium truncate">{task.title}</span>
+                      {task.urgency === "today" && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wide bg-destructive text-destructive-foreground whitespace-nowrap">
+                          Due today
+                        </span>
+                      )}
+                      {task.urgency === "tomorrow" && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wide bg-orange-500 text-white whitespace-nowrap">
+                          Due tomorrow
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] md:text-[10px] uppercase font-semibold ${task.catClass}`}>
+                        {task.cat}
+                      </span>
+                      <span className="text-[11px] md:text-[12px] text-muted-foreground">{task.deadline}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
