@@ -28,12 +28,20 @@ export default function Landing() {
           <img src="/icon.svg" alt="Unscreenshot" className="w-7 h-7 rounded-lg" />
           <span className="text-[17px] font-semibold tracking-tight">Unscreenshot</span>
         </Link>
-        <Link
-          to="/auth"
-          className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Sign in
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link
+            to="/pricing"
+            className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Pricing
+          </Link>
+          <Link
+            to="/auth"
+            className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Sign in
+          </Link>
+        </div>
       </header>
 
       {/* Hero */}
@@ -231,6 +239,12 @@ export default function Landing() {
           Turn my screenshots into reminders
           <ArrowRight className="w-4 h-4" />
         </Link>
+        <Link
+          to="/pricing"
+          className="inline-block mt-4 text-[14px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          View pricing →
+        </Link>
       </section>
 
       {/* Footer */}
@@ -239,12 +253,20 @@ export default function Landing() {
           <span className="text-[13px] text-muted-foreground">
             © {new Date().getFullYear()} Unscreenshot
           </span>
-          <Link
-            to="/auth"
-            className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Sign in
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/pricing"
+              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Pricing
+            </Link>
+            <Link
+              to="/auth"
+              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
