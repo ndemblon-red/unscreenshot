@@ -167,7 +167,7 @@ export default function NotificationBell() {
                       {n.reminder_title}
                     </p>
                     <p className="text-[12px] text-muted-foreground mt-0.5">
-                      {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                      {formatDueLabel(n.reminder_deadline)}
                     </p>
                   </div>
                 </div>
