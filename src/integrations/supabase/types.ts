@@ -57,6 +57,8 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          email_due_today: boolean
+          email_due_tomorrow: boolean
           email_enabled: boolean
           timezone: string
           updated_at: string
@@ -64,6 +66,8 @@ export type Database = {
           web_enabled: boolean
         }
         Insert: {
+          email_due_today?: boolean
+          email_due_tomorrow?: boolean
           email_enabled?: boolean
           timezone?: string
           updated_at?: string
@@ -71,6 +75,8 @@ export type Database = {
           web_enabled?: boolean
         }
         Update: {
+          email_due_today?: boolean
+          email_due_tomorrow?: boolean
           email_enabled?: boolean
           timezone?: string
           updated_at?: string

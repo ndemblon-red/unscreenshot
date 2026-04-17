@@ -11,7 +11,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-type Prefs = { email_enabled: boolean; web_enabled: boolean; timezone: string };
+type Prefs = {
+  email_enabled: boolean;
+  email_due_tomorrow: boolean;
+  email_due_today: boolean;
+  web_enabled: boolean;
+  timezone: string;
+};
 
 type PermissionState = NotificationPermission | "unsupported";
 
@@ -52,6 +58,8 @@ export default function NotificationPreferences() {
   const [userId, setUserId] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<Prefs>({
     email_enabled: true,
+    email_due_tomorrow: true,
+    email_due_today: true,
     web_enabled: false,
     timezone: detectBrowserTimezone(),
   });
@@ -77,17 +85,17 @@ export default function NotificationPreferences() {
       }
       const { data, error } = await supabase
         .from("notification_preferences")
-        .select("email_enabled, web_enabled, timezone")
+        .select("email_enabled, email_due_tomorrow, email_due_today, web_enabled, timezone")
         .eq("user_id", uid)
         .maybeSingle();
       if (error) console.error("Failed to load preferences", error);
       if (data) {
         const detected = detectBrowserTimezone();
-        // If the stored tz is the default UTC and the browser knows a more
-        // specific zone, upgrade silently so users don't have to remember.
         const tz = data.timezone && data.timezone !== "UTC" ? data.timezone : detected;
         setPrefs({
           email_enabled: data.email_enabled,
+          email_due_tomorrow: data.email_due_tomorrow ?? true,
+          email_due_today: data.email_due_today ?? true,
           web_enabled: data.web_enabled,
           timezone: tz,
         });
@@ -98,6 +106,8 @@ export default function NotificationPreferences() {
               {
                 user_id: uid,
                 email_enabled: data.email_enabled,
+                email_due_tomorrow: data.email_due_tomorrow ?? true,
+                email_due_today: data.email_due_today ?? true,
                 web_enabled: data.web_enabled,
                 timezone: tz,
               },
@@ -122,6 +132,8 @@ export default function NotificationPreferences() {
         {
           user_id: userId,
           email_enabled: next.email_enabled,
+          email_due_tomorrow: next.email_due_tomorrow,
+          email_due_today: next.email_due_today,
           web_enabled: next.web_enabled,
           timezone: next.timezone,
         },
@@ -135,6 +147,14 @@ export default function NotificationPreferences() {
 
   async function handleEmailToggle(checked: boolean) {
     await persist({ ...prefs, email_enabled: checked });
+  }
+
+  async function handleEmailTomorrowToggle(checked: boolean) {
+    await persist({ ...prefs, email_due_tomorrow: checked });
+  }
+
+  async function handleEmailTodayToggle(checked: boolean) {
+    await persist({ ...prefs, email_due_today: checked });
   }
 
   async function handleTimezoneChange(value: string) {
@@ -173,22 +193,56 @@ export default function NotificationPreferences() {
     <section className="mt-10">
       <h2 className="text-section-title tracking-tight mb-4">Notifications</h2>
       <div className="space-y-4 rounded-card border border-border p-5 bg-card">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <Mail className="w-4 h-4 mt-0.5 text-muted-foreground" />
-            <div>
-              <p className="text-[15px] font-medium text-foreground">Email reminders</p>
-              <p className="text-label text-muted-foreground mt-0.5">
-                Sent at 6 PM the day before, and 8 AM the day a reminder is due.
-              </p>
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Mail className="w-4 h-4 mt-0.5 text-muted-foreground" />
+              <div>
+                <p className="text-[15px] font-medium text-foreground">Email reminders</p>
+                <p className="text-label text-muted-foreground mt-0.5">
+                  Master switch for all reminder emails.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={prefs.email_enabled}
+              onCheckedChange={handleEmailToggle}
+              disabled={loading}
+              aria-label="Email reminders"
+            />
+          </div>
+
+          <div className={`pl-7 space-y-3 ${!prefs.email_enabled ? "opacity-50" : ""}`}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[14px] font-medium text-foreground">Day before · 6 PM</p>
+                <p className="text-label text-muted-foreground mt-0.5">
+                  Heads-up the evening before a reminder is due.
+                </p>
+              </div>
+              <Switch
+                checked={prefs.email_due_tomorrow}
+                onCheckedChange={handleEmailTomorrowToggle}
+                disabled={loading || !prefs.email_enabled}
+                aria-label="Day-before email"
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[14px] font-medium text-foreground">Day of · 8 AM</p>
+                <p className="text-label text-muted-foreground mt-0.5">
+                  Morning reminder on the day a reminder is due.
+                </p>
+              </div>
+              <Switch
+                checked={prefs.email_due_today}
+                onCheckedChange={handleEmailTodayToggle}
+                disabled={loading || !prefs.email_enabled}
+                aria-label="Day-of email"
+              />
             </div>
           </div>
-          <Switch
-            checked={prefs.email_enabled}
-            onCheckedChange={handleEmailToggle}
-            disabled={loading}
-            aria-label="Email reminders"
-          />
         </div>
 
         <div className="border-t border-border" />
