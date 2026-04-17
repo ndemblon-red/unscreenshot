@@ -55,6 +55,27 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          email_enabled: boolean
+          updated_at: string
+          user_id: string
+          web_enabled: boolean
+        }
+        Insert: {
+          email_enabled?: boolean
+          updated_at?: string
+          user_id: string
+          web_enabled?: boolean
+        }
+        Update: {
+          email_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+          web_enabled?: boolean
+        }
+        Relationships: []
+      }
       reminders: {
         Row: {
           category: string
