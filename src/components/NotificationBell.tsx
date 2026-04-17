@@ -54,15 +54,16 @@ export default function NotificationBell() {
     const reminderIds = [...new Set(data.map((n) => n.reminder_id))];
     const { data: reminders } = await supabase
       .from("reminders")
-      .select("id, title")
+      .select("id, title, deadline")
       .in("id", reminderIds);
 
-    const titleMap = new Map(reminders?.map((r) => [r.id, r.title]) ?? []);
+    const reminderMap = new Map(reminders?.map((r) => [r.id, r]) ?? []);
 
     setNotifications(
       data.map((n) => ({
         ...n,
-        reminder_title: titleMap.get(n.reminder_id) ?? "Deleted reminder",
+        reminder_title: reminderMap.get(n.reminder_id)?.title ?? "Deleted reminder",
+        reminder_deadline: reminderMap.get(n.reminder_id)?.deadline,
       }))
     );
   };
