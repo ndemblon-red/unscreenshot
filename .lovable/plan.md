@@ -1,28 +1,41 @@
 
+The user wants to add upcoming email work to the task list, with the immediate focus being the email format. From context, the gaps in the email system are:
 
-### The bug
-You're right. In `NotificationBell.tsx` line 160:
-```ts
-formatDistanceToNow(new Date(n.created_at), { addSuffix: true })
+1. **Email format** (current priority) — the existing HTML in `check-deadlines/index.ts` is a basic inline template (heading + title + button + footer). Needs improvement: better branding, possibly use proper React Email templates, match the app's minimalist SF Pro aesthetic.
+2. **Cron schedule** — no pg_cron job yet, function only fires manually.
+3. **Resend test mode** — only delivers to `ndemblon@gmail.com`; needs domain verification or switch to Lovable Emails to send to any user.
+4. **Morning-of timing** — currently a "due today" email could fire at 00:05 if cron ran at midnight.
+5. **Notification preferences** — no per-user toggle for email opt-in/out.
+
+I should add these to `docs/TASKS.md` (the project's checklist file) under a clearly-marked "Email reminders" section, ordered by priority with email format first. I'll keep the entries terse and aligned with the existing TASKS.md style (`[ ]` checkboxes, short verb-led lines).
+
+I should also check the current TASKS.md structure to slot the new section in the right place.
+
+### Plan
+
+Add a new "Email reminders" section to `docs/TASKS.md` with these checklist items, ordered by priority:
+
 ```
-`n.created_at` is when the **notification log row was inserted** (when the cron job ran and detected your reminder), not when the reminder is due. So "14 minutes ago" really means "this notification was created 14 minutes ago" — coincidentally close to your reminder time, but unrelated.
+## Email reminders
 
-### The fix
-Show time relative to the **deadline** instead. That matches what users expect from a deadline notification ("Due 9 minutes ago", "Due in 2 hours", "Due tomorrow at 9 AM").
+- [ ] Redesign email format — match app aesthetic (SF Pro, minimal, dry copy), 
+      improve subject line, body layout, and CTA button. Consider extracting 
+      to a separate template file rather than inline HTML in check-deadlines.
+- [ ] Schedule check-deadlines via pg_cron (suggest every 30 min)
+- [ ] Add morning-of timing rule (don't fire "due today" before ~8 AM local)
+- [ ] Move off Resend test mode (verify custom domain OR switch to Lovable Emails) 
+      so emails reach any signed-up user, not just ndemblon@gmail.com
+- [ ] Add per-user notification preference toggle in Account page
+```
 
-### Changes
-**`src/components/NotificationBell.tsx`**
-1. Include `deadline` in the reminder lookup (line ~46): `.select("id, title, deadline")`
-2. Add `reminder_deadline` to the `Notification` interface and the title-map merge
-3. Replace the `formatDistanceToNow(created_at...)` line with a small helper:
-   - If deadline is in the future → `"Due in X"` (e.g., "Due in 2 hours")
-   - If deadline is in the past → `"Due X ago"` (e.g., "Due 9 minutes ago")
-   - Use `formatDistanceToNow(new Date(deadline), { addSuffix: false })` and prefix `"Due "` + suffix `" ago"` / `"in "` manually for clarity
-
-### Out of scope
-- Changing the email template wording (it already says "due today/tomorrow" which is correct)
-- Backfilling old notification rows — the data itself is fine, only the display label was wrong
+Insert this section in `docs/TASKS.md` near the existing notification-related milestone (likely Milestone 3e area based on the summary).
 
 ### Files touched
-- `src/components/NotificationBell.tsx` (one query change + one helper, ~10 lines)
+- `docs/TASKS.md` — add one new section, ~5 lines
 
+### After approval
+Once you approve, I'll switch to default mode, add the section, and then we can start on the first item (email format redesign). For that first task I'll come back with a separate plan covering: copy direction, layout/styling decisions, and whether to keep inline HTML or extract a template.
+
+### Out of scope (this turn)
+- Actually implementing any of the items — this is just adding them to the task list
+- Reordering or rewriting unrelated TASKS.md content
