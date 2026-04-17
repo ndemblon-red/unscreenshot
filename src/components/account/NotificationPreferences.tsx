@@ -132,6 +132,8 @@ export default function NotificationPreferences() {
         {
           user_id: userId,
           email_enabled: next.email_enabled,
+          email_due_tomorrow: next.email_due_tomorrow,
+          email_due_today: next.email_due_today,
           web_enabled: next.web_enabled,
           timezone: next.timezone,
         },
@@ -145,6 +147,14 @@ export default function NotificationPreferences() {
 
   async function handleEmailToggle(checked: boolean) {
     await persist({ ...prefs, email_enabled: checked });
+  }
+
+  async function handleEmailTomorrowToggle(checked: boolean) {
+    await persist({ ...prefs, email_due_tomorrow: checked });
+  }
+
+  async function handleEmailTodayToggle(checked: boolean) {
+    await persist({ ...prefs, email_due_today: checked });
   }
 
   async function handleTimezoneChange(value: string) {
