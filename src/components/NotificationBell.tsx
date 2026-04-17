@@ -13,6 +13,15 @@ interface Notification {
   created_at: string;
   read: boolean;
   reminder_title?: string;
+  reminder_deadline?: string;
+}
+
+function formatDueLabel(deadline?: string): string {
+  if (!deadline) return "";
+  const date = new Date(deadline);
+  if (isNaN(date.getTime())) return "";
+  const distance = formatDistanceToNow(date, { addSuffix: false });
+  return date.getTime() > Date.now() ? `Due in ${distance}` : `Due ${distance} ago`;
 }
 
 export default function NotificationBell() {
