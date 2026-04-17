@@ -1,41 +1,74 @@
 
-The user wants to add upcoming email work to the task list, with the immediate focus being the email format. From context, the gaps in the email system are:
+The user wants branded reminder emails that match the `/reminder/:id` page aesthetic and include the screenshot image. Let me check what that page looks like and plan accordingly.
 
-1. **Email format** (current priority) — the existing HTML in `check-deadlines/index.ts` is a basic inline template (heading + title + button + footer). Needs improvement: better branding, possibly use proper React Email templates, match the app's minimalist SF Pro aesthetic.
-2. **Cron schedule** — no pg_cron job yet, function only fires manually.
-3. **Resend test mode** — only delivers to `ndemblon@gmail.com`; needs domain verification or switch to Lovable Emails to send to any user.
-4. **Morning-of timing** — currently a "due today" email could fire at 00:05 if cron ran at midnight.
-5. **Notification preferences** — no per-user toggle for email opt-in/out.
+Key facts from context:
+- Currently using Resend via connector gateway with `onboarding@resend.dev` (test mode → only delivers to ndemblon@gmail.com)
+- Email is inline HTML in `check-deadlines/index.ts` — basic heading + title + button
+- App aesthetic: minimalist, SF Pro Display, dry copy, HSL category color tokens
+- Reminder detail page shows: image preview, title, category pill, deadline label, created date, action buttons
+- Screenshots are in a public Supabase Storage bucket (`screenshots`) — so `image_url` is publicly accessible and can be referenced directly in emails
 
-I should add these to `docs/TASKS.md` (the project's checklist file) under a clearly-marked "Email reminders" section, ordered by priority with email format first. I'll keep the entries terse and aligned with the existing TASKS.md style (`[ ]` checkboxes, short verb-led lines).
+The user explicitly wants Resend (already set up), so I won't push them to Lovable Emails. I'll keep the existing send mechanism and just redesign the HTML.
 
-I should also check the current TASKS.md structure to slot the new section in the right place.
+### What to build
 
-### Plan
+Redesign the email HTML in `check-deadlines/index.ts` to mirror the reminder detail page:
 
-Add a new "Email reminders" section to `docs/TASKS.md` with these checklist items, ordered by priority:
+**Layout (single column, ~520px max width, white background):**
+1. Small header strip with "Unscreenshot" wordmark (left-aligned, muted)
+2. Section heading: "Due today" or "Due tomorrow" (the existing notification type)
+3. Reminder title (large, bold, SF Pro stack)
+4. Category pill — colored chip matching the app's category palette (use the category's HSL color inline)
+5. Deadline line (e.g., "Today · 9:00 AM") — muted text
+6. **Screenshot image** — full-width, rounded corners, subtle border. Reference the public `image_url` directly.
+7. CTA button — "Open reminder" (black bg, white text, rounded, matching app button style)
+8. Footer — small muted text "Sent by Unscreenshot" + a plain-text note about how to manage reminders (no unsubscribe link yet — that's a separate task already in TASKS.md)
 
-```
-## Email reminders
+**Styling approach:**
+- Inline styles only (email client compatibility)
+- System font stack: `-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif`
+- Colors mirroring the app: white bg `#ffffff`, near-black text `#0a0a0a`, muted `#71717a`, subtle border `#e5e5e5`, button bg `#0a0a0a`
+- Category pill colors: hardcode the 8 category → HSL background mappings (read from `src/lib/categories.ts` to match exactly)
+- Image styled with `max-width: 100%`, `border-radius: 12px`, `border: 1px solid #e5e5e5`
 
-- [ ] Redesign email format — match app aesthetic (SF Pro, minimal, dry copy), 
-      improve subject line, body layout, and CTA button. Consider extracting 
-      to a separate template file rather than inline HTML in check-deadlines.
-- [ ] Schedule check-deadlines via pg_cron (suggest every 30 min)
-- [ ] Add morning-of timing rule (don't fire "due today" before ~8 AM local)
-- [ ] Move off Resend test mode (verify custom domain OR switch to Lovable Emails) 
-      so emails reach any signed-up user, not just ndemblon@gmail.com
-- [ ] Add per-user notification preference toggle in Account page
-```
+**Subject line:** Keep current format ("Reminder due today: {title}" / "Reminder due tomorrow: {title}") — it's already correct.
 
-Insert this section in `docs/TASKS.md` near the existing notification-related milestone (likely Milestone 3e area based on the summary).
+**Plain-text fallback:** Add a simple text version alongside the HTML so the email passes spam filters better (Resend supports both `html` and `text` fields).
+
+### Image considerations
+
+- The `screenshots` bucket is public, so `image_url` works directly in `<img src>` tags — no signed URL needed.
+- Email clients sometimes block images by default. We'll add `alt="Reminder screenshot"` and ensure the email still reads well without the image (title + category + deadline + CTA all visible above/around it).
+
+### Code changes
+
+**File:** `supabase/functions/check-deadlines/index.ts`
+- Extract the HTML generation into a helper function `buildReminderEmail({ title, category, deadline, imageUrl, link, dueWhen })` returning `{ html, text }`
+- Replace the existing inline `html = ...` block with this call
+- Add a category → color map at the top of the file (8 categories matching `src/lib/categories.ts`)
+- Add a small deadline formatter (today / tomorrow + time, since deadlines are stored as `YYYY-MM-DDTHH:MM`)
+
+**Files NOT touched:**
+- No new Edge Functions
+- No DB changes
+- No frontend changes
+- No switch to Lovable Emails (separate task)
+- No cron schedule (separate task)
+
+### Verification plan
+
+After deploying, manually invoke `check-deadlines` (or clear the relevant `notification_log` rows so a fresh email fires) and confirm the email arrives at `ndemblon@gmail.com` with:
+- Image visible
+- Category pill colored correctly
+- CTA button works
+- Layout holds in Gmail web + iOS Mail
+
+### Out of scope
+- Switching off Resend test mode (separate TASKS.md item)
+- pg_cron schedule (separate TASKS.md item)
+- Per-user notification preferences / unsubscribe link (separate TASKS.md item)
+- Morning-of timing rule (separate TASKS.md item)
+- Refactoring email into React Email templates — keeping inline HTML for now since we're staying on Resend; can revisit if/when we move to Lovable Emails
 
 ### Files touched
-- `docs/TASKS.md` — add one new section, ~5 lines
-
-### After approval
-Once you approve, I'll switch to default mode, add the section, and then we can start on the first item (email format redesign). For that first task I'll come back with a separate plan covering: copy direction, layout/styling decisions, and whether to keep inline HTML or extract a template.
-
-### Out of scope (this turn)
-- Actually implementing any of the items — this is just adding them to the task list
-- Reordering or rewriting unrelated TASKS.md content
+- `supabase/functions/check-deadlines/index.ts` (~80 lines added: helper + category map + formatter)
