@@ -227,16 +227,22 @@ Deno.serve(async (req: Request) => {
     // Fetch per-user preferences (email + timezone). Defaults: email on, UTC.
     const { data: prefsRows } = await supabase
       .from("notification_preferences")
-      .select("user_id, email_enabled, timezone")
+      .select("user_id, email_enabled, email_due_today, email_due_tomorrow, timezone")
       .in("user_id", userIds);
     const emailPrefMap: Record<string, boolean> = {};
+    const emailTodayMap: Record<string, boolean> = {};
+    const emailTomorrowMap: Record<string, boolean> = {};
     const tzMap: Record<string, string> = {};
     for (const uid of userIds) {
       emailPrefMap[uid] = true;
+      emailTodayMap[uid] = true;
+      emailTomorrowMap[uid] = true;
       tzMap[uid] = "UTC";
     }
     for (const row of prefsRows || []) {
       emailPrefMap[row.user_id] = row.email_enabled;
+      emailTodayMap[row.user_id] = row.email_due_today ?? true;
+      emailTomorrowMap[row.user_id] = row.email_due_tomorrow ?? true;
       if (row.timezone) tzMap[row.user_id] = row.timezone;
     }
 
