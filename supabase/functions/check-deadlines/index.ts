@@ -211,16 +211,42 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Fetch per-user email preferences (default to true if missing)
+    // Fetch per-user preferences (email + timezone). Defaults: email on, UTC.
     const { data: prefsRows } = await supabase
       .from("notification_preferences")
-      .select("user_id, email_enabled")
+      .select("user_id, email_enabled, timezone")
       .in("user_id", userIds);
     const emailPrefMap: Record<string, boolean> = {};
-    for (const uid of userIds) emailPrefMap[uid] = true;
+    const tzMap: Record<string, string> = {};
+    for (const uid of userIds) {
+      emailPrefMap[uid] = true;
+      tzMap[uid] = "UTC";
+    }
     for (const row of prefsRows || []) {
       emailPrefMap[row.user_id] = row.email_enabled;
+      if (row.timezone) tzMap[row.user_id] = row.timezone;
     }
+
+    // Helpers: compute YYYY-MM-DD and current hour in a given IANA timezone.
+    function localParts(tz: string): { date: string; hour: number } {
+      try {
+        const fmt = new Intl.DateTimeFormat("en-CA", {
+          timeZone: tz,
+          year: "numeric", month: "2-digit", day: "2-digit",
+          hour: "2-digit", hour12: false,
+        });
+        const parts = fmt.formatToParts(now);
+        const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+        const date = `${get("year")}-${get("month")}-${get("day")}`;
+        const hour = parseInt(get("hour"), 10);
+        return { date, hour: isNaN(hour) ? 0 : hour };
+      } catch {
+        const date = now.toISOString().slice(0, 10);
+        return { date, hour: now.getUTCHours() };
+      }
+    }
+    const SEND_HOUR_TODAY = 8;
+    const SEND_HOUR_TOMORROW = 18;
 
     type Entry = {
       reminder_id: string;
