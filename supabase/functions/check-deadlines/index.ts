@@ -336,6 +336,15 @@ Deno.serve(async (req: Request) => {
         skippedCount++;
         continue;
       }
+      const typeAllowed =
+        entry.notification_type === "due_today"
+          ? emailTodayMap[entry.user_id] !== false
+          : emailTomorrowMap[entry.user_id] !== false;
+      if (!typeAllowed) {
+        entry.status = "skipped_email";
+        skippedCount++;
+        continue;
+      }
       if (!entry.recipient_email) {
         entry.status = "no_email";
         continue;
