@@ -276,8 +276,28 @@ Deno.serve(async (req: Request) => {
 
     for (const reminder of reminders) {
       if (!reminder.user_id) continue;
+      const tz = tzMap[reminder.user_id] || "UTC";
+      const local = localParts(tz);
       const deadlineDate = reminder.deadline?.split("T")[0] || reminder.deadline;
-      const notificationType = deadlineDate === today ? "due_today" : "due_tomorrow";
+
+      // Determine due-when relative to the user's local date
+      let notificationType: "due_today" | "due_tomorrow" | null = null;
+      if (deadlineDate === local.date) notificationType = "due_today";
+      else {
+        // Compute user-local "tomorrow" by adding one day to local.date
+        const [y, m, d] = local.date.split("-").map(Number);
+        const localTomorrow = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+        if (deadlineDate === localTomorrow) notificationType = "due_tomorrow";
+      }
+      if (!notificationType) continue;
+
+      // Time-gate: only send at the user's local 8 AM (today) or 6 PM (tomorrow),
+      // unless this is a forced/manual run.
+      if (!forceSend) {
+        const targetHour = notificationType === "due_today" ? SEND_HOUR_TODAY : SEND_HOUR_TOMORROW;
+        if (local.hour !== targetHour) continue;
+      }
+
       const key = `${reminder.id}:${notificationType}`;
       if (alreadyNotified.has(key)) continue;
 
@@ -295,7 +315,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (entries.length === 0) {
-      return new Response(JSON.stringify({ message: "All already notified", notified: 0 }), {
+      return new Response(JSON.stringify({ message: "Nothing to send this hour", notified: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
