@@ -8,6 +8,7 @@ import { getCategoryClasses } from "@/lib/categories";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { toast } from "sonner";
 import { DEADLINE_OPTIONS, deadlineLabelToDate, dateToDeadlineLabel, isDateString, extractDate, extractTime } from "@/lib/deadlines";
+import TimePresetChips from "@/components/TimePresetChips";
 
 type Reminder = {
   id: string;
@@ -293,17 +294,14 @@ export default function ReminderDetail() {
                     onChange={(e) => setDeadline(e.target.value + "T" + customTime)}
                     className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
-                  <input
-                    type="time"
-                    value={customTime}
-                    onChange={(e) => {
-                      const newTime = e.target.value;
-                      setCustomTime(newTime);
-                      setDeadline(extractDate(deadline) + "T" + newTime);
-                    }}
-                    className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
                 </div>
+                <TimePresetChips
+                  value={customTime}
+                  onChange={(newTime) => {
+                    setCustomTime(newTime);
+                    setDeadline(extractDate(deadline) + "T" + newTime);
+                  }}
+                />
                 <button
                   onClick={() => {
                     setEditingDeadline(false);

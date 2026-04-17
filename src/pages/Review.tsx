@@ -343,15 +343,14 @@ export default function ReviewPage() {
                         }}
                         className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                       />
-                      <input
-                        type="time"
+                    </div>
+                    <div className="mt-2">
+                      <TimePresetChips
                         value={customTime}
-                        onChange={(e) => {
-                          const newTime = e.target.value;
+                        onChange={(newTime) => {
                           setCustomTime(newTime);
                           updateField("deadline", (customDate || extractDate(current.deadline)) + "T" + newTime);
                         }}
-                        className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                       />
                     </div>
                   )}
