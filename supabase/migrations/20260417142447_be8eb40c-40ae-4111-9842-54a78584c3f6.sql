@@ -1,0 +1,1 @@
+DELETE FROM public.notification_log WHERE reminder_id IN ('46141f44-40db-4b2f-ad76-5f3763c208de','77876614-5ca1-4039-977d-84c56820e5b6');
