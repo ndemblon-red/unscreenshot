@@ -5,6 +5,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import StatsCards from "@/components/account/StatsCards";
 import CategoryChart from "@/components/account/CategoryChart";
 import ChangePasswordForm from "@/components/account/ChangePasswordForm";
+import NotificationPreferences from "@/components/account/NotificationPreferences";
 import NotificationBell from "@/components/NotificationBell";
 
 interface Stats {
@@ -85,6 +86,8 @@ export default function Account() {
         byCategory={stats?.byCategory ?? {}}
         loading={statsLoading}
       />
+
+      <NotificationPreferences />
 
       <ChangePasswordForm />
 
