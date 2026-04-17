@@ -11,7 +11,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-type Prefs = { email_enabled: boolean; web_enabled: boolean; timezone: string };
+type Prefs = {
+  email_enabled: boolean;
+  email_due_tomorrow: boolean;
+  email_due_today: boolean;
+  web_enabled: boolean;
+  timezone: string;
+};
 
 type PermissionState = NotificationPermission | "unsupported";
 
