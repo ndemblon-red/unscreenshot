@@ -58,6 +58,8 @@ export default function NotificationPreferences() {
   const [userId, setUserId] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<Prefs>({
     email_enabled: true,
+    email_due_tomorrow: true,
+    email_due_today: true,
     web_enabled: false,
     timezone: detectBrowserTimezone(),
   });
