@@ -1,0 +1,17 @@
+{
+  "name": "Unscreenshot",
+  "short_name": "Unscreenshot",
+  "description": "Turn your camera roll into a to-do list that actually follows up.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5B5BD6",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
