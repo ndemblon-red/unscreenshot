@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
-import { Bell, Mail } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Bell, Mail, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
-type Prefs = { email_enabled: boolean; web_enabled: boolean };
+type Prefs = { email_enabled: boolean; web_enabled: boolean; timezone: string };
 
 type PermissionState = NotificationPermission | "unsupported";
 
@@ -13,11 +20,51 @@ function getPermission(): PermissionState {
   return Notification.permission;
 }
 
+function detectBrowserTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
+const COMMON_TIMEZONES = [
+  "UTC",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Madrid",
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Sao_Paulo",
+  "Africa/Johannesburg",
+  "Asia/Dubai",
+  "Asia/Kolkata",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "Pacific/Auckland",
+];
+
 export default function NotificationPreferences() {
   const [userId, setUserId] = useState<string | null>(null);
-  const [prefs, setPrefs] = useState<Prefs>({ email_enabled: true, web_enabled: false });
+  const [prefs, setPrefs] = useState<Prefs>({
+    email_enabled: true,
+    web_enabled: false,
+    timezone: detectBrowserTimezone(),
+  });
   const [loading, setLoading] = useState(true);
   const [permission, setPermission] = useState<PermissionState>(() => getPermission());
+
+  const tzOptions = useMemo(() => {
+    const detected = detectBrowserTimezone();
+    const set = new Set(COMMON_TIMEZONES);
+    if (detected) set.add(detected);
+    if (prefs.timezone) set.add(prefs.timezone);
+    return Array.from(set).sort();
+  }, [prefs.timezone]);
 
   useEffect(() => {
     async function load() {
@@ -30,11 +77,37 @@ export default function NotificationPreferences() {
       }
       const { data, error } = await supabase
         .from("notification_preferences")
-        .select("email_enabled, web_enabled")
+        .select("email_enabled, web_enabled, timezone")
         .eq("user_id", uid)
         .maybeSingle();
       if (error) console.error("Failed to load preferences", error);
-      if (data) setPrefs({ email_enabled: data.email_enabled, web_enabled: data.web_enabled });
+      if (data) {
+        const detected = detectBrowserTimezone();
+        // If the stored tz is the default UTC and the browser knows a more
+        // specific zone, upgrade silently so users don't have to remember.
+        const tz = data.timezone && data.timezone !== "UTC" ? data.timezone : detected;
+        setPrefs({
+          email_enabled: data.email_enabled,
+          web_enabled: data.web_enabled,
+          timezone: tz,
+        });
+        if (tz !== data.timezone) {
+          await supabase
+            .from("notification_preferences")
+            .upsert(
+              {
+                user_id: uid,
+                email_enabled: data.email_enabled,
+                web_enabled: data.web_enabled,
+                timezone: tz,
+              },
+              { onConflict: "user_id" },
+            );
+        }
+      } else {
+        const detected = detectBrowserTimezone();
+        setPrefs((p) => ({ ...p, timezone: detected }));
+      }
       setLoading(false);
     }
     load();
@@ -46,7 +119,12 @@ export default function NotificationPreferences() {
     const { error } = await supabase
       .from("notification_preferences")
       .upsert(
-        { user_id: userId, email_enabled: next.email_enabled, web_enabled: next.web_enabled },
+        {
+          user_id: userId,
+          email_enabled: next.email_enabled,
+          web_enabled: next.web_enabled,
+          timezone: next.timezone,
+        },
         { onConflict: "user_id" },
       );
     if (error) {
@@ -57,6 +135,10 @@ export default function NotificationPreferences() {
 
   async function handleEmailToggle(checked: boolean) {
     await persist({ ...prefs, email_enabled: checked });
+  }
+
+  async function handleTimezoneChange(value: string) {
+    await persist({ ...prefs, timezone: value });
   }
 
   async function handleWebToggle(checked: boolean) {
@@ -97,7 +179,7 @@ export default function NotificationPreferences() {
             <div>
               <p className="text-[15px] font-medium text-foreground">Email reminders</p>
               <p className="text-label text-muted-foreground mt-0.5">
-                Sent the day before and the day a reminder is due.
+                Sent at 6 PM the day before, and 8 AM the day a reminder is due.
               </p>
             </div>
           </div>
@@ -137,6 +219,36 @@ export default function NotificationPreferences() {
             disabled={loading || permission === "unsupported" || permission === "denied"}
             aria-label="Browser notifications"
           />
+        </div>
+
+        <div className="border-t border-border" />
+
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <Globe className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-medium text-foreground">Timezone</p>
+              <p className="text-label text-muted-foreground mt-0.5">
+                Used to send emails at your local 6 PM and 8 AM.
+              </p>
+            </div>
+          </div>
+          <Select
+            value={prefs.timezone}
+            onValueChange={handleTimezoneChange}
+            disabled={loading}
+          >
+            <SelectTrigger className="w-[200px]" aria-label="Timezone">
+              <SelectValue placeholder="Select timezone" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {tzOptions.map((tz) => (
+                <SelectItem key={tz} value={tz}>
+                  {tz}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </section>

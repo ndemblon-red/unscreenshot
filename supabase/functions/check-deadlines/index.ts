@@ -159,15 +159,28 @@ Deno.serve(async (req: Request) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Allow manual/test runs to bypass per-user time gating: ?force=1
+    const url = new URL(req.url);
+    const forceSend = url.searchParams.get("force") === "1";
+
     const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-    const tomorrow = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    // Widen the date window to ±1 UTC day so we catch reminders whose
+    // local "today" / "tomorrow" straddles a UTC boundary.
+    const yesterdayUtc = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const todayUtc = now.toISOString().slice(0, 10);
+    const tomorrowUtc = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    const dayAfterUtc = new Date(now.getTime() + 2 * 86400000).toISOString().slice(0, 10);
+    const candidateDates = [yesterdayUtc, todayUtc, tomorrowUtc, dayAfterUtc];
+
+    const orFilter = candidateDates
+      .flatMap((d) => [`deadline.eq.${d}`, `deadline.like.${d}T%`])
+      .join(",");
 
     const { data: reminders, error: remindersError } = await supabase
       .from("reminders")
       .select("id, user_id, title, deadline, category, image_url")
       .eq("status", "next")
-      .or(`deadline.eq.${today},deadline.eq.${tomorrow},deadline.like.${today}T%,deadline.like.${tomorrow}T%`);
+      .or(orFilter);
 
     if (remindersError) {
       console.error("Error fetching reminders:", remindersError);
@@ -211,16 +224,42 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Fetch per-user email preferences (default to true if missing)
+    // Fetch per-user preferences (email + timezone). Defaults: email on, UTC.
     const { data: prefsRows } = await supabase
       .from("notification_preferences")
-      .select("user_id, email_enabled")
+      .select("user_id, email_enabled, timezone")
       .in("user_id", userIds);
     const emailPrefMap: Record<string, boolean> = {};
-    for (const uid of userIds) emailPrefMap[uid] = true;
+    const tzMap: Record<string, string> = {};
+    for (const uid of userIds) {
+      emailPrefMap[uid] = true;
+      tzMap[uid] = "UTC";
+    }
     for (const row of prefsRows || []) {
       emailPrefMap[row.user_id] = row.email_enabled;
+      if (row.timezone) tzMap[row.user_id] = row.timezone;
     }
+
+    // Helpers: compute YYYY-MM-DD and current hour in a given IANA timezone.
+    function localParts(tz: string): { date: string; hour: number } {
+      try {
+        const fmt = new Intl.DateTimeFormat("en-CA", {
+          timeZone: tz,
+          year: "numeric", month: "2-digit", day: "2-digit",
+          hour: "2-digit", hour12: false,
+        });
+        const parts = fmt.formatToParts(now);
+        const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+        const date = `${get("year")}-${get("month")}-${get("day")}`;
+        const hour = parseInt(get("hour"), 10);
+        return { date, hour: isNaN(hour) ? 0 : hour };
+      } catch {
+        const date = now.toISOString().slice(0, 10);
+        return { date, hour: now.getUTCHours() };
+      }
+    }
+    const SEND_HOUR_TODAY = 8;
+    const SEND_HOUR_TOMORROW = 18;
 
     type Entry = {
       reminder_id: string;
@@ -237,8 +276,28 @@ Deno.serve(async (req: Request) => {
 
     for (const reminder of reminders) {
       if (!reminder.user_id) continue;
+      const tz = tzMap[reminder.user_id] || "UTC";
+      const local = localParts(tz);
       const deadlineDate = reminder.deadline?.split("T")[0] || reminder.deadline;
-      const notificationType = deadlineDate === today ? "due_today" : "due_tomorrow";
+
+      // Determine due-when relative to the user's local date
+      let notificationType: "due_today" | "due_tomorrow" | null = null;
+      if (deadlineDate === local.date) notificationType = "due_today";
+      else {
+        // Compute user-local "tomorrow" by adding one day to local.date
+        const [y, m, d] = local.date.split("-").map(Number);
+        const localTomorrow = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+        if (deadlineDate === localTomorrow) notificationType = "due_tomorrow";
+      }
+      if (!notificationType) continue;
+
+      // Time-gate: only send at the user's local 8 AM (today) or 6 PM (tomorrow),
+      // unless this is a forced/manual run.
+      if (!forceSend) {
+        const targetHour = notificationType === "due_today" ? SEND_HOUR_TODAY : SEND_HOUR_TOMORROW;
+        if (local.hour !== targetHour) continue;
+      }
+
       const key = `${reminder.id}:${notificationType}`;
       if (alreadyNotified.has(key)) continue;
 
@@ -256,7 +315,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (entries.length === 0) {
-      return new Response(JSON.stringify({ message: "All already notified", notified: 0 }), {
+      return new Response(JSON.stringify({ message: "Nothing to send this hour", notified: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

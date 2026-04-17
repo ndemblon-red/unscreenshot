@@ -58,18 +58,21 @@ export type Database = {
       notification_preferences: {
         Row: {
           email_enabled: boolean
+          timezone: string
           updated_at: string
           user_id: string
           web_enabled: boolean
         }
         Insert: {
           email_enabled?: boolean
+          timezone?: string
           updated_at?: string
           user_id: string
           web_enabled?: boolean
         }
         Update: {
           email_enabled?: boolean
+          timezone?: string
           updated_at?: string
           user_id?: string
           web_enabled?: boolean
