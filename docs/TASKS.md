@@ -121,6 +121,19 @@
 
 ---
 
+## Milestone 3h: Email Reminders
+
+**Goal:** Deadline notifications reach users by email reliably, on a sensible schedule, with a branded format and per-user control.
+**Test:** Create a reminder due today as any signed-up user — receive a well-formatted email at a reasonable hour. Toggle email notifications off in Account — no further emails arrive.
+
+- [ ] Redesign email format — match app aesthetic (SF Pro, minimal, dry copy); improve subject, body layout, and CTA; extract to a template file instead of inline HTML in `check-deadlines`
+- [ ] Schedule `check-deadlines` via pg_cron (every ~30 min)
+- [ ] Add morning-of timing rule — do not fire "due today" emails before ~8 AM local
+- [ ] Move off Resend test mode — verify custom domain OR switch to Lovable Emails so any signed-up user can receive notifications
+- [ ] Add per-user email notification preference toggle on the Account page
+
+---
+
 ## Milestone 4: Task List — View, Filter, Sort and Status
 **Goal:** Saved reminders appear in the task list and the user can filter, sort, change status, and navigate to detail.
 **Test:** Save 5 reminders across different categories. Filter by one category — only matching items show. Sort by date newest/oldest — order changes correctly. Mark one as Done — it moves to the Done tab. Check Archive tab shows items whose deadline has passed.
