@@ -256,6 +256,24 @@
 
 ---
 
+## Future: Final SEO Audit
+
+**Goal:** Run a final end-to-end SEO audit before launch to confirm metadata, structured data, and social previews render correctly on the production domain.
+
+**Steps (not yet started):**
+1. Confirm canonical domain and update `index.html`, `sitemap.xml`, and OG image URLs accordingly
+2. Validate Open Graph and Twitter cards via opengraph.xyz and Twitter card validator
+3. Validate JSON-LD via Google Rich Results Test
+4. Submit sitemap to Google Search Console and Bing Webmaster Tools
+5. Re-check page weight, lazy loading, and Lighthouse SEO score (target 100)
+6. Add per-route meta tags (e.g. via react-helmet-async) so `/pricing` and `/auth` get unique titles and descriptions
+
+**Details:**
+- Requires the production/custom domain to be live first
+- Some checks (social scrapers) may require pre-rendering or SSR if the SPA shell is not enough
+
+---
+
 ## Future: Home Page Redesign
 
 **Goal:** Revisit and fix the landing page at `/` to better communicate the product value and convert visitors.
