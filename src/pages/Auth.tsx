@@ -124,9 +124,12 @@ export default function Auth() {
           ) : isLogin ? (
             <>
               Don't have an account?{" "}
-              <Link to="/pricing" className="text-primary hover:underline font-medium">
+              <button
+                onClick={() => setIsLogin(false)}
+                className="text-primary hover:underline font-medium"
+              >
                 Sign up
-              </Link>
+              </button>
             </>
           ) : (
             <>
