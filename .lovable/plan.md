@@ -1,74 +1,57 @@
 
-The user wants branded reminder emails that match the `/reminder/:id` page aesthetic and include the screenshot image. Let me check what that page looks like and plan accordingly.
+### Goal
+Add in-tab browser notifications (system toasts via the Notification API) that fire when a new row appears in `notification_log`, plus a per-channel preferences UI on the Account page (email on/off, web push on/off).
 
-Key facts from context:
-- Currently using Resend via connector gateway with `onboarding@resend.dev` (test mode → only delivers to ndemblon@gmail.com)
-- Email is inline HTML in `check-deadlines/index.ts` — basic heading + title + button
-- App aesthetic: minimalist, SF Pro Display, dry copy, HSL category color tokens
-- Reminder detail page shows: image preview, title, category pill, deadline label, created date, action buttons
-- Screenshots are in a public Supabase Storage bucket (`screenshots`) — so `image_url` is publicly accessible and can be referenced directly in emails
+### Approach
 
-The user explicitly wants Resend (already set up), so I won't push them to Lovable Emails. I'll keep the existing send mechanism and just redesign the HTML.
+**1. Permission + foreground listener**
+- New hook `src/hooks/use-web-notifications.ts`:
+  - On mount, check `Notification.permission` and the user's `web_notifications_enabled` preference.
+  - If both are granted/enabled, subscribe to a Supabase Realtime channel on `notification_log` (INSERT, filtered by `user_id`).
+  - On each new row, fetch the linked reminder title + deadline and call `new Notification(...)` with title `"Due today"` / `"Due tomorrow"`, body = reminder title, icon = `/icon.svg`, and an `onclick` that focuses the window and navigates to `/reminder/:id`.
+- Mount the hook once at the app level (inside `AuthGuard` so it only runs when signed in).
 
-### What to build
+**2. Preferences UI (Account page)**
+- New component `src/components/account/NotificationPreferences.tsx`:
+  - Two switches: "Email reminders" and "Browser notifications".
+  - "Browser notifications" toggle handles the permission prompt: if user flips it on and permission is `default`, call `Notification.requestPermission()`. If `denied`, show inline help text explaining how to re-enable in browser settings.
+  - Both switches read/write to a new `notification_preferences` table.
+- Slot it into `src/pages/Account.tsx` between `CategoryChart` and `ChangePasswordForm`.
 
-Redesign the email HTML in `check-deadlines/index.ts` to mirror the reminder detail page:
+**3. Database**
+New table `notification_preferences`:
+- `user_id uuid PK references auth.users`
+- `email_enabled boolean default true`
+- `web_enabled boolean default false`
+- `updated_at timestamptz default now()`
 
-**Layout (single column, ~520px max width, white background):**
-1. Small header strip with "Unscreenshot" wordmark (left-aligned, muted)
-2. Section heading: "Due today" or "Due tomorrow" (the existing notification type)
-3. Reminder title (large, bold, SF Pro stack)
-4. Category pill — colored chip matching the app's category palette (use the category's HSL color inline)
-5. Deadline line (e.g., "Today · 9:00 AM") — muted text
-6. **Screenshot image** — full-width, rounded corners, subtle border. Reference the public `image_url` directly.
-7. CTA button — "Open reminder" (black bg, white text, rounded, matching app button style)
-8. Footer — small muted text "Sent by Unscreenshot" + a plain-text note about how to manage reminders (no unsubscribe link yet — that's a separate task already in TASKS.md)
+RLS: users can select/insert/update their own row. Auto-create a row on first read via upsert from the client (no trigger needed).
 
-**Styling approach:**
-- Inline styles only (email client compatibility)
-- System font stack: `-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif`
-- Colors mirroring the app: white bg `#ffffff`, near-black text `#0a0a0a`, muted `#71717a`, subtle border `#e5e5e5`, button bg `#0a0a0a`
-- Category pill colors: hardcode the 8 category → HSL background mappings (read from `src/lib/categories.ts` to match exactly)
-- Image styled with `max-width: 100%`, `border-radius: 12px`, `border: 1px solid #e5e5e5`
+**4. Wire into `check-deadlines`**
+- Before sending an email for a given reminder, look up the user's `notification_preferences.email_enabled`. If `false`, skip the email and instead insert the `notification_log` row with `status = 'skipped_email'` so the in-tab toast still fires via realtime.
+- If preferences row doesn't exist, default to `email_enabled = true` (current behavior preserved).
+- Note: web notifications don't need any backend send — the existing `notification_log` insert is the trigger; the client listens via realtime.
 
-**Subject line:** Keep current format ("Reminder due today: {title}" / "Reminder due tomorrow: {title}") — it's already correct.
+**5. Realtime**
+- Add `ALTER PUBLICATION supabase_realtime ADD TABLE public.notification_log;` (might already be set since `NotificationBell` subscribes — will verify; if already added, the migration line is a no-op-safe `ADD TABLE` that we'll guard).
 
-**Plain-text fallback:** Add a simple text version alongside the HTML so the email passes spam filters better (Resend supports both `html` and `text` fields).
+### Files
 
-### Image considerations
+New:
+- `src/hooks/use-web-notifications.ts`
+- `src/components/account/NotificationPreferences.tsx`
+- One migration: create `notification_preferences` table + RLS
 
-- The `screenshots` bucket is public, so `image_url` works directly in `<img src>` tags — no signed URL needed.
-- Email clients sometimes block images by default. We'll add `alt="Reminder screenshot"` and ensure the email still reads well without the image (title + category + deadline + CTA all visible above/around it).
+Edited:
+- `src/pages/Account.tsx` — slot in the new component
+- `src/components/AuthGuard.tsx` — call `useWebNotifications()` once
+- `supabase/functions/check-deadlines/index.ts` — read preferences, skip email when disabled
 
-### Code changes
+### Out of scope (this turn)
+- True background push / service worker / VAPID
+- Notification grouping or quiet hours
+- Per-category preferences
+- Rewriting the existing email (unchanged from last turn)
 
-**File:** `supabase/functions/check-deadlines/index.ts`
-- Extract the HTML generation into a helper function `buildReminderEmail({ title, category, deadline, imageUrl, link, dueWhen })` returning `{ html, text }`
-- Replace the existing inline `html = ...` block with this call
-- Add a category → color map at the top of the file (8 categories matching `src/lib/categories.ts`)
-- Add a small deadline formatter (today / tomorrow + time, since deadlines are stored as `YYYY-MM-DDTHH:MM`)
-
-**Files NOT touched:**
-- No new Edge Functions
-- No DB changes
-- No frontend changes
-- No switch to Lovable Emails (separate task)
-- No cron schedule (separate task)
-
-### Verification plan
-
-After deploying, manually invoke `check-deadlines` (or clear the relevant `notification_log` rows so a fresh email fires) and confirm the email arrives at `ndemblon@gmail.com` with:
-- Image visible
-- Category pill colored correctly
-- CTA button works
-- Layout holds in Gmail web + iOS Mail
-
-### Out of scope
-- Switching off Resend test mode (separate TASKS.md item)
-- pg_cron schedule (separate TASKS.md item)
-- Per-user notification preferences / unsubscribe link (separate TASKS.md item)
-- Morning-of timing rule (separate TASKS.md item)
-- Refactoring email into React Email templates — keeping inline HTML for now since we're staying on Resend; can revisit if/when we move to Lovable Emails
-
-### Files touched
-- `supabase/functions/check-deadlines/index.ts` (~80 lines added: helper + category map + formatter)
+### Verification (after approval)
+Open `/account`, toggle browser notifications on (accept the permission prompt), then manually invoke `check-deadlines` and confirm a system toast appears that links to `/reminder/:id` on click. Then toggle "Email reminders" off, clear the relevant `notification_log` row, re-invoke, and confirm only a toast fires (no email).
