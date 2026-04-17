@@ -97,7 +97,7 @@ export default function NotificationPreferences() {
             <div>
               <p className="text-[15px] font-medium text-foreground">Email reminders</p>
               <p className="text-label text-muted-foreground mt-0.5">
-                Sent the day a reminder is due.
+                Sent the day before and the day a reminder is due.
               </p>
             </div>
           </div>
