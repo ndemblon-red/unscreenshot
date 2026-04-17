@@ -85,17 +85,17 @@ export default function NotificationPreferences() {
       }
       const { data, error } = await supabase
         .from("notification_preferences")
-        .select("email_enabled, web_enabled, timezone")
+        .select("email_enabled, email_due_tomorrow, email_due_today, web_enabled, timezone")
         .eq("user_id", uid)
         .maybeSingle();
       if (error) console.error("Failed to load preferences", error);
       if (data) {
         const detected = detectBrowserTimezone();
-        // If the stored tz is the default UTC and the browser knows a more
-        // specific zone, upgrade silently so users don't have to remember.
         const tz = data.timezone && data.timezone !== "UTC" ? data.timezone : detected;
         setPrefs({
           email_enabled: data.email_enabled,
+          email_due_tomorrow: data.email_due_tomorrow ?? true,
+          email_due_today: data.email_due_today ?? true,
           web_enabled: data.web_enabled,
           timezone: tz,
         });
@@ -106,6 +106,8 @@ export default function NotificationPreferences() {
               {
                 user_id: uid,
                 email_enabled: data.email_enabled,
+                email_due_tomorrow: data.email_due_tomorrow ?? true,
+                email_due_today: data.email_due_today ?? true,
                 web_enabled: data.web_enabled,
                 timezone: tz,
               },
