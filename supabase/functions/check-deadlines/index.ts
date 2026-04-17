@@ -211,6 +211,17 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Fetch per-user email preferences (default to true if missing)
+    const { data: prefsRows } = await supabase
+      .from("notification_preferences")
+      .select("user_id, email_enabled")
+      .in("user_id", userIds);
+    const emailPrefMap: Record<string, boolean> = {};
+    for (const uid of userIds) emailPrefMap[uid] = true;
+    for (const row of prefsRows || []) {
+      emailPrefMap[row.user_id] = row.email_enabled;
+    }
+
     type Entry = {
       reminder_id: string;
       user_id: string;
@@ -253,7 +264,13 @@ Deno.serve(async (req: Request) => {
     // Attempt email sends, then mark status accordingly
     let sentCount = 0;
     let failedCount = 0;
+    let skippedCount = 0;
     for (const entry of entries) {
+      if (emailPrefMap[entry.user_id] === false) {
+        entry.status = "skipped_email";
+        skippedCount++;
+        continue;
+      }
       if (!entry.recipient_email) {
         entry.status = "no_email";
         continue;
@@ -296,9 +313,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    console.log(`Logged ${entries.length} notifications (sent: ${sentCount}, failed: ${failedCount})`);
+    console.log(`Logged ${entries.length} notifications (sent: ${sentCount}, failed: ${failedCount}, skipped: ${skippedCount})`);
     return new Response(
-      JSON.stringify({ message: "Success", notified: entries.length, sent: sentCount, failed: failedCount }),
+      JSON.stringify({ message: "Success", notified: entries.length, sent: sentCount, failed: failedCount, skipped: skippedCount }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
