@@ -332,28 +332,30 @@ export default function ReviewPage() {
                     </button>
                   </div>
                   {customDate && (
-                    <div className="flex gap-2 mt-2">
-                      <input
-                        type="date"
-                        value={extractDate(current.deadline)}
-                        min={new Date().toISOString().split("T")[0]}
-                        onChange={(e) => {
-                          const newDate = e.target.value;
-                          setCustomDate(newDate);
-                          updateField("deadline", newDate + "T" + customTime);
-                        }}
-                        className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      />
-                    </div>
-                    <div className="mt-2">
-                      <TimePresetChips
-                        value={customTime}
-                        onChange={(newTime) => {
-                          setCustomTime(newTime);
-                          updateField("deadline", (customDate || extractDate(current.deadline)) + "T" + newTime);
-                        }}
-                      />
-                    </div>
+                    <>
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="date"
+                          value={extractDate(current.deadline)}
+                          min={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => {
+                            const newDate = e.target.value;
+                            setCustomDate(newDate);
+                            updateField("deadline", newDate + "T" + customTime);
+                          }}
+                          className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                      </div>
+                      <div className="mt-2">
+                        <TimePresetChips
+                          value={customTime}
+                          onChange={(newTime) => {
+                            setCustomTime(newTime);
+                            updateField("deadline", (customDate || extractDate(current.deadline)) + "T" + newTime);
+                          }}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
 
