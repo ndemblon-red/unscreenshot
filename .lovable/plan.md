@@ -1,57 +1,63 @@
 
-### Goal
-Add in-tab browser notifications (system toasts via the Notification API) that fire when a new row appears in `notification_log`, plus a per-channel preferences UI on the Account page (email on/off, web push on/off).
+The user wants three cron passes, not one:
+1. **6pm local** — send "due tomorrow" emails
+2. **8am local** — send "due today" emails
+3. **Hourly** — catch reminders added later in the day (for both today and tomorrow)
 
-### Approach
+### Timezone problem
 
-**1. Permission + foreground listener**
-- New hook `src/hooks/use-web-notifications.ts`:
-  - On mount, check `Notification.permission` and the user's `web_notifications_enabled` preference.
-  - If both are granted/enabled, subscribe to a Supabase Realtime channel on `notification_log` (INSERT, filtered by `user_id`).
-  - On each new row, fetch the linked reminder title + deadline and call `new Notification(...)` with title `"Due today"` / `"Due tomorrow"`, body = reminder title, icon = `/icon.svg`, and an `onclick` that focuses the window and navigates to `/reminder/:id`.
-- Mount the hook once at the app level (inside `AuthGuard` so it only runs when signed in).
+pg_cron runs in UTC. "Local time" only works if we know the user's timezone. Two options:
 
-**2. Preferences UI (Account page)**
-- New component `src/components/account/NotificationPreferences.tsx`:
-  - Two switches: "Email reminders" and "Browser notifications".
-  - "Browser notifications" toggle handles the permission prompt: if user flips it on and permission is `default`, call `Notification.requestPermission()`. If `denied`, show inline help text explaining how to re-enable in browser settings.
-  - Both switches read/write to a new `notification_preferences` table.
-- Slot it into `src/pages/Account.tsx` between `CategoryChart` and `ChangePasswordForm`.
+**A. Single timezone (hardcode)** — pick one timezone (e.g. Europe/London) and schedule everything against it. Simple, but wrong for users in other zones. Fine for a single-user / small-beta phase.
 
-**3. Database**
-New table `notification_preferences`:
-- `user_id uuid PK references auth.users`
-- `email_enabled boolean default true`
-- `web_enabled boolean default false`
-- `updated_at timestamptz default now()`
+**B. Per-user timezone** — store `timezone` on `notification_preferences`, then run cron hourly, and inside `check-deadlines` only send emails to users whose local time matches the target hour. Works globally, slightly more code.
 
-RLS: users can select/insert/update their own row. Auto-create a row on first read via upsert from the client (no trigger needed).
+Option B is the right answer because the hourly run is already needed — we just teach it to also do the 6pm/8am gating per user. One cron job, all logic server-side.
 
-**4. Wire into `check-deadlines`**
-- Before sending an email for a given reminder, look up the user's `notification_preferences.email_enabled`. If `false`, skip the email and instead insert the `notification_log` row with `status = 'skipped_email'` so the in-tab toast still fires via realtime.
-- If preferences row doesn't exist, default to `email_enabled = true` (current behavior preserved).
-- Note: web notifications don't need any backend send — the existing `notification_log` insert is the trigger; the client listens via realtime.
+### Plan
 
-**5. Realtime**
-- Add `ALTER PUBLICATION supabase_realtime ADD TABLE public.notification_log;` (might already be set since `NotificationBell` subscribes — will verify; if already added, the migration line is a no-op-safe `ADD TABLE` that we'll guard).
+**1. Schema**
+Add `timezone text default 'UTC'` to `notification_preferences` (IANA name, e.g. `Europe/London`).
+
+**2. Account UI**
+Add a timezone select to `NotificationPreferences.tsx`. Default to the browser's `Intl.DateTimeFormat().resolvedOptions().timeZone` on first load if no preference exists.
+
+**3. `check-deadlines` logic rewrite**
+
+Replace the current "send everything due today/tomorrow" pass with per-user time-gated logic:
+
+- Query all reminders where `deadline` falls on today or tomorrow (in any timezone — widen the window to ±1 day in UTC to be safe).
+- For each user, look up their `timezone` and `email_enabled`.
+- Compute the user's local hour right now.
+- For each reminder belonging to that user:
+  - If reminder is due **tomorrow (user-local)** AND user-local hour == 18 AND no `due_tomorrow` log exists → send + log
+  - If reminder is due **today (user-local)** AND user-local hour == 8 AND no `due_today` log exists → send + log
+  - Otherwise skip (the hourly run will catch it at the right hour, including reminders added later that day)
+
+The dedup via `notification_log` already prevents duplicates if the function runs more than once at the target hour.
+
+**4. Cron schedule**
+One job, hourly on the hour:
+```
+0 * * * *
+```
+Runs `check-deadlines` 24 times a day. Each run only emails users whose local clock has just struck 8 or 18.
+
+**5. Migration + cron setup**
+- Migration: enable `pg_cron` + `pg_net`, add `timezone` column to `notification_preferences`.
+- Separate DB insert (not migration): `cron.schedule('check-deadlines-hourly', '0 * * * *', ...)` with project URL + anon key.
+
+**6. Docs**
+Mark cron as done in `docs/TASKS.md`; log the timing decision in `docs/DECISIONS.md`.
 
 ### Files
+- New migration: `pg_cron`/`pg_net` + `timezone` column
+- DB insert: `cron.schedule(...)` (uses project URL + anon key — not a migration)
+- `supabase/functions/check-deadlines/index.ts` — rewrite send loop with timezone gating
+- `src/components/account/NotificationPreferences.tsx` — add timezone select with browser-detected default
+- `docs/TASKS.md`, `docs/DECISIONS.md`
 
-New:
-- `src/hooks/use-web-notifications.ts`
-- `src/components/account/NotificationPreferences.tsx`
-- One migration: create `notification_preferences` table + RLS
-
-Edited:
-- `src/pages/Account.tsx` — slot in the new component
-- `src/components/AuthGuard.tsx` — call `useWebNotifications()` once
-- `supabase/functions/check-deadlines/index.ts` — read preferences, skip email when disabled
-
-### Out of scope (this turn)
-- True background push / service worker / VAPID
-- Notification grouping or quiet hours
-- Per-category preferences
-- Rewriting the existing email (unchanged from last turn)
-
-### Verification (after approval)
-Open `/account`, toggle browser notifications on (accept the permission prompt), then manually invoke `check-deadlines` and confirm a system toast appears that links to `/reminder/:id` on click. Then toggle "Email reminders" off, clear the relevant `notification_log` row, re-invoke, and confirm only a toast fires (no email).
+### Out of scope
+- Per-user choice of send hours (8/18 are fixed)
+- Quiet hours / weekend skip
+- Backfill migration for existing users (they get `'UTC'` until they visit `/account`; the UI auto-detects on first load and saves)
