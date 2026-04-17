@@ -159,15 +159,28 @@ Deno.serve(async (req: Request) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Allow manual/test runs to bypass per-user time gating: ?force=1
+    const url = new URL(req.url);
+    const forceSend = url.searchParams.get("force") === "1";
+
     const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-    const tomorrow = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    // Widen the date window to ±1 UTC day so we catch reminders whose
+    // local "today" / "tomorrow" straddles a UTC boundary.
+    const yesterdayUtc = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const todayUtc = now.toISOString().slice(0, 10);
+    const tomorrowUtc = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    const dayAfterUtc = new Date(now.getTime() + 2 * 86400000).toISOString().slice(0, 10);
+    const candidateDates = [yesterdayUtc, todayUtc, tomorrowUtc, dayAfterUtc];
+
+    const orFilter = candidateDates
+      .flatMap((d) => [`deadline.eq.${d}`, `deadline.like.${d}T%`])
+      .join(",");
 
     const { data: reminders, error: remindersError } = await supabase
       .from("reminders")
       .select("id, user_id, title, deadline, category, image_url")
       .eq("status", "next")
-      .or(`deadline.eq.${today},deadline.eq.${tomorrow},deadline.like.${today}T%,deadline.like.${tomorrow}T%`);
+      .or(orFilter);
 
     if (remindersError) {
       console.error("Error fetching reminders:", remindersError);
