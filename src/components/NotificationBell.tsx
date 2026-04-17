@@ -13,6 +13,15 @@ interface Notification {
   created_at: string;
   read: boolean;
   reminder_title?: string;
+  reminder_deadline?: string;
+}
+
+function formatDueLabel(deadline?: string): string {
+  if (!deadline) return "";
+  const date = new Date(deadline);
+  if (isNaN(date.getTime())) return "";
+  const distance = formatDistanceToNow(date, { addSuffix: false });
+  return date.getTime() > Date.now() ? `Due in ${distance}` : `Due ${distance} ago`;
 }
 
 export default function NotificationBell() {
@@ -45,15 +54,16 @@ export default function NotificationBell() {
     const reminderIds = [...new Set(data.map((n) => n.reminder_id))];
     const { data: reminders } = await supabase
       .from("reminders")
-      .select("id, title")
+      .select("id, title, deadline")
       .in("id", reminderIds);
 
-    const titleMap = new Map(reminders?.map((r) => [r.id, r.title]) ?? []);
+    const reminderMap = new Map(reminders?.map((r) => [r.id, r]) ?? []);
 
     setNotifications(
       data.map((n) => ({
         ...n,
-        reminder_title: titleMap.get(n.reminder_id) ?? "Deleted reminder",
+        reminder_title: reminderMap.get(n.reminder_id)?.title ?? "Deleted reminder",
+        reminder_deadline: reminderMap.get(n.reminder_id)?.deadline,
       }))
     );
   };
@@ -157,7 +167,7 @@ export default function NotificationBell() {
                       {n.reminder_title}
                     </p>
                     <p className="text-[12px] text-muted-foreground mt-0.5">
-                      {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                      {formatDueLabel(n.reminder_deadline)}
                     </p>
                   </div>
                 </div>
