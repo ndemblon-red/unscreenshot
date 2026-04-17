@@ -1,77 +1,85 @@
 
 
-## SEO Audit — Unscreenshot Home Page
+The user wants email reminders for deadlines but doesn't have a custom domain. They're asking about Resend specifically.
 
-Here's the audit. I've split it into **what's wrong** and **what to fix**, prioritised.
+Let me think about what they actually need:
+- They already have `check-deadlines` edge function that logs in-app notifications
+- They want to add email delivery on top of that
+- No custom domain yet
 
-### Critical issues (fix first)
+Options analysis:
 
-1. **Default Lovable meta tags still in `index.html`**
-   - `<title>Lovable App</title>` — should be branded ("Unscreenshot — Turn screenshots into reminders")
-   - `<meta name="description" content="Lovable Generated Project" />` — generic, no keywords
-   - `<meta name="author" content="Lovable" />` — wrong author
-   - `og:title`, `og:description`, `og:image` all still point to Lovable defaults
-   - `twitter:site` is `@Lovable`
-   - **Impact:** Search results and social shares will display "Lovable App" instead of your brand. Major visibility loss.
+**Option A: Lovable Emails (built-in)**
+- Requires a custom domain (subdomain delegation)
+- Not viable right now since they don't have one
 
-2. **No Open Graph image for your brand**
-   - Currently uses Lovable's default image. When someone shares your link on Twitter/LinkedIn/iMessage, they see Lovable branding, not yours.
+**Option B: Resend with `onboarding@resend.dev` test sender**
+- Works without a custom domain
+- BUT the test sender only sends to the verified account owner's email — not arbitrary users
+- Good for testing only, not real users
 
-3. **No canonical URL**
-   - Missing `<link rel="canonical" href="..." />` — risks duplicate-content issues if the site is reachable via multiple URLs (custom domain + lovable.app subdomain).
+**Option C: Resend with their own verified domain**
+- Same domain requirement as Lovable Emails — no advantage if they don't have a domain
+- Adds a third-party dependency
 
-### High-priority issues
+**Honest answer:** Without a custom domain, neither option lets them email arbitrary users in production. The "rework" question is small either way — the existing `check-deadlines` function already finds due reminders. Adding email is ~30 lines of code calling Resend's API via the gateway. The blocker isn't code, it's the domain.
 
-4. **No structured data (JSON-LD)**
-   - No Schema.org markup. Adding `SoftwareApplication` or `Organization` schema helps Google show rich results.
+Recommendation: be straight with them. Don't oversell. Suggest a phased approach: scaffold the code now using Resend test mode so they can test it themselves, then flip to a verified domain when they get one.
 
-5. **No `sitemap.xml`**
-   - `robots.txt` exists but doesn't reference a sitemap. Search engines have to discover routes themselves.
+Let me check the existing check-deadlines function to confirm what's there.
 
-6. **Missing `lang` precision and theme-color**
-   - `<html lang="en">` is fine, but missing `<meta name="theme-color">` for mobile browser chrome.
+Actually I have it from context already. The function logs to `notification_log` but doesn't send emails. Adding email send is a small addition.
 
-7. **Client-side rendered content (SPA limitation)**
-   - The page is a Vite/React SPA — initial HTML is empty until JS runs. Googlebot handles this OK, but Bing and social scrapers (LinkedIn, Slack) often don't. Static meta tags in `index.html` partially mitigate this; pre-rendering would fully solve it (out of scope for this audit, but worth flagging).
+Plan:
 
-### Medium-priority issues
+## Email Reminders — Honest Assessment
 
-8. **Hero `<h1>` is good, but image `alt` text is thin**
-   - The mockup screenshot images use generic alts like the task title. Decorative mockup images should have meaningful alt text or `alt=""` if purely decorative.
+### Short answer
+You can do this with Resend, but **without a custom domain you can only email yourself** (the address you sign up to Resend with). Real users won't get anything until you verify a domain — same blocker either way.
 
-9. **External Unsplash images in mockup**
-   - Loaded from `images.unsplash.com` with no `loading="lazy"`. Adds page weight and a third-party dependency. Use `loading="lazy"` at minimum.
+The code rework is tiny (~30 lines). The blocker is the domain, not the architecture.
 
-10. **No favicon variants**
-    - Only `/icon.svg`. Missing `apple-touch-icon`, no `manifest.json` for PWA/Android.
+### Three paths
 
-### Low-priority / nice-to-have
+**1. Build it now in test mode (recommended)**
+Wire up Resend using their test sender `onboarding@resend.dev`. Emails will only deliver to your own verified Resend address — perfect for you to test the flow end-to-end. When you get a domain later, swap one constant and you're live.
+- Pros: No wasted work, you can validate the experience today
+- Cons: Only you receive emails until a domain is verified
 
-11. **No `<meta name="keywords">`** — actually fine, Google ignores it. Skip.
-12. **`robots.txt` is permissive** — fine for a marketing site.
-13. **No analytics tag** — not strictly SEO, but you'd want Plausible/GA to measure organic traffic.
+**2. Wait until you have a domain**
+Skip email entirely until a domain exists, then use either Lovable's built-in email (no extra account) or Resend.
+- Pros: No throwaway setup
+- Cons: Feature shipped later
 
----
+**3. Use Lovable's built-in email later**
+Once you have a domain, Lovable's built-in system needs no third-party account, no API keys, and includes queueing/retries automatically. If you don't strongly prefer Resend, this is less moving parts.
 
-### Proposed fixes (if you want me to implement)
+### My recommendation
+Go with **path 1**. Here's the actual plan:
 
-I can fix items 1–6, 8–10 directly in code:
+### Implementation (path 1)
 
-- Rewrite `index.html` `<head>` with proper title, description, OG tags, Twitter card, canonical, theme-color
-- Generate a branded OG image (1200×630) and place it in `/public`
-- Add JSON-LD `SoftwareApplication` schema
-- Create `/public/sitemap.xml` listing `/`, `/pricing`, `/auth`
-- Reference sitemap in `robots.txt`
-- Add `apple-touch-icon` link and a basic `manifest.json`
-- Improve `alt` text and add `loading="lazy"` to mockup images
+1. **Connect Resend** via Lovable's connector system (one click, no API key to manage manually)
+2. **Update `check-deadlines` edge function**:
+   - After inserting a row into `notification_log`, also call Resend via the connector gateway
+   - Use `from: 'Unscreenshot <onboarding@resend.dev>'`
+   - Compose a short email: subject "Reminder due today" / "Reminder due tomorrow", body with the title and a link to `/reminder/:id`
+   - Log result back to `notification_log.status` (`sent` / `failed`)
+3. **Add a constant `SENDER_EMAIL`** at the top of the function so when you get a domain you change one line
+4. **No DB changes needed** — `notification_log` already has `recipient_email` and `status` columns
 
-**Out of scope without bigger changes:** SSR/pre-rendering for full social-scraper support (would require switching off Vite SPA or adding a pre-render step).
+### Rework when you get a domain
+Literally one line: change `SENDER_EMAIL` from `onboarding@resend.dev` to `reminders@yourdomain.com`. That's it. No schema changes, no architectural changes, no client changes.
 
----
+### What I won't do
+- Set up a custom domain in Resend before you've picked one
+- Add user preferences UI for opting out (you can add later if needed — at MVP, the user opted in by signing up)
+- Build an email template library — one transactional email, kept simple
 
-### What I need from you
+### Files I'd touch
+- `supabase/functions/check-deadlines/index.ts` — add Resend send after notification_log insert
+- That's it
 
-- **Tagline for `<title>` and meta description** — I can draft one in your dry tone, or you can supply
-- **OG image** — I can hand-design an SVG-to-PNG, or generate one with AI. Your call.
-- **Canonical domain** — what's the production URL? (e.g. `unscreenshot.app`?) Needed for canonical + OG URLs + sitemap.
+### Before I build
+Confirm path 1 (test mode now), or tell me you'd rather wait (path 2) or use Lovable's built-in email when you get a domain (path 3).
 
