@@ -193,22 +193,56 @@ export default function NotificationPreferences() {
     <section className="mt-10">
       <h2 className="text-section-title tracking-tight mb-4">Notifications</h2>
       <div className="space-y-4 rounded-card border border-border p-5 bg-card">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <Mail className="w-4 h-4 mt-0.5 text-muted-foreground" />
-            <div>
-              <p className="text-[15px] font-medium text-foreground">Email reminders</p>
-              <p className="text-label text-muted-foreground mt-0.5">
-                Sent at 6 PM the day before, and 8 AM the day a reminder is due.
-              </p>
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Mail className="w-4 h-4 mt-0.5 text-muted-foreground" />
+              <div>
+                <p className="text-[15px] font-medium text-foreground">Email reminders</p>
+                <p className="text-label text-muted-foreground mt-0.5">
+                  Master switch for all reminder emails.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={prefs.email_enabled}
+              onCheckedChange={handleEmailToggle}
+              disabled={loading}
+              aria-label="Email reminders"
+            />
+          </div>
+
+          <div className={`pl-7 space-y-3 ${!prefs.email_enabled ? "opacity-50" : ""}`}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[14px] font-medium text-foreground">Day before · 6 PM</p>
+                <p className="text-label text-muted-foreground mt-0.5">
+                  Heads-up the evening before a reminder is due.
+                </p>
+              </div>
+              <Switch
+                checked={prefs.email_due_tomorrow}
+                onCheckedChange={handleEmailTomorrowToggle}
+                disabled={loading || !prefs.email_enabled}
+                aria-label="Day-before email"
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[14px] font-medium text-foreground">Day of · 8 AM</p>
+                <p className="text-label text-muted-foreground mt-0.5">
+                  Morning reminder on the day a reminder is due.
+                </p>
+              </div>
+              <Switch
+                checked={prefs.email_due_today}
+                onCheckedChange={handleEmailTodayToggle}
+                disabled={loading || !prefs.email_enabled}
+                aria-label="Day-of email"
+              />
             </div>
           </div>
-          <Switch
-            checked={prefs.email_enabled}
-            onCheckedChange={handleEmailToggle}
-            disabled={loading}
-            aria-label="Email reminders"
-          />
         </div>
 
         <div className="border-t border-border" />
