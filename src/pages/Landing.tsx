@@ -168,7 +168,7 @@ export default function Landing() {
                 >
                   {/* Thumbnail */}
                   <div className="w-11 h-11 md:w-14 md:h-14 rounded-btn overflow-hidden flex-shrink-0 bg-muted">
-                    <img src={task.img} alt={task.title} className="w-full h-full object-cover" />
+                    <img src={task.img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   </div>
                   {/* Content */}
                   <div className="flex-1 min-w-0 flex flex-col gap-0.5">
