@@ -130,7 +130,7 @@
 - [ ] Schedule `check-deadlines` via pg_cron (every ~30 min)
 - [ ] Add morning-of timing rule — do not fire "due today" emails before ~8 AM local
 - [ ] Move off Resend test mode — verify custom domain OR switch to Lovable Emails so any signed-up user can receive notifications
-- [ ] Add per-user email notification preference toggle on the Account page
+- [x] Add per-user email notification preference toggle on the Account page (master switch + per-trigger toggles for "Day before · 6 PM" and "Day of · 8 AM")
 
 ---
 
