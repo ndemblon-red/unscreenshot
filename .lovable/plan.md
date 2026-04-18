@@ -1,26 +1,33 @@
 
-User wants per-trigger email toggles: "due tomorrow" (6pm day before) and "due today" (8am day of), independently. Currently `email_enabled` is a single boolean.
+User wants the brand logo added to the reminder email. The logo exists at `public/icon.svg` — purple rounded square with white screenshot-frame corners + checkmark.
 
-### Approach
+Email clients don't reliably render inline SVG. Standard approach: host as PNG and reference via absolute URL in `<img>`. Two options:
 
-**Schema** — add two booleans to `notification_preferences`, both defaulting to `true`:
-- `email_due_tomorrow boolean not null default true`
-- `email_due_today boolean not null default true`
+**A. Reference the SVG directly from the deployed site** (`https://.../icon.svg`)
+- Cheap, no asset pipeline. But Gmail/Outlook commonly strip or fail to render SVG `<img>`. Not reliable.
 
-Keep `email_enabled` as a master switch (off → no emails of any kind). Simpler than removing it and migrating, and matches the existing UI mental model.
+**B. Add a PNG version to `public/`, reference by absolute URL**
+- Reliable across all major clients. One-time export needed.
+- I'd add `public/icon-128.png` (64×64 displayed at retina) and reference it via `${APP_URL}/icon-128.png` in the email header.
 
-**Edge function** — in `check-deadlines`, after the master `email_enabled` check, also gate on the per-type flag:
-- `due_tomorrow` requires `email_due_tomorrow`
-- `due_today` requires `email_due_today`
+Going with B.
 
-If gated off, log status `skipped_email` (reuse existing skipped path) so we still record + don't retry.
+### Changes
 
-**UI** — `NotificationPreferences.tsx`:
-- Replace the single "Email reminders" row with a parent row (master toggle, same description) plus two indented child toggles below it: "Day before (6 PM)" and "Day of (8 AM)".
-- Children disabled when master is off (visually muted).
-- All three persist via the same `persist()` upsert.
+1. **Add `public/icon-128.png`** — 128×128 raster of the existing icon (purple bg, white frame corners, white checkmark). Match `hsl(241, 64%, 59%)` background.
 
-**Out of scope**
-- Per-category email prefs
-- Quiet hours
-- Browser-notification per-type split (only email per the user's ask)
+2. **Edit `supabase/functions/check-deadlines/index.ts`** — in `buildReminderEmail`, replace the current text-only "UNSCREENSHOT" header row with a logo + wordmark row:
+   ```
+   [logo 32x32]  Unscreenshot
+   ```
+   Logo is an `<img src="${APP_URL}/icon-128.png" width="32" height="32">`. Keep existing typography (SF Pro stack, #1d1d1f). Add `alt="Unscreenshot"` for screen readers / image-blocked clients.
+
+3. **Plain-text version** — unchanged (no logo needed in text part).
+
+### Out of scope
+- Replacing the footer link
+- Restyling the rest of the email
+- Adding logo to in-app `NotificationBell`
+
+### Verification
+Trigger `check-deadlines?force=1` against a real reminder, open the resulting email in Gmail web + iOS Mail, confirm logo renders at the top-left of the card.
