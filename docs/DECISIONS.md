@@ -195,6 +195,23 @@ After every significant decision during your build, add an entry. A "significant
 
 ---
 
+### April 2026 — Per-trigger email notification toggles (master + two children)
+
+**Context:** Email reminders previously had a single on/off switch. Some users want only the day-before nudge, others only the day-of nudge, and some want both.
+
+**Options considered:**
+- Keep a single email on/off toggle
+- Replace the master with two independent toggles (one per trigger)
+- Master switch + two child toggles (one per trigger), children disabled when master is off
+
+**Decision:** Master "Email reminders" switch plus two indented child toggles: "Day before · 6 PM" and "Day of · 8 AM", both defaulting to on. Master off disables all email regardless of children. Per-type gating happens in the `check-deadlines` edge function; skipped sends are logged with status `skipped_email` to prevent retries.
+
+**Why:** The master switch preserves a single, obvious "turn it all off" action — the most common intent. The two children give granular control without forcing users to think about both triggers if they don't want to. Logging skipped sends keeps the dedup model consistent with the existing notification log.
+
+**What I'd revisit:** If users ask for per-category email prefs or quiet hours, layer those on top — the per-trigger model already establishes the pattern.
+
+---
+
 ### April 2026 — Sign-out moved to Account page
 
 **Context:** The sign-out button was initially in the main task list header. As the header gained more icons (upload, notifications, account), it became cluttered.
