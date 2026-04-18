@@ -70,7 +70,16 @@ function buildReminderEmail(opts: {
         <table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px; width:100%; background-color:#ffffff; border-radius:16px; border:1px solid #e5e5ea;">
           <tr>
             <td style="padding:24px 28px 8px;">
-              <p style="margin:0; font-size:13px; font-weight:600; color:#6e6e73; letter-spacing:0.02em;">UNSCREENSHOT</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle; padding-right:10px;">
+                    <img src="${APP_URL}/icon-128.png" alt="Unscreenshot" width="28" height="28" style="display:block; width:28px; height:28px; border-radius:6px;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <p style="margin:0; font-size:15px; font-weight:600; color:#1d1d1f; letter-spacing:-0.01em;">Unscreenshot</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
