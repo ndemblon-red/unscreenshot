@@ -254,6 +254,8 @@ Deno.serve(async (req: Request) => {
         imageUrl: entry.reminder_image_url,
         link,
         dueWhen,
+        logoUrl: LOGO_URL,
+        appUrl: APP_URL,
       });
       const result = await sendEmail(entry.recipient_email, subject, html, text);
       if (result.ok) {
