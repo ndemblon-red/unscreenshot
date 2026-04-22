@@ -177,6 +177,53 @@ serve(async (req) => {
   const requestStartTime = new Date().toISOString();
 
   try {
+    // --- Auth: verify caller's JWT ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const userId = claimsData.claims.sub;
+
+    // --- Beta cap check (service role bypasses RLS) ---
+    const adminClient = createClient(supabaseUrl, serviceKey);
+    const { count: usedCount, error: countError } = await adminClient
+      .from("analysis_usage")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (countError) {
+      console.error("Failed to count analysis usage:", countError);
+      // Fail open: allow analysis if usage check itself errors, to avoid blocking valid users
+    } else if (isOverCap(usedCount ?? 0, BETA_ANALYSIS_CAP)) {
+      return new Response(
+        JSON.stringify({
+          error: "beta_cap_reached",
+          used: usedCount ?? 0,
+          limit: BETA_ANALYSIS_CAP,
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { imageBase64, mimeType } = await req.json();
 
     if (!imageBase64 || !mimeType) {
