@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Trash2, Clock, Pencil, Undo2 } from "lucide-react";
+import { ArrowLeft, Check, Trash2, Clock, Pencil, Undo2, Share2 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
+import ShareReminderDialog from "@/components/ShareReminderDialog";
 import { toast } from "sonner";
 import { DEADLINE_OPTIONS, deadlineLabelToDate, dateToDeadlineLabel, isDateString, extractDate, extractTime } from "@/lib/deadlines";
 import TimePresetChips from "@/components/TimePresetChips";
@@ -29,6 +30,7 @@ export default function ReminderDetail() {
   const [reminder, setReminder] = useState<Reminder | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Editable fields
   const [title, setTitle] = useState("");
@@ -354,6 +356,13 @@ export default function ReminderDetail() {
           </button>
         )}
         <button
+          onClick={() => setShareOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-btn text-[15px] font-medium border border-border text-foreground hover:bg-muted transition-colors"
+        >
+          <Share2 className="w-4 h-4" />
+          Share
+        </button>
+        <button
           onClick={() => setDeleteOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-btn text-[15px] font-medium border border-destructive text-destructive hover:bg-destructive/10 transition-colors"
         >
@@ -367,6 +376,12 @@ export default function ReminderDetail() {
         onOpenChange={setDeleteOpen}
         onConfirm={handleDelete}
         imageUrl={reminder.image_url}
+      />
+
+      <ShareReminderDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        reminderId={reminder.id}
       />
     </div>
   );
