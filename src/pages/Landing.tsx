@@ -32,12 +32,6 @@ export default function Landing() {
           <span className="text-[17px] font-semibold tracking-tight">Unscreenshot</span>
         </Link>
         <div className="flex items-center gap-6">
-          <Link
-            to="/pricing"
-            className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Pricing
-          </Link>
           <a
             href={CONTACT_MAILTO}
             className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
