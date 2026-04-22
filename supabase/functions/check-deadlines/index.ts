@@ -94,9 +94,9 @@ Deno.serve(async (req: Request) => {
     const reminderIds = reminders.map((r) => r.id);
     const { data: existingLogs, error: logsError } = await supabase
       .from("notification_log")
-      .select("reminder_id, notification_type")
+      .select("reminder_id, notification_type, recipient_email")
       .in("reminder_id", reminderIds)
-      .in("notification_type", ["due_today", "due_tomorrow"]);
+      .in("notification_type", ["due_today", "due_tomorrow", "shared_due_today", "shared_due_tomorrow"]);
 
     if (logsError) {
       console.error("Error fetching existing logs:", logsError);
