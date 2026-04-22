@@ -71,11 +71,12 @@ describe("checkRecipientCap", () => {
 
   it("rejects when total would exceed cap", () => {
     const result = checkRecipientCap(8, 5);
-    if (result.ok) throw new Error("expected cap rejection");
-    expect(result.activeCount).toBe(8);
-    expect(result.max).toBe(MAX_RECIPIENTS_PER_REMINDER);
-    expect(result.message).toContain("at most 10");
-    expect(result.message).toContain("8");
+    expect(result.ok).toBe(false);
+    const failure = result as Extract<typeof result, { ok: false }>;
+    expect(failure.activeCount).toBe(8);
+    expect(failure.max).toBe(MAX_RECIPIENTS_PER_REMINDER);
+    expect(failure.message).toContain("at most 10");
+    expect(failure.message).toContain("8");
   });
 
   it("respects custom max", () => {
