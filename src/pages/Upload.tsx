@@ -300,6 +300,10 @@ export default function UploadPage() {
         <button
           disabled={files.length === 0 || compressing}
           onClick={async () => {
+            if (capReached) {
+              setWaitlistOpen(true);
+              return;
+            }
             setCompressing(true);
             try {
               const results = await Promise.allSettled(
@@ -348,6 +352,8 @@ export default function UploadPage() {
           Cancel
         </button>
       </div>
+
+      <WaitlistDialog open={waitlistOpen} onOpenChange={setWaitlistOpen} />
     </div>
   );
 }
