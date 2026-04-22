@@ -1,7 +1,10 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, X, ArrowLeft, ImageIcon, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { BETA_ANALYSIS_CAP, isOverCap } from "@/lib/beta-limits";
+import WaitlistDialog from "@/components/WaitlistDialog";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
