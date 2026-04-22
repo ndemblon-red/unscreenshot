@@ -1,5 +1,8 @@
-import { Camera, Brain, Bell, ArrowRight } from "lucide-react";
+import { Camera, Brain, Bell, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+
+const CONTACT_EMAIL = "hello@unscreenshot.ai";
+const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=Unscreenshot`;
 
 const steps = [
   {
