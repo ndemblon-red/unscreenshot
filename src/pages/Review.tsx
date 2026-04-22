@@ -7,6 +7,7 @@ import { enqueue } from "@/lib/save-queue";
 import { toast } from "@/hooks/use-toast";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
+import WaitlistDialog from "@/components/WaitlistDialog";
 
 import { DEADLINE_OPTIONS, deadlineLabelToDate, isDateString, extractDate, extractTime } from "@/lib/deadlines";
 import TimePresetChips from "@/components/TimePresetChips";
