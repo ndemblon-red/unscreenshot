@@ -280,6 +280,12 @@ export default function Landing() {
             >
               Pricing
             </Link>
+            <a
+              href={CONTACT_MAILTO}
+              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Contact
+            </a>
             <Link
               to="/auth"
               className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
