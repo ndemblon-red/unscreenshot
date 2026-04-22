@@ -68,7 +68,24 @@ export default function ReviewPage() {
         const { data, error } = await supabase.functions.invoke("analyse-screenshot", {
           body: { imageBase64: item.base64, mimeType: item.mimeType },
         });
-        if (error) throw error;
+        if (error) {
+          // Detect beta cap response (FunctionsHttpError exposes context.response)
+          // deno-lint-ignore no-explicit-any
+          const ctxResp = (error as any)?.context?.response as Response | undefined;
+          if (ctxResp && ctxResp.status === 403) {
+            try {
+              const body = await ctxResp.clone().json();
+              if (body?.error === "beta_cap_reached") {
+                setWaitlistOpen(true);
+                setItems((prev) =>
+                  prev.map((it, i) => (i === index ? { ...it, error: true, analysed: true } : it))
+                );
+                return;
+              }
+            } catch { /* fall through to generic error */ }
+          }
+          throw error;
+        }
         setItems((prev) =>
           prev.map((it, i) => {
             if (i !== index) return it;
