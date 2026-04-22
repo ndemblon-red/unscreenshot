@@ -162,6 +162,17 @@ Deno.serve(async (req: Request) => {
     const SEND_HOUR_TODAY = 8;
     const SEND_HOUR_TOMORROW = 18;
 
+    // Fetch active shares for these reminders so we can also email recipients.
+    const { data: shareRows } = await supabase
+      .from("reminder_shares")
+      .select("reminder_id, recipient_email")
+      .in("reminder_id", reminderIds)
+      .is("revoked_at", null);
+    const sharesByReminder: Record<string, string[]> = {};
+    for (const row of shareRows ?? []) {
+      (sharesByReminder[row.reminder_id] ||= []).push(row.recipient_email);
+    }
+
     type Entry = {
       reminder_id: string;
       user_id: string;
@@ -172,6 +183,7 @@ Deno.serve(async (req: Request) => {
       reminder_category: string;
       reminder_deadline: string;
       reminder_image_url: string;
+      is_share?: boolean;
     };
     const entries: Entry[] = [];
 
