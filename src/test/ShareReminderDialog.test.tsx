@@ -129,11 +129,16 @@ describe("ShareReminderDialog", () => {
       expect(screen.getByLabelText(/Revoke share with user0@example.com/)).toBeInTheDocument(),
     );
 
+    // First pending email fills the last slot.
     await addEmail("new1@example.com");
     expect(screen.getByText("0 of 10 slots remaining")).toBeInTheDocument();
 
-    await addEmail("new2@example.com");
-    expect(toast.error).toHaveBeenCalledWith("Maximum 10 recipients per reminder");
+    // Once the cap is hit, the input + Add button must be disabled so users
+    // can't even attempt to add another recipient.
+    const input = screen.getByPlaceholderText("email@example.com") as HTMLInputElement;
+    const addButton = screen.getByText("Add").closest("button")!;
+    expect(input).toBeDisabled();
+    expect(addButton).toBeDisabled();
   });
 
   it("invokes share-reminder edge function with pending emails", async () => {

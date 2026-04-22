@@ -95,11 +95,11 @@ describe("localParts", () => {
   });
 
   it("shifts date for east-of-UTC zones near end of day UTC", () => {
-    // 2026-04-22 23:00 UTC => 2026-04-23 09:00 in Tokyo (UTC+9)
+    // 2026-04-22 23:00 UTC => 2026-04-23 08:00 in Tokyo (UTC+9)
     const lateUtc = new Date("2026-04-22T23:00:00Z");
     const result = localParts(lateUtc, "Asia/Tokyo");
     expect(result.date).toBe("2026-04-23");
-    expect(result.hour).toBe(9);
+    expect(result.hour).toBe(8);
   });
 
   it("falls back to UTC for invalid timezone", () => {
