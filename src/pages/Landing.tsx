@@ -51,13 +51,10 @@ export default function Landing() {
       <section className="flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-20 pt-12 pb-16 md:pt-16 md:pb-20">
         <div className="max-w-2xl w-full text-center mx-auto">
           {/* Beta pill */}
-          <a
-            href={CONTACT_MAILTO}
-            className="inline-flex items-center gap-1.5 px-3 py-1 mb-6 rounded-full border border-border bg-muted/40 text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-          >
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-6 rounded-full border border-border bg-muted/40 text-[12px] text-muted-foreground">
             <Sparkles className="w-3 h-3 text-tag-events" />
-            <span><span className="font-medium text-foreground">Now in beta</span> — free during beta, 30 analyses per account</span>
-          </a>
+            <span><span className="font-medium text-foreground">Now in beta</span> — free during beta, 30 screenshot reminders per account</span>
+          </div>
           <h1 className="text-[32px] md:text-[48px] leading-[1.1] tracking-tight font-bold mb-6">
             You screenshot everything.{" "}
             <span className="text-tag-events">You action nothing.</span>
@@ -73,7 +70,7 @@ export default function Landing() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <p className="mt-3 text-[13px] text-muted-foreground">
-            Free during beta · No credit card · 30 analyses per account
+            Free during beta · No credit card · 30 screenshot reminders per account
           </p>
         </div>
 
