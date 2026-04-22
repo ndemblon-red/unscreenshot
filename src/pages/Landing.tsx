@@ -253,12 +253,6 @@ export default function Landing() {
           Turn my screenshots into reminders
           <ArrowRight className="w-4 h-4" />
         </Link>
-        <Link
-          to="/pricing"
-          className="inline-block mt-4 text-[14px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          View pricing →
-        </Link>
       </section>
 
       {/* Footer */}
@@ -268,12 +262,6 @@ export default function Landing() {
             © {new Date().getFullYear()} Unscreenshot
           </span>
           <div className="flex items-center gap-4">
-            <Link
-              to="/pricing"
-              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Pricing
-            </Link>
             <a
               href={CONTACT_MAILTO}
               className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
