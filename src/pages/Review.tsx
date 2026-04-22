@@ -7,6 +7,7 @@ import { enqueue } from "@/lib/save-queue";
 import { toast } from "@/hooks/use-toast";
 import { CATEGORIES } from "@/lib/categories";
 import { getCategoryClasses } from "@/lib/categories";
+import WaitlistDialog from "@/components/WaitlistDialog";
 
 import { DEADLINE_OPTIONS, deadlineLabelToDate, isDateString, extractDate, extractTime } from "@/lib/deadlines";
 import TimePresetChips from "@/components/TimePresetChips";
@@ -34,6 +35,7 @@ export default function ReviewPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState("");
   const [customTime, setCustomTime] = useState("09:00");
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   // Load files passed from Upload page
   useEffect(() => {
@@ -66,7 +68,24 @@ export default function ReviewPage() {
         const { data, error } = await supabase.functions.invoke("analyse-screenshot", {
           body: { imageBase64: item.base64, mimeType: item.mimeType },
         });
-        if (error) throw error;
+        if (error) {
+          // Detect beta cap response (FunctionsHttpError exposes context.response)
+          // deno-lint-ignore no-explicit-any
+          const ctxResp = (error as any)?.context?.response as Response | undefined;
+          if (ctxResp && ctxResp.status === 403) {
+            try {
+              const body = await ctxResp.clone().json();
+              if (body?.error === "beta_cap_reached") {
+                setWaitlistOpen(true);
+                setItems((prev) =>
+                  prev.map((it, i) => (i === index ? { ...it, error: true, analysed: true } : it))
+                );
+                return;
+              }
+            } catch { /* fall through to generic error */ }
+          }
+          throw error;
+        }
         setItems((prev) =>
           prev.map((it, i) => {
             if (i !== index) return it;
@@ -424,6 +443,8 @@ export default function ReviewPage() {
           </button>
         </div>
       )}
+
+      <WaitlistDialog open={waitlistOpen} onOpenChange={setWaitlistOpen} />
     </div>
   );
 }

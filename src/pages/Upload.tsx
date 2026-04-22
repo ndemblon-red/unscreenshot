@@ -1,7 +1,10 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, X, ArrowLeft, ImageIcon, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { BETA_ANALYSIS_CAP, isOverCap } from "@/lib/beta-limits";
+import WaitlistDialog from "@/components/WaitlistDialog";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
@@ -70,8 +73,32 @@ export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [compressing, setCompressing] = useState(false);
+  const [usedCount, setUsedCount] = useState<number | null>(null);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  // Fetch the user's beta analysis usage on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { count, error } = await supabase
+        .from("analysis_usage")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", session.user.id);
+      if (cancelled) return;
+      if (error) {
+        console.error("Failed to fetch analysis usage:", error);
+        return;
+      }
+      setUsedCount(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const capReached = usedCount !== null && isOverCap(usedCount);
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const newFiles: QueuedFile[] = [];
@@ -160,6 +187,24 @@ export default function UploadPage() {
         <h1 className="text-page-title tracking-tight">Upload Screenshots</h1>
         <div className="w-16" />
       </header>
+
+      {/* Beta usage chip */}
+      {usedCount !== null && (
+        <div className="mb-4 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => capReached && setWaitlistOpen(true)}
+            className={`text-[12px] px-2.5 py-1 rounded-full border ${
+              capReached
+                ? "border-destructive/30 bg-destructive/5 text-destructive cursor-pointer"
+                : "border-border bg-muted/40 text-muted-foreground cursor-default"
+            }`}
+          >
+            {usedCount} / {BETA_ANALYSIS_CAP} analyses used
+            {capReached && " — join the waitlist"}
+          </button>
+        </div>
+      )}
 
       {/* File validation errors */}
       {fileErrors.length > 0 && (
@@ -255,6 +300,10 @@ export default function UploadPage() {
         <button
           disabled={files.length === 0 || compressing}
           onClick={async () => {
+            if (capReached) {
+              setWaitlistOpen(true);
+              return;
+            }
             setCompressing(true);
             try {
               const results = await Promise.allSettled(
@@ -303,6 +352,8 @@ export default function UploadPage() {
           Cancel
         </button>
       </div>
+
+      <WaitlistDialog open={waitlistOpen} onOpenChange={setWaitlistOpen} />
     </div>
   );
 }
