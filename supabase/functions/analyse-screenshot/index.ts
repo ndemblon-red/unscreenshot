@@ -376,6 +376,14 @@ serve(async (req) => {
       ]);
     }
 
+    // Record successful analysis toward beta cap (fire-and-forget)
+    adminClient
+      .from("analysis_usage")
+      .insert({ user_id: userId })
+      .then(({ error }) => {
+        if (error) console.error("Failed to log analysis_usage:", error);
+      });
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
