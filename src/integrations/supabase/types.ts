@@ -85,6 +85,41 @@ export type Database = {
         }
         Relationships: []
       }
+      reminder_shares: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_email: string
+          reminder_id: string
+          revoked_at: string | null
+          shared_by_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_email: string
+          reminder_id: string
+          revoked_at?: string | null
+          shared_by_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_email?: string
+          reminder_id?: string
+          revoked_at?: string | null
+          shared_by_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_shares_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reminders: {
         Row: {
           category: string
