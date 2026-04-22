@@ -51,7 +51,7 @@ export default function Landing() {
       <section className="flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-20 pt-12 pb-16 md:pt-16 md:pb-20">
         <div className="max-w-2xl w-full text-center mx-auto">
           {/* Beta pill */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-6 rounded-full border border-border bg-muted/40 text-[12px] text-muted-foreground">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-6 rounded-full border border-border text-[12px] text-muted-foreground bg-amber-100">
             <Sparkles className="w-3 h-3 text-tag-events" />
             <span><span className="font-medium text-foreground">Now in beta</span> — 30 free reminders, no card</span>
           </div>
