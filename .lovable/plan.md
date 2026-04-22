@@ -1,49 +1,66 @@
 
-## Two issues — one answer for each
 
-### 1. Logo not rendering in the email
+## Beta Analysis Cap (30 per user)
 
-The PNG file is valid. The problem is the URL it's served from.
+Limit each user to 30 successful AI screenshot analyses during beta. When they hit the cap, show a "join the waitlist" message pointing to `waitlist@unscreenshot.ai`. No effect on creating, editing, sharing, or viewing reminders manually.
 
-`APP_URL` in `check-deadlines/index.ts` points to:
+### How it works
+
+1. Every successful `analyse-screenshot` call records one row in a new `analysis_usage` table tagged with the user's ID.
+2. Before calling Claude, the function counts the user's existing rows. If `count >= 30`, it returns `403 { error: "beta_cap_reached" }` instead.
+3. The Upload page catches that error and shows a "Join the waitlist" modal with a `mailto:waitlist@unscreenshot.ai` button.
+4. A small "12 / 30 analyses used" chip on the Upload page shows current usage.
+
+```text
+Upload page  ──►  analyse-screenshot edge fn  ──►  Anthropic
+     │                    │
+     │                    ├─ validate user's login token
+     │                    ├─ count rows in analysis_usage WHERE user_id = X
+     │                    ├─ if >= 30: return 403 beta_cap_reached
+     │                    └─ on success: insert row into analysis_usage
+     │
+     └─ on 403: show WaitlistDialog
+     └─ on mount: fetch usage count, render "X / 30 used" chip
 ```
-https://id-preview--6b3058fd-4727-4ff6-b954-440c6a622739.lovable.app
-```
 
-That domain is gated behind Lovable auth — fetching `/icon-128.png` returns a 302 redirect to `lovable.dev/auth-bridge`, not the image. Email clients show a broken icon (exactly what you see in your screenshot).
+### Waitlist dialog content
 
-**Fix options:**
+- Title: "You've reached the beta limit"
+- Body: "Thanks for trying Unscreenshot. The beta is capped at 30 analyses per person while we finalise pricing. Join the waitlist for early access to paid plans."
+- Primary action: "Join waitlist" → `mailto:waitlist@unscreenshot.ai?subject=Unscreenshot%20waitlist`
+- Secondary action: "Back to reminders" → `/app`
 
-**A. Host the PNG on Supabase Storage (recommended, works now)**
-- Upload `icon-128.png` to a public Storage bucket (e.g. `public-assets`)
-- Use that public URL in the email template
-- Pros: works immediately, no publish needed, stable URL
-- Cons: one-time setup of the bucket + upload
+### Database changes
 
-**B. Inline the logo as base64**
-- Embed the PNG directly in the HTML as `data:image/png;base64,...`
-- Pros: zero hosting, always works
-- Cons: Gmail strips `data:` images in many cases — unreliable
+New `analysis_usage` table:
+- `id uuid pk`
+- `user_id uuid not null` (no FK to `auth.users`, per project convention)
+- `created_at timestamptz default now()`
+- Index on `user_id`
+- RLS: users can `SELECT` own rows; only service role can `INSERT`. No update/delete.
 
-**C. Wait until you publish the project**
-- Once published, `https://your-published-url.lovable.app/icon-128.png` is publicly fetchable
-- Pros: nothing to change in code if `APP_URL` already points there
-- Cons: blocks until publish; `APP_URL` would still need updating to the published URL
+Constant `BETA_ANALYSIS_CAP = 30` in a new shared file `supabase/functions/_shared/beta-limits.ts`.
 
-I'd go with **A**. Concrete steps:
-1. Create a public storage bucket `public-assets` via migration
-2. Upload `public/icon-128.png` to it (one-off script or manual via Storage UI)
-3. Replace the logo `<img src>` in `buildReminderEmail` with the public Storage URL
-4. Also update the reminder `link` to use a permanent URL (currently same broken preview URL — clicking "Open reminder" in the email also fails for the same reason). For now keep it as-is but flag this.
+### Edge function changes (`analyse-screenshot`)
 
-### 2. "Extract email HTML" task — what it means
+- Validate the caller's login token (closes the open-endpoint hole — anyone with the URL could currently burn Anthropic credits).
+- Service-role client counts rows, then inserts one row after a successful Claude response. Failed analyses don't count.
+- Return `403 { error: "beta_cap_reached", used, limit }` when exceeded.
 
-Right now the entire email template (~120 lines of HTML, inline CSS, helpers like `formatDeadlineLabel`, `escapeHtml`, `buildReminderEmail`) lives inside `supabase/functions/check-deadlines/index.ts`. That file is now ~400 lines and mixes two concerns: the cron logic (who to notify, when) and the presentation (what the email looks like).
+### Frontend changes
 
-"Extract email HTML" = move `buildReminderEmail` and its helpers into a separate file, e.g. `supabase/functions/_shared/reminder-email-template.ts`, and import it from `check-deadlines/index.ts`. Pure refactor, no behaviour change. Makes the cron function easier to read and lets future templates (e.g. weekly digest) reuse the same helpers.
+- **`src/pages/Upload.tsx`**: fetch usage count on mount; show "X / 30 analyses used" chip; if `X >= 30`, disable the Analyse button and show the waitlist dialog directly.
+- **`src/pages/Review.tsx`**: when `analyse-screenshot` returns 403, surface the waitlist dialog instead of the generic retry banner.
+- **New `src/components/WaitlistDialog.tsx`**: dialog with the message and `mailto:` button.
 
-**Honest take:** it's nice-to-have, not blocking. Skip until the file actually becomes painful, or do it alongside the logo URL fix since you'll be touching the template anyway.
+### Tests
 
-### Recommended action this turn
+- New `src/test/beta-cap.test.ts` for pure cap logic (`isOverCap(used, limit)`, edge cases at 0/29/30/31).
+- Render test for `WaitlistDialog`.
 
-Fix the logo (option A) and do the small extract refactor at the same time, since both touch the email template. Out of scope: fixing the "Open reminder" link URL (separate concern, needs a published URL or a proper redirect endpoint — I'll flag it but not fix it yet).
+### Out of scope
+
+- No proper waitlist database table or admin UI (mailto for now).
+- No retroactive count of past analyses — counter starts at 0 from deploy time.
+- No per-user cap overrides; bump `BETA_ANALYSIS_CAP` or delete rows manually if needed.
+
