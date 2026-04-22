@@ -53,7 +53,7 @@ export default function Landing() {
           {/* Beta pill */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-6 rounded-full border border-border bg-muted/40 text-[12px] text-muted-foreground">
             <Sparkles className="w-3 h-3 text-tag-events" />
-            <span><span className="font-medium text-foreground">Now in beta</span> — free during beta, 30 screenshot reminders per account</span>
+            <span><span className="font-medium text-foreground">Now in beta</span> — 30 free reminders, no card</span>
           </div>
           <h1 className="text-[32px] md:text-[48px] leading-[1.1] tracking-tight font-bold mb-6">
             You screenshot everything.{" "}
@@ -70,7 +70,7 @@ export default function Landing() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <p className="mt-3 text-[13px] text-muted-foreground">
-            Free during beta · No credit card · 30 screenshot reminders per account
+            Free while in beta · 30 reminders included
           </p>
         </div>
 
