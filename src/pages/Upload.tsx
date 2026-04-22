@@ -188,6 +188,24 @@ export default function UploadPage() {
         <div className="w-16" />
       </header>
 
+      {/* Beta usage chip */}
+      {usedCount !== null && (
+        <div className="mb-4 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => capReached && setWaitlistOpen(true)}
+            className={`text-[12px] px-2.5 py-1 rounded-full border ${
+              capReached
+                ? "border-destructive/30 bg-destructive/5 text-destructive cursor-pointer"
+                : "border-border bg-muted/40 text-muted-foreground cursor-default"
+            }`}
+          >
+            {usedCount} / {BETA_ANALYSIS_CAP} analyses used
+            {capReached && " — join the waitlist"}
+          </button>
+        </div>
+      )}
+
       {/* File validation errors */}
       {fileErrors.length > 0 && (
         <div className="mb-4 p-3 rounded-card border border-destructive/30 bg-destructive/5">
