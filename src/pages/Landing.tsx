@@ -1,5 +1,8 @@
-import { Camera, Brain, Bell, ArrowRight } from "lucide-react";
+import { Camera, Brain, Bell, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+
+const CONTACT_EMAIL = "hello@unscreenshot.ai";
+const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=Unscreenshot`;
 
 const steps = [
   {
@@ -35,6 +38,12 @@ export default function Landing() {
           >
             Pricing
           </Link>
+          <a
+            href={CONTACT_MAILTO}
+            className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Contact
+          </a>
           <Link
             to="/auth"
             className="text-[14px] text-muted-foreground hover:text-foreground transition-colors"
@@ -47,6 +56,14 @@ export default function Landing() {
       {/* Hero */}
       <section className="flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-20 pt-12 pb-16 md:pt-16 md:pb-20">
         <div className="max-w-2xl w-full text-center mx-auto">
+          {/* Beta pill */}
+          <a
+            href={CONTACT_MAILTO}
+            className="inline-flex items-center gap-1.5 px-3 py-1 mb-6 rounded-full border border-border bg-muted/40 text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+          >
+            <Sparkles className="w-3 h-3 text-tag-events" />
+            <span><span className="font-medium text-foreground">Now in beta</span> — free during beta, 30 analyses per account</span>
+          </a>
           <h1 className="text-[32px] md:text-[48px] leading-[1.1] tracking-tight font-bold mb-6">
             You screenshot everything.{" "}
             <span className="text-tag-events">You action nothing.</span>
@@ -61,6 +78,9 @@ export default function Landing() {
             Turn my screenshots into reminders
             <ArrowRight className="w-4 h-4" />
           </Link>
+          <p className="mt-3 text-[13px] text-muted-foreground">
+            Free during beta · No credit card · 30 analyses per account
+          </p>
         </div>
 
         {/* App mockup */}
@@ -260,6 +280,12 @@ export default function Landing() {
             >
               Pricing
             </Link>
+            <a
+              href={CONTACT_MAILTO}
+              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Contact
+            </a>
             <Link
               to="/auth"
               className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
