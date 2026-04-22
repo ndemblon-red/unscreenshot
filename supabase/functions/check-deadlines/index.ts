@@ -107,7 +107,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const alreadyNotified = new Set(
-      (existingLogs || []).map((l) => `${l.reminder_id}:${l.notification_type}`)
+      (existingLogs || []).map((l) => `${l.reminder_id}:${l.notification_type}:${l.recipient_email ?? ""}`)
     );
 
     const userIds = [...new Set(reminders.map((r) => r.user_id).filter(Boolean))];
