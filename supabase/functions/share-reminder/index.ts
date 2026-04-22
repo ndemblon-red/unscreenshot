@@ -2,15 +2,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.98.0/cors";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { buildShareNotificationEmail } from "../_shared/share-notification-email-template.ts";
+import {
+  MAX_RECIPIENTS_PER_REMINDER,
+  normaliseEmails,
+  selectNewRecipients,
+  checkRecipientCap,
+} from "../_shared/share-logic.ts";
 
 // Mirrors check-deadlines: same sender, same gateway, same brand assets.
 const SENDER_EMAIL = "Unscreenshot <onboarding@resend.dev>";
 const RESEND_GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 const APP_URL = "https://id-preview--6b3058fd-4727-4ff6-b954-440c6a622739.lovable.app";
 const LOGO_URL = "https://eialbbgpkyjjzcfkxbgc.supabase.co/storage/v1/object/public/public-assets/icon-128.png";
-
-// Per-reminder cap on active recipients.
-const MAX_RECIPIENTS_PER_REMINDER = 10;
 
 const BodySchema = z.object({
   reminderId: z.string().uuid(),
@@ -89,10 +92,7 @@ Deno.serve(async (req: Request) => {
     }
     const { reminderId, recipientEmails } = parsed.data;
 
-    // Normalise: lowercase + trim + dedupe
-    const normalisedEmails = Array.from(
-      new Set(recipientEmails.map((e) => e.trim().toLowerCase())),
-    );
+    const normalisedEmails = normaliseEmails(recipientEmails);
 
     // ---- Service-role client for everything below ----
     const admin = createClient(supabaseUrl, serviceRoleKey);
@@ -123,24 +123,21 @@ Deno.serve(async (req: Request) => {
       .eq("reminder_id", reminderId)
       .is("revoked_at", null);
 
-    const existingSet = new Set((existingShares ?? []).map((s) => s.recipient_email));
-    const activeCount = existingSet.size;
+    const existingActive = (existingShares ?? []).map((s) => s.recipient_email);
+    const activeCount = new Set(existingActive).size;
 
-    // Skip emails already actively shared
-    const newEmails = normalisedEmails.filter((e) => !existingSet.has(e));
-
-    // Don't allow sender sharing with themselves
-    const senderEmail = (user.email ?? "").toLowerCase();
-    const filteredNew = newEmails.filter((e) => e !== senderEmail);
+    // Skip already-shared and sender's own email
+    const filteredNew = selectNewRecipients(normalisedEmails, existingActive, user.email);
 
     // ---- Enforce 10-recipient cap (per reminder) ----
-    if (activeCount + filteredNew.length > MAX_RECIPIENTS_PER_REMINDER) {
+    const cap = checkRecipientCap(activeCount, filteredNew.length);
+    if (!cap.ok) {
       return new Response(
         JSON.stringify({
-          error: `This reminder can be shared with at most ${MAX_RECIPIENTS_PER_REMINDER} people. Currently shared with ${activeCount}.`,
+          error: cap.message,
           code: "recipient_cap_exceeded",
-          activeCount,
-          max: MAX_RECIPIENTS_PER_REMINDER,
+          activeCount: cap.activeCount,
+          max: cap.max,
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
