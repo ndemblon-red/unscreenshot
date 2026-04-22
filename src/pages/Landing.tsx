@@ -78,6 +78,9 @@ export default function Landing() {
             Turn my screenshots into reminders
             <ArrowRight className="w-4 h-4" />
           </Link>
+          <p className="mt-3 text-[13px] text-muted-foreground">
+            Free during beta · No credit card · 30 analyses per account
+          </p>
         </div>
 
         {/* App mockup */}
