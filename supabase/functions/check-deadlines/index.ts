@@ -211,20 +211,43 @@ Deno.serve(async (req: Request) => {
         if (local.hour !== targetHour) continue;
       }
 
-      const key = `${reminder.id}:${notificationType}`;
-      if (alreadyNotified.has(key)) continue;
+      // Owner entry — keyed with the owner's email so it stays distinct from share rows.
+      const ownerEmail = emailMap[reminder.user_id] || null;
+      const ownerKey = `${reminder.id}:${notificationType}:${ownerEmail ?? ""}`;
+      if (!alreadyNotified.has(ownerKey)) {
+        entries.push({
+          reminder_id: reminder.id,
+          user_id: reminder.user_id,
+          recipient_email: ownerEmail,
+          notification_type: notificationType,
+          status: "logged",
+          reminder_title: reminder.title,
+          reminder_category: reminder.category,
+          reminder_deadline: reminder.deadline,
+          reminder_image_url: reminder.image_url,
+        });
+      }
 
-      entries.push({
-        reminder_id: reminder.id,
-        user_id: reminder.user_id,
-        recipient_email: emailMap[reminder.user_id] || null,
-        notification_type: notificationType,
-        status: "logged",
-        reminder_title: reminder.title,
-        reminder_category: reminder.category,
-        reminder_deadline: reminder.deadline,
-        reminder_image_url: reminder.image_url,
-      });
+      // Share recipient entries — same time-gate as owner. Distinct
+      // notification_type so they don't collide with the owner's log row.
+      const sharedType = notificationType === "due_today" ? "shared_due_today" : "shared_due_tomorrow";
+      const recipients = sharesByReminder[reminder.id] ?? [];
+      for (const recipient of recipients) {
+        const shareKey = `${reminder.id}:${sharedType}:${recipient}`;
+        if (alreadyNotified.has(shareKey)) continue;
+        entries.push({
+          reminder_id: reminder.id,
+          user_id: reminder.user_id,
+          recipient_email: recipient,
+          notification_type: sharedType,
+          status: "logged",
+          reminder_title: reminder.title,
+          reminder_category: reminder.category,
+          reminder_deadline: reminder.deadline,
+          reminder_image_url: reminder.image_url,
+          is_share: true,
+        });
+      }
     }
 
     if (entries.length === 0) {
@@ -238,26 +261,35 @@ Deno.serve(async (req: Request) => {
     let failedCount = 0;
     let skippedCount = 0;
     for (const entry of entries) {
-      if (emailPrefMap[entry.user_id] === false) {
-        entry.status = "skipped_email";
-        skippedCount++;
-        continue;
-      }
-      const typeAllowed =
-        entry.notification_type === "due_today"
+      // Owner entries respect the user's notification preferences. Share
+      // entries are recipient-driven and bypass the owner's email toggles.
+      if (!entry.is_share) {
+        if (emailPrefMap[entry.user_id] === false) {
+          entry.status = "skipped_email";
+          skippedCount++;
+          continue;
+        }
+        const isToday = entry.notification_type === "due_today";
+        const typeAllowed = isToday
           ? emailTodayMap[entry.user_id] !== false
           : emailTomorrowMap[entry.user_id] !== false;
-      if (!typeAllowed) {
-        entry.status = "skipped_email";
-        skippedCount++;
-        continue;
+        if (!typeAllowed) {
+          entry.status = "skipped_email";
+          skippedCount++;
+          continue;
+        }
       }
       if (!entry.recipient_email) {
         entry.status = "no_email";
         continue;
       }
-      const dueWhen: "today" | "tomorrow" = entry.notification_type === "due_today" ? "today" : "tomorrow";
-      const subject = `Reminder due ${dueWhen}: ${entry.reminder_title}`;
+      const dueWhen: "today" | "tomorrow" =
+        entry.notification_type === "due_today" || entry.notification_type === "shared_due_today"
+          ? "today"
+          : "tomorrow";
+      const subject = entry.is_share
+        ? `Shared reminder due ${dueWhen}: ${entry.reminder_title}`
+        : `Reminder due ${dueWhen}: ${entry.reminder_title}`;
       const link = `${APP_URL}/reminder/${entry.reminder_id}`;
       const { html, text } = buildReminderEmail({
         title: entry.reminder_title,
@@ -282,7 +314,7 @@ Deno.serve(async (req: Request) => {
 
     // Strip helper fields before insert
     const insertRows = entries.map(
-      ({ reminder_title, reminder_category, reminder_deadline, reminder_image_url, ...rest }) => rest
+      ({ reminder_title, reminder_category, reminder_deadline, reminder_image_url, is_share, ...rest }) => rest
     );
     const { error: insertError } = await supabase
       .from("notification_log")
