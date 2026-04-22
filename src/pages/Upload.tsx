@@ -73,8 +73,32 @@ export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const [compressing, setCompressing] = useState(false);
+  const [usedCount, setUsedCount] = useState<number | null>(null);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  // Fetch the user's beta analysis usage on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { count, error } = await supabase
+        .from("analysis_usage")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", session.user.id);
+      if (cancelled) return;
+      if (error) {
+        console.error("Failed to fetch analysis usage:", error);
+        return;
+      }
+      setUsedCount(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const capReached = usedCount !== null && isOverCap(usedCount);
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const newFiles: QueuedFile[] = [];
