@@ -1,6 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.98.0/cors";
 import { buildReminderEmail } from "../_shared/reminder-email-template.ts";
+import {
+  localParts,
+  classifyDue,
+  shouldSendNow,
+  deadlineDatePart,
+} from "../_shared/deadline-logic.ts";
 
 // Change this one line when you get a verified domain (e.g. "reminders@yourdomain.com")
 const SENDER_EMAIL = "Unscreenshot <onboarding@resend.dev>";
@@ -141,27 +147,6 @@ Deno.serve(async (req: Request) => {
       if (row.timezone) tzMap[row.user_id] = row.timezone;
     }
 
-    // Helpers: compute YYYY-MM-DD and current hour in a given IANA timezone.
-    function localParts(tz: string): { date: string; hour: number } {
-      try {
-        const fmt = new Intl.DateTimeFormat("en-CA", {
-          timeZone: tz,
-          year: "numeric", month: "2-digit", day: "2-digit",
-          hour: "2-digit", hour12: false,
-        });
-        const parts = fmt.formatToParts(now);
-        const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
-        const date = `${get("year")}-${get("month")}-${get("day")}`;
-        const hour = parseInt(get("hour"), 10);
-        return { date, hour: isNaN(hour) ? 0 : hour };
-      } catch {
-        const date = now.toISOString().slice(0, 10);
-        return { date, hour: now.getUTCHours() };
-      }
-    }
-    const SEND_HOUR_TODAY = 8;
-    const SEND_HOUR_TOMORROW = 18;
-
     // Fetch active shares for these reminders so we can also email recipients.
     const { data: shareRows } = await supabase
       .from("reminder_shares")
@@ -190,26 +175,15 @@ Deno.serve(async (req: Request) => {
     for (const reminder of reminders) {
       if (!reminder.user_id) continue;
       const tz = tzMap[reminder.user_id] || "UTC";
-      const local = localParts(tz);
-      const deadlineDate = reminder.deadline?.split("T")[0] || reminder.deadline;
+      const local = localParts(now, tz);
+      const deadlineDate = deadlineDatePart(reminder.deadline);
 
-      // Determine due-when relative to the user's local date
-      let notificationType: "due_today" | "due_tomorrow" | null = null;
-      if (deadlineDate === local.date) notificationType = "due_today";
-      else {
-        // Compute user-local "tomorrow" by adding one day to local.date
-        const [y, m, d] = local.date.split("-").map(Number);
-        const localTomorrow = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
-        if (deadlineDate === localTomorrow) notificationType = "due_tomorrow";
-      }
+      const notificationType = classifyDue(deadlineDate, local.date);
       if (!notificationType) continue;
 
       // Time-gate: only send at the user's local 8 AM (today) or 6 PM (tomorrow),
       // unless this is a forced/manual run.
-      if (!forceSend) {
-        const targetHour = notificationType === "due_today" ? SEND_HOUR_TODAY : SEND_HOUR_TOMORROW;
-        if (local.hour !== targetHour) continue;
-      }
+      if (!shouldSendNow(notificationType, local.hour, forceSend)) continue;
 
       // Owner entry — keyed with the owner's email so it stays distinct from share rows.
       const ownerEmail = emailMap[reminder.user_id] || null;
