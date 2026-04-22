@@ -443,6 +443,8 @@ export default function ReviewPage() {
           </button>
         </div>
       )}
+
+      <WaitlistDialog open={waitlistOpen} onOpenChange={setWaitlistOpen} />
     </div>
   );
 }
