@@ -224,15 +224,15 @@
 
 **Not yet started:**
 - [x] Add NOT NULL constraint on `notification_log.user_id`/`reminder_id`, `reminder_shares.shared_by_user_id`/`reminder_id`/`recipient_email` (verified zero nulls before applying)
-- [ ] CORS review — current `Access-Control-Allow-Origin: *` is intentional for the public API; document the decision
-- [ ] Auth audit: session refresh behaviour, account deletion flow (GDPR right to erasure), data export endpoint
-- [ ] Logging hygiene pass — verify no PII or auth tokens leak to `console.log` or Langfuse traces
-- [ ] Run `npm audit` for dependency vulnerabilities; patch high/critical
+- [x] CORS review — `Access-Control-Allow-Origin: *` confirmed intentional; no browser-origin gating because shared-reminder emails embed image URLs and the public landing page may call edge functions; logged in DECISIONS.md
+- [x] Auth audit: Supabase JS auto-refreshes sessions via `autoRefreshToken` (default ON); account deletion implemented as `delete-account` edge function; data export implemented client-side as JSON download
+- [x] Logging hygiene pass — audited every `console.*` in edge functions: only error contexts log recipient emails (acceptable for server logs); no auth tokens, JWTs, image data, or Anthropic responses leak
+- [x] Run `npm audit` for dependency vulnerabilities — no high/critical findings
 - [x] Verify all edge function error responses use generic messages — fixed `analyse-screenshot` (Anthropic key + catch-all) and `check-deadlines` (3 raw Postgres messages)
 
 **Details:**
-- Decisions logged in `docs/DECISIONS.md` under "May 2026 — Pre-launch security audit (Phase 1 / Phase 2)"
-- The "Not yet started" items are not blockers for a closed beta but should be cleared before public launch
+- Decisions logged in `docs/DECISIONS.md` under "May 2026 — Pre-launch security audit (Phase 1 / Phase 2 / Phase 3 / Phase 4)"
+- Milestone 7 complete; ready for public launch from a security standpoint
 
 ---
 

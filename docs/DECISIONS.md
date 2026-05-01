@@ -286,3 +286,19 @@ After every significant decision during your build, add an entry. A "significant
 **Why:** A consistent rule — clients only see actionable, generic error strings; operators get the real diagnostic in server logs. Eliminates accidental DB schema, library, or config leaks via error responses.
 
 **What I'd revisit:** If a user reports a confusing failure that I can't reproduce, having the server log surfaced via Langfuse / Cloud logs becomes the only diagnostic path — make sure those stay queryable.
+
+---
+
+### May 2026 — Pre-launch security audit (Phase 4: GDPR, CORS, audits)
+
+**Context:** Final phase of Milestone 7. Closed the remaining items: GDPR right-to-erasure, data portability, CORS posture, dependency CVEs, and logging hygiene.
+
+**Decisions:**
+- **Account deletion** — built `delete-account` edge function. Validates JWT, then cascades: storage objects under `{user_id}/`, then DB rows in `reminders`, `reminder_shares`, `notification_log`, `notification_preferences`, `analysis_usage`, then `auth.admin.deleteUser`. UI lives in a new `DangerZone` component with a confirmation dialog. Service-role key required for `auth.admin.deleteUser` and to bypass RLS during cascade.
+- **Data export** — implemented client-side: parallel `select *` across all five user-owned tables, packaged as a single JSON blob and downloaded as `unscreenshot-export-YYYY-MM-DD.json`. No edge function needed because RLS already scopes selects to the caller.
+- **CORS** — kept `Access-Control-Allow-Origin: *`. Reasoning: (a) the public landing page at `/` may call edge functions before login; (b) shared-reminder emails embed image URLs from `screenshots` bucket fetched cross-origin; (c) Lovable-hosted preview, prod, and custom-domain deployments would require an allowlist that drifts. Auth on every protected endpoint is enforced via JWT validation in code, not by origin.
+- **Logging hygiene** — audited every `console.*` call in `supabase/functions/`. Findings: recipient email addresses appear in two error logs (`share-reminder` send failure, `check-deadlines` send failure) — acceptable, these are server-side logs and emails are necessary to debug delivery. No JWTs, no Anthropic responses, no image data, no service-role keys logged.
+- **Dependency scan** — `npm audit` returned zero high or critical vulnerabilities. No action needed.
+- **Session refresh** — Supabase JS client has `autoRefreshToken: true` by default. Sessions are silently refreshed; no custom logic required.
+
+**Status:** Milestone 7 complete. App is ready for public launch from a security standpoint.
