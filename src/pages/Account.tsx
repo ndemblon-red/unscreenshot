@@ -6,6 +6,7 @@ import StatsCards from "@/components/account/StatsCards";
 import CategoryChart from "@/components/account/CategoryChart";
 import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 import NotificationPreferences from "@/components/account/NotificationPreferences";
+import DangerZone from "@/components/account/DangerZone";
 import NotificationBell from "@/components/NotificationBell";
 
 interface Stats {
@@ -91,18 +92,7 @@ export default function Account() {
 
       <ChangePasswordForm />
 
-      <div className="mt-10 pt-6 border-t border-border">
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            navigate("/auth");
-          }}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-btn border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors text-[15px] font-medium"
-        >
-          <LogOut className="w-4 h-4" />
-          Sign out
-        </button>
-      </div>
+      <DangerZone />
     </div>
   );
 }
