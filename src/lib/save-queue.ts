@@ -59,7 +59,7 @@ export async function flushQueue(): Promise<{ saved: number; failed: number }> {
       if (!session) throw new Error("Not authenticated");
 
       const ext = item.file.name.split(".").pop() || "jpg";
-      const path = `${crypto.randomUUID()}.${ext}`;
+      const path = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("screenshots")
         .upload(path, item.file, { contentType: item.mimeType });
