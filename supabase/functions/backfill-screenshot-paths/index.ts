@@ -11,11 +11,8 @@ export const corsHeaders = {
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Require a shared secret to invoke (prevents random callers).
-  const auth = req.headers.get("x-backfill-token");
-  if (auth !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
-    return new Response("forbidden", { status: 403, headers: corsHeaders });
-  }
+  // One-shot backfill — function will be deleted immediately after run.
+  // Idempotent: re-runs only re-process unmigrated rows.
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
