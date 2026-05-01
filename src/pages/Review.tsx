@@ -139,7 +139,7 @@ export default function ReviewPage() {
       if (!session) throw new Error("Not authenticated");
 
       const ext = current.file.name.split(".").pop() || "jpg";
-      const path = `${crypto.randomUUID()}.${ext}`;
+      const path = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("screenshots")
         .upload(path, current.file, { contentType: current.mimeType });
