@@ -26,6 +26,8 @@ export default function Index() {
 
   // Auto-archive expired reminders then fetch
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const fetchReminders = async () => {
       const today = new Date().toISOString().split("T")[0];
 
@@ -60,22 +62,34 @@ export default function Index() {
       }
     };
 
-    fetchReminders();
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel("reminders_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "reminders" },
-        () => {
-          fetchReminders();
-        }
-      )
-      .subscribe();
+      await fetchReminders();
+
+      // Subscribe to realtime changes scoped to this user
+      channel = supabase
+        .channel(`reminders_changes_${session.user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "reminders",
+            filter: `user_id=eq.${session.user.id}`,
+          },
+          () => {
+            fetchReminders();
+          }
+        )
+        .subscribe();
+    };
+
+    init();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
