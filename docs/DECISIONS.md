@@ -270,3 +270,19 @@ After every significant decision during your build, add an entry. A "significant
 - When Lovable adds rate-limiting primitives, add a per-user-per-window cap on `share-reminder` to close the revoke-and-replay loop.
 - Audit `check-deadlines` error returns if it ever becomes user-callable (currently cron-only).
 
+
+---
+
+### May 2026 — Pre-launch security audit (Phase 3)
+
+**Context:** Continued the audit by tightening schema constraints on the remaining tables and finishing the edge-function error-message sweep.
+
+**Decisions:**
+1. **NOT NULL across the board.** Verified zero null values in `notification_log.user_id`/`reminder_id`, `reminder_shares.shared_by_user_id`/`reminder_id`/`recipient_email`, then added the constraints. Schema now matches RLS expectations on every owner-scoped table.
+2. **Edge-function error sanitisation completed.**
+   - `analyse-screenshot`: replaced "ANTHROPIC_API_KEY is not configured" leak with generic 503 "Service temporarily unavailable" (real reason still in server logs). Catch-all replaced raw `e.message` with "Internal server error".
+   - `check-deadlines`: three raw Postgres `error.message` returns replaced with generic "Internal server error". Cron-only function so threat surface is small, but defence in depth.
+
+**Why:** A consistent rule — clients only see actionable, generic error strings; operators get the real diagnostic in server logs. Eliminates accidental DB schema, library, or config leaks via error responses.
+
+**What I'd revisit:** If a user reports a confusing failure that I can't reproduce, having the server log surfaced via Langfuse / Cloud logs becomes the only diagnostic path — make sure those stay queryable.

@@ -223,12 +223,12 @@
 - [ ] Backend rate limiting on `share-reminder` (revoke-and-replay loop) — no Lovable rate-limit primitive yet
 
 **Not yet started:**
-- [ ] Add NOT NULL constraint on `notification_log.user_id` and `reminder_shares.shared_by_user_id`/`recipient_email` (verify orphan counts first)
+- [x] Add NOT NULL constraint on `notification_log.user_id`/`reminder_id`, `reminder_shares.shared_by_user_id`/`reminder_id`/`recipient_email` (verified zero nulls before applying)
 - [ ] CORS review — current `Access-Control-Allow-Origin: *` is intentional for the public API; document the decision
 - [ ] Auth audit: session refresh behaviour, account deletion flow (GDPR right to erasure), data export endpoint
 - [ ] Logging hygiene pass — verify no PII or auth tokens leak to `console.log` or Langfuse traces
 - [ ] Run `npm audit` for dependency vulnerabilities; patch high/critical
-- [ ] Verify all edge function error responses use generic messages (full audit, not just `share-reminder`)
+- [x] Verify all edge function error responses use generic messages — fixed `analyse-screenshot` (Anthropic key + catch-all) and `check-deadlines` (3 raw Postgres messages)
 
 **Details:**
 - Decisions logged in `docs/DECISIONS.md` under "May 2026 — Pre-launch security audit (Phase 1 / Phase 2)"
