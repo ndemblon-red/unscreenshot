@@ -253,3 +253,20 @@ After every significant decision during your build, add an entry. A "significant
 - If unconfirmed users complain about being blocked, soften to "warn but allow" with a banner.
 - If image fetch privacy becomes a requirement (e.g. shared reminders should expire), migrate from public URLs to signed URLs — this would break share-email images for non-users and require a tokenized viewer route.
 
+
+---
+
+### May 2026 — Pre-launch security audit (Phase 2)
+
+**Context:** Follow-up pass after Phase 1, focusing on schema correctness, error-message hygiene, and frontend XSS surface.
+
+**Decisions:**
+1. **Skip backend rate limiting.** `share-reminder` is already well-bounded (10 recipients per reminder, skip-already-shared, ownership check). `analyse-screenshot` has the 30-call beta cap. Lovable backend has no established rate-limiting primitives — deferring deeper limits until proper infra exists.
+2. **`reminders.user_id` is now NOT NULL.** Deleted 4 orphan rows (unreachable via RLS, no recovery path). Schema now matches the RLS contract: every reminder has an owner.
+3. **`share-reminder` error response sanitised.** Replaced raw `insertErr.message` with a generic "Could not save shares" string. Real error still goes to server logs. Prevents Postgres error details (column names, constraint internals) from leaking to clients.
+4. **XSS surface clean.** Only `dangerouslySetInnerHTML` usage is the stock shadcn `chart.tsx` rendering developer-controlled colour tokens — no user input path.
+
+**What I'd revisit:**
+- When Lovable adds rate-limiting primitives, add a per-user-per-window cap on `share-reminder` to close the revoke-and-replay loop.
+- Audit `check-deadlines` error returns if it ever becomes user-callable (currently cron-only).
+

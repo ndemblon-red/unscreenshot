@@ -165,7 +165,7 @@ Deno.serve(async (req: Request) => {
     const { error: insertErr } = await admin.from("reminder_shares").insert(insertRows);
     if (insertErr) {
       console.error("Insert reminder_shares failed:", insertErr);
-      return new Response(JSON.stringify({ error: insertErr.message }), {
+      return new Response(JSON.stringify({ error: "Could not save shares. Please try again." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
