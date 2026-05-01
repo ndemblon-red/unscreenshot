@@ -201,6 +201,12 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    if (!userData.user.email_confirmed_at) {
+      return new Response(
+        JSON.stringify({ error: "Please confirm your email before using this feature." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const userId = userData.user.id;
 
     // --- Beta cap check (service role bypasses RLS) ---
@@ -230,6 +236,24 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Missing imageBase64 or mimeType" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Validate mimeType (Anthropic-supported only) ---
+    const ALLOWED_MIME = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!ALLOWED_MIME.includes(mimeType)) {
+      return new Response(
+        JSON.stringify({ error: `Unsupported image type: ${mimeType}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Validate size (~7 MB base64 ≈ 5 MB raw, matches client compression target) ---
+    const MAX_BASE64_BYTES = 7 * 1024 * 1024;
+    if (typeof imageBase64 !== "string" || imageBase64.length > MAX_BASE64_BYTES) {
+      return new Response(
+        JSON.stringify({ error: "Image too large. Max ~5 MB after compression." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
