@@ -298,3 +298,36 @@
 
 **Details:**
 - Scope TBD — needs a review of what specifically is broken or underperforming
+
+---
+
+## Milestone 7: Pre-Launch Security Audit
+**Goal:** Close obvious security gaps before opening beta to a wider audience. Cover storage, auth, RLS, edge function hardening, and frontend XSS surface.
+**Test:** Re-run Supabase linter — no critical findings. Manually verify: (a) signed-out users can't read another user's storage paths, (b) unconfirmed-email users get 403 on `analyse-screenshot` and `share-reminder`, (c) oversized payload to `analyse-screenshot` returns 413 before any Anthropic call.
+
+**Completed:**
+- [x] Restructure storage paths to `{user_id}/{uuid}.ext`; backfill existing 27 objects
+- [x] Apply path-based RLS on `storage.objects` (INSERT/UPDATE/DELETE require ownership)
+- [x] Lock screenshot listing to owners; keep public SELECT for email image fetches
+- [x] Enable HIBP leaked-password protection on auth
+- [x] Add `user_id=eq.<uid>` filters to Realtime subscriptions in `Index.tsx` and `NotificationBell.tsx`
+- [x] Reject unconfirmed-email users (403) in `analyse-screenshot` and `share-reminder`
+- [x] Validate `analyse-screenshot` input: mimeType allowlist + ~7 MB base64 cap
+- [x] Delete 4 orphan reminders; add NOT NULL constraint on `reminders.user_id`
+- [x] Sanitise `share-reminder` error response (no raw Postgres messages to client)
+- [x] Scan frontend for `dangerouslySetInnerHTML` — only stock shadcn chart usage, no user input
+
+**Deferred:**
+- [ ] Backend rate limiting on `share-reminder` (revoke-and-replay loop) — no Lovable rate-limit primitive yet
+
+**Not yet started:**
+- [ ] Add NOT NULL constraint on `notification_log.user_id` and `reminder_shares.shared_by_user_id`/`recipient_email` (verify orphan counts first)
+- [ ] CORS review — current `Access-Control-Allow-Origin: *` is intentional for the public API; document the decision
+- [ ] Auth audit: session refresh behaviour, account deletion flow (GDPR right to erasure), data export endpoint
+- [ ] Logging hygiene pass — verify no PII or auth tokens leak to `console.log` or Langfuse traces
+- [ ] Run `npm audit` for dependency vulnerabilities; patch high/critical
+- [ ] Verify all edge function error responses use generic messages (full audit, not just `share-reminder`)
+
+**Details:**
+- Decisions logged in `docs/DECISIONS.md` under "May 2026 — Pre-launch security audit (Phase 1 / Phase 2)"
+- The "Not yet started" items are not blockers for a closed beta but should be cleared before public launch
