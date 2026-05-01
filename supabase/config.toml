@@ -2,3 +2,6 @@ project_id = "eialbbgpkyjjzcfkxbgc"
 
 [functions.analyse-screenshot]
 verify_jwt = false
+
+[functions.backfill-screenshot-paths]
+verify_jwt = false
