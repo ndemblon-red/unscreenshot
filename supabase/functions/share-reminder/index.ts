@@ -80,6 +80,12 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (!userData.user.email_confirmed_at) {
+      return new Response(
+        JSON.stringify({ error: "Please confirm your email before sharing." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     const user = userData.user;
 
     // ---- Validate body ----
