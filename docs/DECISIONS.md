@@ -226,3 +226,30 @@ After every significant decision during your build, add an entry. A "significant
 **Why:** Sign-out is an infrequent action. Keeping it in the main header used prime real estate for something users rarely need. The Account page is the natural home for account-level actions like password changes and sign-out.
 
 **What I'd revisit:** If users report difficulty finding sign-out, add it to a header dropdown menu as well.
+
+---
+
+### May 2026 — Pre-launch security audit (Phase 1)
+
+**Context:** Pre-launch hardening pass before opening beta to a wider audience. Goal: close gaps that could enable cross-tenant access, abuse of the AI quota, or unbounded backend cost.
+
+**Options considered (storage paths):**
+- Bucket-level RLS only (Option 2 — fastest, opaque)
+- Path-based RLS with per-user folders (Option 1 — Supabase-canonical, self-documenting)
+
+**Decision:** Applied six hardening changes:
+1. **Storage paths** — Screenshots now saved as `{user_id}/{uuid}.ext`. Backfilled 27 existing objects; 12 ownerless orphans left inert. Public SELECT preserved so emails still render images via public URL.
+2. **Storage RLS** — INSERT/UPDATE/DELETE now require `auth.uid()::text = (storage.foldername(name))[1]`. Listing locked to owners; URL-based fetch stays public.
+3. **HIBP** — Leaked-password protection enabled on auth.
+4. **Realtime filters** — `Index.tsx` and `NotificationBell.tsx` subscriptions now pass `user_id=eq.<uid>` server-side filters. Per-user channel names. RLS was already enforcing safety; this is a worker-load optimisation.
+5. **Email-confirmation gate** — `analyse-screenshot` and `share-reminder` reject users whose `email_confirmed_at` is null (403). Aligns backend with the email-verification requirement on signup.
+6. **`analyse-screenshot` input validation** — mimeType allowlist (`jpeg/png/gif/webp`); base64 payload capped at ~7 MB (≈5 MB raw, matches client compression target). Rejects oversized/invalid payloads before any Anthropic call or beta-cap consumption.
+
+**Why Option 1 for storage:** Path-based RLS is the Supabase-canonical pattern — every doc and example uses it. Ownership is encoded in the path, so future devs reading a policy understand it immediately. Worth the one-time backfill cost.
+
+**Why email-confirmation gate strict (not lenient):** With email verification on at signup, allowing unconfirmed users to call backend functions would make the gate cosmetic. Strict mode keeps the security boundary meaningful.
+
+**What I'd revisit:**
+- If unconfirmed users complain about being blocked, soften to "warn but allow" with a banner.
+- If image fetch privacy becomes a requirement (e.g. shared reminders should expire), migrate from public URLs to signed URLs — this would break share-email images for non-users and require a tokenized viewer route.
+
