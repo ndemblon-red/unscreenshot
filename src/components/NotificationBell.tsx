@@ -69,19 +69,33 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
-    fetchNotifications();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const channel = supabase
-      .channel("notification_log_bell")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notification_log" },
-        () => fetchNotifications()
-      )
-      .subscribe();
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      await fetchNotifications();
+
+      channel = supabase
+        .channel(`notification_log_bell_${session.user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notification_log",
+            filter: `user_id=eq.${session.user.id}`,
+          },
+          () => fetchNotifications()
+        )
+        .subscribe();
+    };
+
+    init();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
