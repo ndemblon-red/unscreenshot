@@ -147,7 +147,7 @@ export type Database = {
           image_url: string
           status: string
           title: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           category?: string
@@ -157,7 +157,7 @@ export type Database = {
           image_url: string
           status?: string
           title: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           category?: string
@@ -167,7 +167,7 @@ export type Database = {
           image_url?: string
           status?: string
           title?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
