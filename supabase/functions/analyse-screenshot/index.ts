@@ -259,9 +259,10 @@ serve(async (req) => {
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) {
+      console.error("ANTHROPIC_API_KEY is not configured");
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY is not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Service temporarily unavailable" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -431,7 +432,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

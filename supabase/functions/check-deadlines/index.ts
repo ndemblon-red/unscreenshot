@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
 
     if (remindersError) {
       console.error("Error fetching reminders:", remindersError);
-      return new Response(JSON.stringify({ error: remindersError.message }), {
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -106,7 +106,7 @@ Deno.serve(async (req: Request) => {
 
     if (logsError) {
       console.error("Error fetching existing logs:", logsError);
-      return new Response(JSON.stringify({ error: logsError.message }), {
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -296,7 +296,7 @@ Deno.serve(async (req: Request) => {
 
     if (insertError) {
       console.error("Error inserting notifications:", insertError);
-      return new Response(JSON.stringify({ error: insertError.message }), {
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
