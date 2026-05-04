@@ -22,6 +22,14 @@ export default function DangerZone() {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
+  const phraseMatches = confirmText.trim().toLowerCase() === CONFIRM_PHRASE;
+
+  function openConfirm() {
+    setConfirmText("");
+    setConfirmOpen(true);
+  }
 
   async function handleExport() {
     setExporting(true);
