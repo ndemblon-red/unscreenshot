@@ -12,7 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+
+const CONFIRM_PHRASE = "delete my account";
 
 export default function DangerZone() {
   const navigate = useNavigate();
