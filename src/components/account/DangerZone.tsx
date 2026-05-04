@@ -12,13 +12,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+
+const CONFIRM_PHRASE = "delete my account";
 
 export default function DangerZone() {
   const navigate = useNavigate();
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
+  const phraseMatches = confirmText.trim().toLowerCase() === CONFIRM_PHRASE;
+
+  function openConfirm() {
+    setConfirmText("");
+    setConfirmOpen(true);
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -84,6 +95,7 @@ export default function DangerZone() {
     } finally {
       setDeleting(false);
       setConfirmOpen(false);
+      setConfirmText("");
     }
   }
 
@@ -101,14 +113,20 @@ export default function DangerZone() {
       </button>
 
       <button
-        onClick={() => setConfirmOpen(true)}
+        onClick={openConfirm}
         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-btn border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors text-[15px] font-medium"
       >
         <Trash2 className="w-4 h-4" />
         Delete account
       </button>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) setConfirmText("");
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
@@ -117,12 +135,30 @@ export default function DangerZone() {
               notification history. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <label htmlFor="confirm-delete" className="text-label text-muted-foreground">
+              Type <span className="font-mono text-foreground">{CONFIRM_PHRASE}</span> to confirm.
+            </label>
+            <Input
+              id="confirm-delete"
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              disabled={deleting}
+              placeholder={CONFIRM_PHRASE}
+            />
+          </div>
+
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleting || !phraseMatches}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
               {deleting ? "Deleting..." : "Delete forever"}
             </AlertDialogAction>
