@@ -1,47 +1,32 @@
-## Goal
+## Audit findings
 
-Close the "Share recipient email sanity check (sender name + unsubscribe)" audit item by tightening sender attribution and giving non-user recipients a clear way to stop the emails. Two small, targeted changes — no new infrastructure, no schema changes.
+**1. Edge function log skim — ✅ clean**
+- `analyse-screenshot`, `share-reminder`, `delete-account`: no recent invocations, no errors.
+- `check-deadlines`: only Boot/Shutdown lifecycle entries, zero errors or 500s in the recent window. No Anthropic/Resend failures surfaced.
 
-## Current state
+**2. Cron schedule — ⚠️ duplicate jobs found**
+Two active cron jobs both invoke `check-deadlines`:
+- `check-deadlines-hourly` — `0 * * * *` (intended, matches docs)
+- `check-deadlines-every-minute` — `* * * * *` (legacy, redundant)
 
-- Sender display name is present (`Unscreenshot <onboarding@resend.dev>`).
-- Subject and body name the sharer's email.
-- Footer says only "Sent by Unscreenshot. Turn screenshots into reminders at unscreenshot." — no opt-out, no reply path.
-- `reply_to` is not set, so any reply goes to a dead Resend test inbox.
+Both succeed every run (1440 + 24 successful runs in last 24h). The per-minute job is wasteful: the function does its own time-gating (only sends at user-local 8 AM / 6 PM), so the extra 1416 invocations/day produce no emails but burn function quota and log noise.
 
-## Changes
+**3. Rate limiting on share-reminder / signups — deferred**
+No backend primitive in place; per existing platform guidance and the `reminder-sharing` memory, this stays deferred until post-launch.
 
-### 1. `supabase/functions/share-reminder/index.ts`
-- Add `reply_to: <sharer's email>` to the Resend payload when `user.email` is present. This makes "Reply" go directly to the person who shared the reminder — recipients can ask the sharer to stop, which is the natural opt-out for a 1:1 share.
-- No change to `from:` (separate verified-domain item already tracked).
+## Plan
 
-### 2. `supabase/functions/_shared/share-notification-email-template.ts`
-Extend the footer to make consent and opt-out explicit. New footer copy (dry, on-brand, no exclamation marks):
+1. **Drop the redundant per-minute cron job** via a migration:
+   ```sql
+   SELECT cron.unschedule('check-deadlines-every-minute');
+   ```
+   Keep `check-deadlines-hourly` as the single source of truth.
 
-> You received this because **`<sender email>`** chose to share a reminder with you. Reply to this email to ask them to stop, or [unsubscribe from all share emails](unsubscribeUrl).
+2. **Update `docs/DECISIONS.md`** with three short entries:
+   - Edge function log skim performed, no errors observed across the four user-facing functions.
+   - `check-deadlines` runs hourly via pg_cron; duplicate per-minute job removed.
+   - Rate limiting on `share-reminder` and signups intentionally deferred (rationale: no backend rate-limit primitive available; mitigations in place are the per-reminder 10-recipient cap, the 30-analysis beta cap, and Supabase's built-in auth signup throttling).
 
-Implementation notes:
-- Plain-text version updated to match.
-- Add `unsubscribeUrl` to `ShareNotificationEmailOptions` so the unsubscribe link is composable rather than hard-coded.
-- For now, link to `mailto:<sharer>?subject=Please%20stop%20sharing%20reminders%20with%20me` as the unsubscribe target — same effect as Reply, but explicit. A proper token-backed suppression list is a follow-up if/when Lovable Emails replaces Resend test mode.
-- Add `List-Unsubscribe` and `List-Unsubscribe-Post` headers to the Resend payload pointing at the same mailto. Gmail/Outlook surface these as a one-click "Unsubscribe" link in the inbox UI, which dramatically reduces spam complaint rates.
+3. **No code changes** to edge functions — they're healthy.
 
-### 3. `docs/DECISIONS.md`
-Add a short entry under May 2026 documenting:
-- Why share-reminder uses `reply_to: sharer` instead of a generic noreply.
-- Why opt-out is implemented as mailto + List-Unsubscribe header rather than a token-backed suppression list (deferred until verified-domain migration).
-- The trade-off: we get inbox-provider unsubscribe UX without standing up a suppression table; if shared volumes grow, revisit with a proper token flow.
-
-## Out of scope (already tracked separately)
-
-- Migrating off `onboarding@resend.dev` to a verified domain — known item.
-- Token-backed suppression list — deferred until Lovable Emails or verified domain is in place.
-- Touching the `check-deadlines` reminder emails — different recipient model (own user, has account, has in-app prefs).
-
-## Files touched
-
-- `supabase/functions/share-reminder/index.ts` — add `reply_to` and List-Unsubscribe headers.
-- `supabase/functions/_shared/share-notification-email-template.ts` — extend footer + accept `unsubscribeUrl`.
-- `docs/DECISIONS.md` — log the decision.
-
-No migrations, no new edge functions, no schema changes.
+No schema changes beyond unscheduling the cron job. No frontend impact.
