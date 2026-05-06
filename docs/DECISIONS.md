@@ -319,3 +319,20 @@ After every significant decision during your build, add an entry. A "significant
 **Why:** Shared reminders are sent to non-users (friends, family, colleagues). If the bucket were private, those recipients would see broken image placeholders in their emails, which would gut the product experience. The risk of public SELECT is mitigated by unguessable UUID filenames inside per-user folders — there is no directory listing, and objects are only discoverable via the reminder record that the sharer explicitly distributes.
 
 **What I'd revisit:** If image privacy becomes a hard requirement (e.g. sensitive documents shared by accident), migrate to signed URLs with a tokenized viewer route. This would require all shared images to be fetched through an authenticated proxy, and non-user email rendering would need to use expiring signed links instead of direct public URLs.
+
+---
+
+### May 2026 — Share-reminder emails: reply-to sharer + mailto unsubscribe
+
+**Context:** The pre-launch deliverability audit flagged that `share-reminder` emails (sent to non-user recipients) lacked a clear opt-out mechanism and a working reply path. Replies bounced into the Resend test sender, and the footer offered no way to stop receiving share emails. This is the kind of thing that drives spam complaints and damages sender reputation for the whole domain — including auth emails.
+
+**Options considered:**
+- Do nothing — rely on the recipient asking the sharer in person
+- Build a token-backed suppression list with a hosted unsubscribe page
+- Use `reply_to: <sharer>` plus a mailto-based List-Unsubscribe header
+
+**Decision:** Set `reply_to` on every share email to the sharer's own address, add a footer line explaining who sent it and how to stop, and emit `List-Unsubscribe` / `List-Unsubscribe-Post` headers pointing at a `mailto:<sharer>` link. Gmail and Outlook surface this as a one-click "Unsubscribe" button in their inbox UI.
+
+**Why:** Share emails are inherently 1:1 and triggered by the sharer, not by us. The natural opt-out is "tell the person who shared with you to stop" — which `reply_to` and the mailto unsubscribe both achieve, with zero new infrastructure. We get the inbox-provider unsubscribe affordance (which is what actually moves the spam-complaint needle) without standing up a suppression table, token rotation, or a hosted unsubscribe route. A proper token-backed flow is overkill at current volumes and would duplicate work that Lovable Emails will eventually provide natively.
+
+**What I'd revisit:** If share volume grows or recipients start reporting "I asked them to stop and they didn't", build a real suppression list keyed on `(sharer_user_id, recipient_email)` and check it in `share-reminder` before sending. Migrate the unsubscribe link from `mailto:` to a tokenized `/unsubscribe/:token` route at the same time.

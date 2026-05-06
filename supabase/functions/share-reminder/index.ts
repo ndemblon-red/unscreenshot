@@ -25,6 +25,8 @@ async function sendEmail(
   subject: string,
   html: string,
   text: string,
+  replyTo: string | null,
+  unsubscribeUrl: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
   const resendKey = Deno.env.get("RESEND_API_KEY");
@@ -32,6 +34,21 @@ async function sendEmail(
   if (!resendKey) return { ok: false, error: "RESEND_API_KEY not configured" };
 
   try {
+    // List-Unsubscribe + List-Unsubscribe-Post enable Gmail/Outlook one-click
+    // unsubscribe UI in the inbox, which lowers spam-complaint rates.
+    const payload: Record<string, unknown> = {
+      from: SENDER_EMAIL,
+      to: [to],
+      subject,
+      html,
+      text,
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    };
+    if (replyTo) payload.reply_to = replyTo;
+
     const res = await fetch(`${RESEND_GATEWAY_URL}/emails`, {
       method: "POST",
       headers: {
@@ -39,7 +56,7 @@ async function sendEmail(
         "Authorization": `Bearer ${lovableKey}`,
         "X-Connection-Api-Key": resendKey,
       },
-      body: JSON.stringify({ from: SENDER_EMAIL, to: [to], subject, html, text }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const body = await res.text();
@@ -174,6 +191,13 @@ Deno.serve(async (req: Request) => {
     // ---- Send "shared with you" emails ----
     const subject = `${user.email ?? "Someone"} shared a reminder: ${reminder.title}`;
     const signupLink = `${APP_URL}/auth`;
+    const replyTo = user.email ?? null;
+    // mailto unsubscribe: hits the sharer directly. Same effect as Reply, but
+    // explicit and surfaced via List-Unsubscribe in the inbox UI. A token-backed
+    // suppression list is deferred until we move off Resend test mode.
+    const unsubscribeUrl = replyTo
+      ? `mailto:${replyTo}?subject=${encodeURIComponent("Please stop sharing reminders with me")}`
+      : `${APP_URL}/`;
     const { html, text } = buildShareNotificationEmail({
       senderEmail: user.email ?? "A friend",
       title: reminder.title,
@@ -183,12 +207,13 @@ Deno.serve(async (req: Request) => {
       signupLink,
       logoUrl: LOGO_URL,
       appUrl: APP_URL,
+      unsubscribeUrl,
     });
 
     let sentCount = 0;
     let failedCount = 0;
     for (const recipient of filteredNew) {
-      const result = await sendEmail(recipient, subject, html, text);
+      const result = await sendEmail(recipient, subject, html, text, replyTo, unsubscribeUrl);
       if (result.ok) sentCount++;
       else {
         failedCount++;

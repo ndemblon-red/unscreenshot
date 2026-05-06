@@ -48,10 +48,11 @@ export interface ShareNotificationEmailOptions {
   signupLink: string;
   logoUrl: string;
   appUrl: string;
+  unsubscribeUrl: string;
 }
 
 export function buildShareNotificationEmail(opts: ShareNotificationEmailOptions): { html: string; text: string } {
-  const { senderEmail, title, category, deadline, imageUrl, signupLink, logoUrl, appUrl } = opts;
+  const { senderEmail, title, category, deadline, imageUrl, signupLink, logoUrl, appUrl, unsubscribeUrl } = opts;
   const senderSafe = escapeHtml(senderEmail);
   const titleSafe = escapeHtml(title);
   const categorySafe = escapeHtml(category);
@@ -119,6 +120,7 @@ export function buildShareNotificationEmail(opts: ShareNotificationEmailOptions)
           </tr>
           <tr>
             <td style="padding:20px 28px 24px; border-top:1px solid #e5e5ea;">
+              <p style="margin:0 0 8px; font-size:12px; color:#6e6e73; line-height:1.5;">You received this because <strong style="color:#1d1d1f;">${senderSafe}</strong> chose to share a reminder with you. Reply to this email to ask them to stop, or <a href="${unsubscribeUrl}" style="color:#6e6e73; text-decoration:underline;">unsubscribe from share emails</a>.</p>
               <p style="margin:0; font-size:12px; color:#6e6e73; line-height:1.5;">Sent by Unscreenshot. Turn screenshots into reminders at <a href="${appUrl}" style="color:#6e6e73; text-decoration:underline;">unscreenshot</a>.</p>
             </td>
           </tr>
@@ -129,7 +131,7 @@ export function buildShareNotificationEmail(opts: ShareNotificationEmailOptions)
 </body>
 </html>`;
 
-  const text = `${senderEmail} shared a reminder with you\n\n${title}\n${category} · Due ${deadlineLabel}\n\n${senderEmail} shared this reminder with you. We'll email you again when it's due.\n\nSave your own reminders: ${signupLink}\n\n— Sent by Unscreenshot`;
+  const text = `${senderEmail} shared a reminder with you\n\n${title}\n${category} · Due ${deadlineLabel}\n\n${senderEmail} shared this reminder with you. We'll email you again when it's due.\n\nSave your own reminders: ${signupLink}\n\n—\nYou received this because ${senderEmail} chose to share a reminder with you. Reply to this email to ask them to stop, or unsubscribe: ${unsubscribeUrl}\n\nSent by Unscreenshot`;
 
   return { html, text };
 }
