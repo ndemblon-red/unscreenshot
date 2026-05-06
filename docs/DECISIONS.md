@@ -422,3 +422,13 @@ Showing a banner for exempt storage is actively discouraged by regulators (it tr
 - Chat widgets that drop tracking cookies (Intercom, Crisp, Drift)
 
 If any of the above lands, switch to a proper consent-mode banner (granular categories, reject-all as easy as accept-all, no pre-ticked boxes) — not a cookie wall.
+
+---
+
+### May 2026 — Governing law: England and Wales
+
+**Context:** Terms previously said "the jurisdiction where the service operator is based" — too vague for beta launch.
+
+**Decision:** Named England and Wales explicitly. Operator is UK-based.
+
+**What I'd revisit:** If the operating entity moves jurisdiction, or if a non-UK entity (e.g. a US Inc or EU GmbH) becomes the contracting party.
