@@ -333,3 +333,22 @@
 
 **Details:**
 - Scope TBD — needs a review of what specifically is broken or underperforming
+
+---
+
+## Future: Roles and Permissions System
+
+**Goal:** Replace the hardcoded admin email allowlist with a proper role-based access control system once a second admin is added or finer-grained roles are needed.
+
+**Steps (not yet started):**
+1. Create `app_role` enum (`admin`, `moderator`, `user`) and `user_roles` table with `(user_id, role)` unique constraint
+2. Add `has_role(_user_id uuid, _role app_role)` security-definer function
+3. Migrate `admin-stats` edge function to call `has_role` instead of checking `ADMIN_EMAILS`
+4. Migrate `AdminGuard` to query the role from a session-cached source instead of comparing emails
+5. Seed initial admin row(s) via a one-off migration
+6. Document the role-assignment flow in DECISIONS.md
+
+**Details:**
+- Current admin gate is documented in DECISIONS.md (May 2026 — Admin stats: hardcoded email allowlist)
+- Roles MUST live in a separate table — never on profiles or any user-editable surface — to prevent privilege escalation
+- Triggered by: a second admin being added, or any role beyond "admin" being needed
