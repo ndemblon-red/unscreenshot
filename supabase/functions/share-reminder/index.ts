@@ -191,20 +191,6 @@ Deno.serve(async (req: Request) => {
     // ---- Send "shared with you" emails ----
     const subject = `${user.email ?? "Someone"} shared a reminder: ${reminder.title}`;
     const signupLink = `${APP_URL}/auth`;
-    const { html, text } = buildShareNotificationEmail({
-      senderEmail: user.email ?? "A friend",
-      title: reminder.title,
-      category: reminder.category,
-      deadline: reminder.deadline,
-      imageUrl: reminder.image_url,
-      signupLink,
-      logoUrl: LOGO_URL,
-      appUrl: APP_URL,
-    });
-
-    // ---- Send "shared with you" emails ----
-    const subject = `${user.email ?? "Someone"} shared a reminder: ${reminder.title}`;
-    const signupLink = `${APP_URL}/auth`;
     const replyTo = user.email ?? null;
     // mailto unsubscribe: hits the sharer directly. Same effect as Reply, but
     // explicit and surfaced via List-Unsubscribe in the inbox UI. A token-backed
