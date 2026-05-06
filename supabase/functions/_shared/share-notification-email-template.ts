@@ -48,10 +48,11 @@ export interface ShareNotificationEmailOptions {
   signupLink: string;
   logoUrl: string;
   appUrl: string;
+  unsubscribeUrl: string;
 }
 
 export function buildShareNotificationEmail(opts: ShareNotificationEmailOptions): { html: string; text: string } {
-  const { senderEmail, title, category, deadline, imageUrl, signupLink, logoUrl, appUrl } = opts;
+  const { senderEmail, title, category, deadline, imageUrl, signupLink, logoUrl, appUrl, unsubscribeUrl } = opts;
   const senderSafe = escapeHtml(senderEmail);
   const titleSafe = escapeHtml(title);
   const categorySafe = escapeHtml(category);
