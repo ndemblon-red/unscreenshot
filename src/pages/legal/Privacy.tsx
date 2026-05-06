@@ -71,7 +71,7 @@ export default function Privacy() {
 
       <h2>Your rights</h2>
       <ul>
-        <li><strong>Access and export:</strong> email us and we will export your reminders.</li>
+        <li><strong>Access and export:</strong> use "Export my data (JSON)" on the Account page to download all your reminders and metadata. For anything that button doesn't cover, email us.</li>
         <li><strong>Deletion:</strong> use "Delete account" on the Account page. This permanently removes your account, all reminders, all uploaded images, and all share records.</li>
         <li><strong>Correction:</strong> edit any reminder field directly in the app.</li>
         <li><strong>Email opt-out:</strong> turn off deadline emails on the Account page. Account-related emails (password reset, security) still send.</li>
