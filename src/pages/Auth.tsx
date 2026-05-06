@@ -97,6 +97,15 @@ export default function Auth() {
             )}
             {forgotMode ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"}
           </button>
+
+          {!isLogin && !forgotMode && (
+            <p className="text-[12px] text-muted-foreground text-center -mt-1">
+              By creating an account you agree to our{" "}
+              <Link to="/legal/terms" className="underline hover:text-foreground">Terms</Link>
+              {" "}and{" "}
+              <Link to="/legal/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+            </p>
+          )}
         </form>
 
         {isLogin && !forgotMode && (
