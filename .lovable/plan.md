@@ -1,47 +1,50 @@
-## Yes — public bucket must be disclosed
+## Goal
 
-The Privacy Policy will be explicit: screenshots live in a publicly-readable bucket, URLs are random UUIDs but not access-controlled, the trade-off was made so shared-reminder emails can render images inline, and users should not upload secrets/IDs/passwords. The Terms will reference the Privacy Policy on this point.
+Stop sending from `onboarding@resend.dev` and start sending Unscreenshot emails from your own domain via Resend. Keep `hello@unscreenshot.ai` as the public contact / reply-to.
 
-## Files to create
+## Steps
 
-1. **`src/components/LegalLayout.tsx`** — shared shell: header with logo + Unscreenshot wordmark linking back to `/`, prose container, footer with Privacy/Terms cross-links. Plain typography, dry copy, no buzzwords (per memory).
+### 1. Verify `unscreenshot.ai` in Resend (you do this, outside Lovable)
 
-2. **`src/pages/legal/Privacy.tsx`** — Privacy Policy. Sections:
-   - What we collect (account, screenshots, reminder metadata, notification settings, sharing data, operational logs; explicit "no analytics, no ad pixels")
-   - Where data lives (Supabase EU + RLS, Anthropic for AI, Resend for email, Langfuse for AI traces — explicitly excluding image data)
-   - **About screenshot storage** — the public-bucket disclosure, the rationale (shared-reminder emails), and the practical "don't upload secrets" warning
-   - Sharing reminders (recipient emails stored, opt-out via reply / List-Unsubscribe)
-   - How we use your data (no selling, no advertisers)
-   - Your rights (access, deletion via Account page, correction, email opt-out)
-   - Retention (reminders until deleted, logs 90d, suppression list indefinite)
-   - Children (16+)
-   - Changes (email account holders for material changes)
-   - Contact (`hello@unscreenshot.ai`)
+In the Resend dashboard:
+- Domains → Add Domain → enter `unscreenshot.ai` (or a subdomain like `send.unscreenshot.ai` if you want to keep the root clean — recommended).
+- Resend will give you DNS records (SPF/TXT, DKIM CNAMEs, and an MX for bounces).
+- Add those records at your registrar (the same place you set up the custom domain). Wait for Resend to mark them Verified.
 
-3. **`src/pages/legal/Terms.tsx`** — Terms of Service. Sections:
-   - The service (beta caveats)
-   - Your account (16+, one per person, secure password)
-   - Acceptable use (no illegal/infringing content, no other people's PII without consent, no abuse/reverse-engineering, no spamming via share)
-   - Your content (you keep ownership; limited licence to store/process/display; cross-link to Privacy on the public-bucket point)
-   - AI output (can be wrong; not liable for missed deadlines)
-   - Beta limits and changes (30-analysis cap; can change at any time)
-   - No warranty (as-is)
-   - Liability (capped at amount paid = £0 during beta)
-   - Termination (self-serve via Account page)
-   - Governing law (placeholder for operator's jurisdiction)
-   - Contact
+I cannot do this step for you — it requires access to Resend and your DNS provider.
 
-## Files to update
+### 2. Pick the sender identity
 
-4. **`src/App.tsx`** — add two public routes: `/legal/privacy` → `Privacy`, `/legal/terms` → `Terms`. No AuthGuard.
+Suggested:
+- `From:` `Unscreenshot <noreply@unscreenshot.ai>` (or `hello@` if you prefer warmth)
+- `Reply-To:` `hello@unscreenshot.ai` for share + deadline emails (currently set to the sender's own email for shares — we'll keep that for shares but add `hello@` as fallback for system mail)
 
-5. **`src/pages/Landing.tsx`** — extend the existing footer to include Privacy and Terms links alongside Contact and Sign in.
+Confirm which `From:` address you want before I edit code.
 
-6. **`src/pages/Auth.tsx`** — add a small line under the submit button on signup mode only: "By creating an account you agree to our Terms and Privacy Policy" with both words linked. Keep it dry, single line, muted text.
+### 3. Code changes (I'll do this once domain is verified)
 
-## Out of scope (not changing)
+Two edge functions hardcode the sender:
+- `supabase/functions/share-reminder/index.ts` — `SENDER_EMAIL`
+- `supabase/functions/check-deadlines/index.ts` — `SENDER_EMAIL`
 
-- No cookie banner — we don't set non-essential cookies (no analytics).
-- No DPA, no GDPR Article 30 register — overkill for solo beta.
-- Governing-law jurisdiction left as a generic placeholder; can be tightened when the legal entity is finalised.
-- No DECISIONS.md update needed — the public-bucket decision is already logged there from an earlier turn.
+Change both from `"Unscreenshot <onboarding@resend.dev>"` to the new verified address. For `check-deadlines` (system notifications, no human sender), also set a default `reply_to: hello@unscreenshot.ai`.
+
+Then redeploy both functions.
+
+### 4. `hello@unscreenshot.ai` inbox
+
+You don't have a real mailbox yet. Two easy options for later:
+- **Forwarding only (free/cheap):** Cloudflare Email Routing, ImprovIt, or your registrar's forwarding — forwards `hello@unscreenshot.ai` to your personal inbox. Requires MX records on the root domain. Note: if you used the root `unscreenshot.ai` for Resend in step 1, the Resend MX (for bounces) and the forwarding MX can conflict — that's why I recommend verifying Resend on a subdomain like `send.unscreenshot.ai` and leaving the root MX free for forwarding.
+- **Real mailbox:** Google Workspace / Fastmail / Migadu (~$3-6/mo).
+
+Out of scope for this plan — just flagging the DNS interaction so you don't paint yourself into a corner.
+
+### 5. Update legal pages + waitlist mailto
+
+`waitlist@unscreenshot.ai` is referenced in the beta cap dialog and `hello@unscreenshot.ai` in the privacy policy. Both will start working as soon as forwarding is set up — no code change needed.
+
+## What I need from you to proceed
+
+1. Confirm the sender domain: root (`unscreenshot.ai`) or subdomain (`send.unscreenshot.ai` — recommended).
+2. Confirm the `From:` address (e.g. `noreply@…` or `hello@…`).
+3. Tell me when Resend shows the domain as Verified — then I'll do step 3 and redeploy.
