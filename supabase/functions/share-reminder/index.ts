@@ -25,6 +25,8 @@ async function sendEmail(
   subject: string,
   html: string,
   text: string,
+  replyTo: string | null,
+  unsubscribeUrl: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
   const resendKey = Deno.env.get("RESEND_API_KEY");
@@ -32,6 +34,21 @@ async function sendEmail(
   if (!resendKey) return { ok: false, error: "RESEND_API_KEY not configured" };
 
   try {
+    // List-Unsubscribe + List-Unsubscribe-Post enable Gmail/Outlook one-click
+    // unsubscribe UI in the inbox, which lowers spam-complaint rates.
+    const payload: Record<string, unknown> = {
+      from: SENDER_EMAIL,
+      to: [to],
+      subject,
+      html,
+      text,
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    };
+    if (replyTo) payload.reply_to = replyTo;
+
     const res = await fetch(`${RESEND_GATEWAY_URL}/emails`, {
       method: "POST",
       headers: {
@@ -39,7 +56,7 @@ async function sendEmail(
         "Authorization": `Bearer ${lovableKey}`,
         "X-Connection-Api-Key": resendKey,
       },
-      body: JSON.stringify({ from: SENDER_EMAIL, to: [to], subject, html, text }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const body = await res.text();
