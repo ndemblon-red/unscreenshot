@@ -120,6 +120,7 @@ export function buildShareNotificationEmail(opts: ShareNotificationEmailOptions)
           </tr>
           <tr>
             <td style="padding:20px 28px 24px; border-top:1px solid #e5e5ea;">
+              <p style="margin:0 0 8px; font-size:12px; color:#6e6e73; line-height:1.5;">You received this because <strong style="color:#1d1d1f;">${senderSafe}</strong> chose to share a reminder with you. Reply to this email to ask them to stop, or <a href="${unsubscribeUrl}" style="color:#6e6e73; text-decoration:underline;">unsubscribe from share emails</a>.</p>
               <p style="margin:0; font-size:12px; color:#6e6e73; line-height:1.5;">Sent by Unscreenshot. Turn screenshots into reminders at <a href="${appUrl}" style="color:#6e6e73; text-decoration:underline;">unscreenshot</a>.</p>
             </td>
           </tr>
