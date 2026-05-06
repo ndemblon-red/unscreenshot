@@ -302,3 +302,20 @@ After every significant decision during your build, add an entry. A "significant
 - **Session refresh** — Supabase JS client has `autoRefreshToken: true` by default. Sessions are silently refreshed; no custom logic required.
 
 **Status:** Milestone 7 complete. App is ready for public launch from a security standpoint.
+
+---
+
+### May 2026 — Screenshots bucket remains public for shared-reminder email rendering
+
+**Context:** During the security audit, the question was raised whether the `screenshots` storage bucket should stay public or be locked down to authenticated users only.
+
+**Options considered:**
+- Make bucket private — all image fetches require an auth token; shared-reminder emails could not embed images
+- Make bucket private but generate signed URLs for share emails — complex, short-lived, breaks non-user email rendering
+- Keep bucket public with path-based RLS for writes — anyone can fetch an image if they have the URL, but only the owner can upload or delete
+
+**Decision:** Keep the `screenshots` bucket public. INSERT/UPDATE/DELETE are already protected by path-based RLS (`auth.uid()::text = (storage.foldername(name))[1]`). SELECT remains open so that shared-reminder emails can render screenshot thumbnails without requiring the recipient to be authenticated.
+
+**Why:** Shared reminders are sent to non-users (friends, family, colleagues). If the bucket were private, those recipients would see broken image placeholders in their emails, which would gut the product experience. The risk of public SELECT is mitigated by unguessable UUID filenames inside per-user folders — there is no directory listing, and objects are only discoverable via the reminder record that the sharer explicitly distributes.
+
+**What I'd revisit:** If image privacy becomes a hard requirement (e.g. sensitive documents shared by accident), migrate to signed URLs with a tokenized viewer route. This would require all shared images to be fetched through an authenticated proxy, and non-user email rendering would need to use expiring signed links instead of direct public URLs.
