@@ -12,9 +12,11 @@ import ReminderDetail from "./pages/ReminderDetail";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Account from "./pages/Account";
+import AdminStats from "./pages/AdminStats";
 import NotFound from "./pages/NotFound";
 import OfflineBanner from "./components/OfflineBanner";
 import AuthGuard from "./components/AuthGuard";
+import AdminGuard from "./components/AdminGuard";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,7 @@ const App = () => (
           <Route path="/review" element={<AuthGuard><Review /></AuthGuard>} />
           <Route path="/reminder/:id" element={<AuthGuard><ReminderDetail /></AuthGuard>} />
           <Route path="/account" element={<AuthGuard><Account /></AuthGuard>} />
+          <Route path="/admin/stats" element={<AdminGuard><AdminStats /></AdminGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

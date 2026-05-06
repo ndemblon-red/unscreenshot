@@ -365,3 +365,20 @@ After every significant decision during your build, add an entry. A "significant
 **Decision:** Defer custom rate limiting. The 10-recipient cap, the 30-analysis beta cap, and Supabase's built-in throttling are sufficient for the beta. Logged in TASKS Milestone 7 for a post-launch revisit.
 
 **What I'd revisit:** If we see abuse patterns (e.g. one user sharing the same reminder repeatedly across many fresh recipient addresses to spam, or signup floods), introduce a `rate_limits` table keyed on `(user_id, action, window_start)` and check it in the relevant edge functions.
+
+---
+
+### May 2026 — Admin stats: hardcoded email allowlist (Option A)
+
+**Context:** Pre-launch checklist flagged the absence of basic product analytics (signups, first-analysis, week-2 retention). Rather than add a third-party tracker (PostHog, Plausible, Firebase) and the privacy-policy/cookie-banner overhead it brings, all the raw data is already in Postgres (`auth.users`, `analysis_usage`, `reminders`, `reminder_shares`).
+
+**Options considered:**
+- Third-party product analytics tool — extra disclosure, cookie banner, ongoing cost
+- Proper `user_roles` table + `has_role()` security-definer + RLS-gated aggregate views — the textbook approach, but overkill for a single solo-founder admin
+- Hardcoded email allowlist in an edge function + a thin `/admin/stats` page
+
+**Decision:** Option A. `admin-stats` edge function checks `user.email` against a hardcoded `ADMIN_EMAILS` set (`ndemblon@gmail.com`), uses the service role to run aggregate queries, returns JSON. `/admin/stats` page renders the numbers behind an `AdminGuard` (client-side redirect for non-admins). Real enforcement is server-side; the client guard only prevents rendering the empty shell.
+
+**Why:** Beta has one admin. Existing data covers the metrics that matter. No new dependency, no privacy disclosure, no cookie banner. ~150 lines of code total. Migrating to a `user_roles` table later is mechanical: replace the allowlist check in the edge function and the guard with `has_role(auth.uid(), 'admin')`.
+
+**What I'd revisit:** When a second admin is needed, or when finer-grained roles (moderator, support) become useful — see TASKS Future entry "Roles and permissions system".
