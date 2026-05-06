@@ -262,6 +262,18 @@ export default function Landing() {
             © {new Date().getFullYear()} Unscreenshot
           </span>
           <div className="flex items-center gap-4">
+            <Link
+              to="/legal/privacy"
+              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              to="/legal/terms"
+              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Terms
+            </Link>
             <a
               href={CONTACT_MAILTO}
               className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"

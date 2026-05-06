@@ -13,6 +13,8 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Account from "./pages/Account";
 import AdminStats from "./pages/AdminStats";
+import Privacy from "./pages/legal/Privacy";
+import Terms from "./pages/legal/Terms";
 import NotFound from "./pages/NotFound";
 import OfflineBanner from "./components/OfflineBanner";
 import AuthGuard from "./components/AuthGuard";
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/legal/privacy" element={<Privacy />} />
+          <Route path="/legal/terms" element={<Terms />} />
           <Route path="/app" element={<AuthGuard><Index /></AuthGuard>} />
           <Route path="/upload" element={<AuthGuard><Upload /></AuthGuard>} />
           <Route path="/review" element={<AuthGuard><Review /></AuthGuard>} />
