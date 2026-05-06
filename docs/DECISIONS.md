@@ -382,3 +382,17 @@ After every significant decision during your build, add an entry. A "significant
 **Why:** Beta has one admin. Existing data covers the metrics that matter. No new dependency, no privacy disclosure, no cookie banner. ~150 lines of code total. Migrating to a `user_roles` table later is mechanical: replace the allowlist check in the edge function and the guard with `has_role(auth.uid(), 'admin')`.
 
 **What I'd revisit:** When a second admin is needed, or when finer-grained roles (moderator, support) become useful — see TASKS Future entry "Roles and permissions system".
+
+---
+
+### May 2026 — Google sign-in via Lovable Cloud managed OAuth
+
+**Context:** Pre-launch, Auth page only supported email/password. Wanted lower signup friction before opening the beta.
+
+**Decision:** Enabled Google OAuth using Lovable Cloud's managed credentials (no Google Cloud Console setup, no client ID/secret to rotate). Implemented via `lovable.auth.signInWithOAuth("google", { redirect_uri: origin + "/app" })` from `@lovable.dev/cloud-auth-js`. "Continue with Google" button sits above the email/password form on the Auth page, with a divider. Email/password kept enabled — Google is additive, not a replacement.
+
+**Why:** One-tap signup typically lifts conversion 20–40%. Auth flow keys off `auth.uid()` so RLS, the 30-analysis cap, and reminders all work unchanged regardless of sign-in method. Managed credentials mean zero ops overhead.
+
+**Caveats:** Users who sign up with Google then later try email/password with the same address will get a "user already exists" error — standard Supabase behavior, accepted for beta.
+
+**What I'd revisit:** If we want our own branding on the Google consent screen, swap to BYO Google OAuth credentials in Cloud → Auth Settings → Google.
