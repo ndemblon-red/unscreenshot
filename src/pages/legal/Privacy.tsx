@@ -69,6 +69,22 @@ export default function Privacy() {
       </ul>
       <p>We do not sell your data. We do not share it with advertisers.</p>
 
+      <h2>Cookies and local storage</h2>
+      <p>
+        We do not use tracking, advertising, or analytics cookies. We do not
+        run a third-party analytics tracker. The app uses only what is
+        strictly necessary to function:
+      </p>
+      <ul>
+        <li><strong>Authentication tokens:</strong> stored in your browser's local storage so you stay signed in.</li>
+        <li><strong>UI state:</strong> a small cookie remembers whether the sidebar is collapsed.</li>
+        <li><strong>Offline queue:</strong> if you upload while offline, screenshots are held in local storage until you reconnect.</li>
+      </ul>
+      <p>
+        Because none of this is used for tracking or advertising, no cookie
+        consent banner is required.
+      </p>
+
       <h2>Your rights</h2>
       <ul>
         <li><strong>Access and export:</strong> use "Export my data (JSON)" on the Account page to download all your reminders and metadata. For anything that button doesn't cover, email us.</li>
