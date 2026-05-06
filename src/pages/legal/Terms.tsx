@@ -91,9 +91,10 @@ export default function Terms() {
 
       <h2>Governing law</h2>
       <p>
-        These terms are governed by the laws of the jurisdiction where the
-        service operator is based. Disputes go to the courts of that
-        jurisdiction.
+        These terms are governed by the laws of England and Wales. Any
+        dispute arising out of or in connection with the service or these
+        terms will be subject to the exclusive jurisdiction of the courts of
+        England and Wales.
       </p>
 
       <h2>Contact</h2>
