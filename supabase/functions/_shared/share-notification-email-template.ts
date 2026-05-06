@@ -131,7 +131,7 @@ export function buildShareNotificationEmail(opts: ShareNotificationEmailOptions)
 </body>
 </html>`;
 
-  const text = `${senderEmail} shared a reminder with you\n\n${title}\n${category} · Due ${deadlineLabel}\n\n${senderEmail} shared this reminder with you. We'll email you again when it's due.\n\nSave your own reminders: ${signupLink}\n\n— Sent by Unscreenshot`;
+  const text = `${senderEmail} shared a reminder with you\n\n${title}\n${category} · Due ${deadlineLabel}\n\n${senderEmail} shared this reminder with you. We'll email you again when it's due.\n\nSave your own reminders: ${signupLink}\n\n—\nYou received this because ${senderEmail} chose to share a reminder with you. Reply to this email to ask them to stop, or unsubscribe: ${unsubscribeUrl}\n\nSent by Unscreenshot`;
 
   return { html, text };
 }
