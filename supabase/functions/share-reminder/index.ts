@@ -202,10 +202,32 @@ Deno.serve(async (req: Request) => {
       appUrl: APP_URL,
     });
 
+    // ---- Send "shared with you" emails ----
+    const subject = `${user.email ?? "Someone"} shared a reminder: ${reminder.title}`;
+    const signupLink = `${APP_URL}/auth`;
+    const replyTo = user.email ?? null;
+    // mailto unsubscribe: hits the sharer directly. Same effect as Reply, but
+    // explicit and surfaced via List-Unsubscribe in the inbox UI. A token-backed
+    // suppression list is deferred until we move off Resend test mode.
+    const unsubscribeUrl = replyTo
+      ? `mailto:${replyTo}?subject=${encodeURIComponent("Please stop sharing reminders with me")}`
+      : `${APP_URL}/`;
+    const { html, text } = buildShareNotificationEmail({
+      senderEmail: user.email ?? "A friend",
+      title: reminder.title,
+      category: reminder.category,
+      deadline: reminder.deadline,
+      imageUrl: reminder.image_url,
+      signupLink,
+      logoUrl: LOGO_URL,
+      appUrl: APP_URL,
+      unsubscribeUrl,
+    });
+
     let sentCount = 0;
     let failedCount = 0;
     for (const recipient of filteredNew) {
-      const result = await sendEmail(recipient, subject, html, text);
+      const result = await sendEmail(recipient, subject, html, text, replyTo, unsubscribeUrl);
       if (result.ok) sentCount++;
       else {
         failedCount++;
