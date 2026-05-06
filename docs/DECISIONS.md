@@ -396,3 +396,29 @@ After every significant decision during your build, add an entry. A "significant
 **Caveats:** Users who sign up with Google then later try email/password with the same address will get a "user already exists" error — standard Supabase behavior, accepted for beta.
 
 **What I'd revisit:** If we want our own branding on the Google consent screen, swap to BYO Google OAuth credentials in Cloud → Auth Settings → Google.
+
+---
+
+### May 2026 — No cookie consent banner
+
+**Context:** Privacy Policy got a "Cookies and local storage" section. Question: does EU ePrivacy / UK PECR require a consent banner on top of that?
+
+**Decision:** No banner. Disclosure-only in the Privacy Policy is sufficient for the current shape of the app.
+
+**Why:** ePrivacy/PECR consent applies to non-essential device storage. Everything we store qualifies for the "strictly necessary" exemption:
+- Supabase auth tokens in localStorage — needed to keep the user signed in (a service they explicitly requested).
+- Sidebar collapsed cookie — UI preference for a UI the user is actively using; CNIL/ICO explicitly exempt this.
+- Offline upload queue in localStorage — needed to complete a user-initiated action.
+- No analytics, ads, session replay, or third-party trackers on the client. Langfuse is server-side only.
+
+Showing a banner for exempt storage is actively discouraged by regulators (it trains users to click through and misrepresents the legal basis).
+
+**Trigger to revisit — add a banner the moment we add any of:**
+- Client analytics (PostHog, GA, Mixpanel, Plausible cloud is borderline-exempt but verify)
+- Marketing/ads pixels (Meta, LinkedIn, Reddit, Google Ads)
+- Session replay (Hotjar, FullStory, Clarity)
+- A/B testing with fingerprinting
+- Embedded YouTube (use `youtube-nocookie.com` to stay exempt) or similar third-party embeds that set cookies
+- Chat widgets that drop tracking cookies (Intercom, Crisp, Drift)
+
+If any of the above lands, switch to a proper consent-mode banner (granular categories, reject-all as easy as accept-all, no pre-ticked boxes) — not a cookie wall.
