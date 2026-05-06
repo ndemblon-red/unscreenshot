@@ -336,3 +336,32 @@ After every significant decision during your build, add an entry. A "significant
 **Why:** Share emails are inherently 1:1 and triggered by the sharer, not by us. The natural opt-out is "tell the person who shared with you to stop" — which `reply_to` and the mailto unsubscribe both achieve, with zero new infrastructure. We get the inbox-provider unsubscribe affordance (which is what actually moves the spam-complaint needle) without standing up a suppression table, token rotation, or a hosted unsubscribe route. A proper token-backed flow is overkill at current volumes and would duplicate work that Lovable Emails will eventually provide natively.
 
 **What I'd revisit:** If share volume grows or recipients start reporting "I asked them to stop and they didn't", build a real suppression list keyed on `(sharer_user_id, recipient_email)` and check it in `share-reminder` before sending. Migrate the unsubscribe link from `mailto:` to a tokenized `/unsubscribe/:token` route at the same time.
+
+---
+
+### May 2026 — Pre-launch edge function & cron audit
+
+**Context:** Final pre-launch sweep of the four user-facing edge functions (`analyse-screenshot`, `share-reminder`, `delete-account`, `check-deadlines`) and the deadline cron schedule.
+
+**Findings:**
+- Edge function logs: no errors, no 500s, no Anthropic/Resend failures across the recent window. `check-deadlines` shows clean Boot/Shutdown lifecycle only.
+- Cron: two active jobs were both invoking `check-deadlines` — `check-deadlines-hourly` (`0 * * * *`, intended) and a legacy `check-deadlines-every-minute` (`* * * * *`). Both succeeded on every run, but the per-minute job produced no extra emails because the function time-gates internally to user-local 8 AM / 6 PM. It just burned function quota.
+
+**Decision:** Unscheduled `check-deadlines-every-minute`. Hourly is now the single source of truth, matching the documented design.
+
+**What I'd revisit:** If we ever want sub-hour granularity (e.g. user-configurable send times), reintroduce a faster cron — but only after the function's time-gating logic is re-checked end-to-end.
+
+---
+
+### May 2026 — Rate limiting on share-reminder and signups deferred
+
+**Context:** Pre-launch checklist flagged "rate limiting on share-reminder / signups" as an open item. There is no first-class backend primitive for ad-hoc per-user rate limiting available right now, and the existing mitigations cover the realistic abuse vectors at beta volume.
+
+**Existing mitigations:**
+- `share-reminder`: per-reminder cap of 10 active recipients (enforced server-side in the edge function and via a unique active index), JWT-validated caller, and email-confirmed-account requirement.
+- `analyse-screenshot`: 30-analysis per-user beta cap, JWT-validated.
+- Signups: Supabase Auth's built-in signup throttling.
+
+**Decision:** Defer custom rate limiting. The 10-recipient cap, the 30-analysis beta cap, and Supabase's built-in throttling are sufficient for the beta. Logged in TASKS Milestone 7 for a post-launch revisit.
+
+**What I'd revisit:** If we see abuse patterns (e.g. one user sharing the same reminder repeatedly across many fresh recipient addresses to spam, or signup floods), introduce a `rate_limits` table keyed on `(user_id, action, window_start)` and check it in the relevant edge functions.
