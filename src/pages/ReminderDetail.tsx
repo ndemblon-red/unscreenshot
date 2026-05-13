@@ -183,7 +183,7 @@ export default function ReminderDetail() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-page-title tracking-tight">Reminder</h1>
+          <h1 className="text-page-title tracking-tight">{reminder.title || "Reminder"}</h1>
         </div>
         <NotificationBell />
       </header>

@@ -50,7 +50,7 @@ export default function TaskCard({
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h3 className="text-card-title truncate">{title}</h3>
+          <h2 className="text-card-title truncate">{title}</h2>
           {urgency === "today" && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pill text-[10px] font-bold uppercase tracking-wide bg-destructive text-destructive-foreground whitespace-nowrap">
               <AlertCircle className="w-3 h-3" />
