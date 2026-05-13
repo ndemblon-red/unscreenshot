@@ -35,6 +35,7 @@ export default function ChangePasswordForm() {
             onChange={(e) => setNewPassword(e.target.value)}
             required
             minLength={6}
+            aria-label="New password"
             className="w-full pl-10 pr-3 py-2.5 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
