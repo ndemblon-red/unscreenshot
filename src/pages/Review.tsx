@@ -231,7 +231,7 @@ export default function ReviewPage() {
           <div className="rounded-card overflow-hidden border border-border bg-muted aspect-[3/4] flex items-center justify-center">
             <img
               src={current.preview}
-              alt="Screenshot"
+              alt="Screenshot being reviewed"
               className="w-full h-full object-contain"
             />
           </div>
@@ -282,8 +282,9 @@ export default function ReviewPage() {
               <>
                 {/* Title */}
                 <div>
-                  <label className="text-label text-muted-foreground mb-1.5 block">Title</label>
+                  <label htmlFor="review-title" className="text-label text-muted-foreground mb-1.5 block">Title</label>
                   <input
+                    id="review-title"
                     type="text"
                     value={current.title}
                     onChange={(e) => updateField("title", e.target.value)}
@@ -294,8 +295,8 @@ export default function ReviewPage() {
 
                 {/* Category */}
                 <div>
-                  <label className="text-label text-muted-foreground mb-1.5 block">Category</label>
-                  <div className="flex flex-wrap gap-2">
+                  <label htmlFor="review-category" className="text-label text-muted-foreground mb-1.5 block">Category</label>
+                  <div id="review-category" className="flex flex-wrap gap-2">
                     {ASSIGNABLE_CATEGORIES.map((cat) => (
                       <button
                         key={cat}
@@ -314,8 +315,8 @@ export default function ReviewPage() {
 
                 {/* Deadline */}
                 <div>
-                  <label className="text-label text-muted-foreground mb-1.5 block">Deadline</label>
-                  <div className="flex flex-wrap gap-2">
+                  <label htmlFor="review-deadline" className="text-label text-muted-foreground mb-1.5 block">Deadline</label>
+                  <div id="review-deadline" className="flex flex-wrap gap-2">
                     {DEADLINE_OPTIONS.map((opt) => {
                       const optDate = deadlineLabelToDate(opt);
                       return (

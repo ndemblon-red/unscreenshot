@@ -59,11 +59,12 @@ export default function Pricing() {
 
             {/* Discount code */}
             <div className="mb-6">
-              <label className="text-[13px] font-medium text-muted-foreground mb-1.5 block">
+              <label htmlFor="discount-code" className="text-[13px] font-medium text-muted-foreground mb-1.5 block">
                 Have a discount code?
               </label>
               <div className="flex gap-2">
                 <input
+                  id="discount-code"
                   type="text"
                   placeholder="Enter code"
                   className="flex-1 px-3 py-2 rounded-btn border border-border bg-background text-[14px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"

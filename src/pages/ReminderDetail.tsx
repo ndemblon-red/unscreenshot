@@ -294,6 +294,7 @@ export default function ReminderDetail() {
                     value={extractDate(deadline)}
                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setDeadline(e.target.value + "T" + customTime)}
+                    aria-label="Custom deadline date"
                     className="px-3 py-2 rounded-btn border border-border bg-card text-[15px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
