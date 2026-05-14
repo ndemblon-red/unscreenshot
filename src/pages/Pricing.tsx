@@ -12,8 +12,7 @@ const features = [
 
 export default function Pricing() {
   return (
-    <>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Helmet>
           <title>Pricing — Unscreenshot</title>
           <meta name="description" content="Unscreenshot pricing. One plan with unlimited uploads, AI task extraction, automatic deadlines, and notifications." />
