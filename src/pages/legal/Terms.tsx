@@ -11,6 +11,10 @@ export default function Terms() {
         <title>Terms of Service — Unscreenshot</title>
         <meta name="description" content="Unscreenshot terms of service. Beta service terms, acceptable use, liability, and governing law." />
         <link rel="canonical" href="/legal/terms" />
+        <meta property="og:title" content="Terms of Service — Unscreenshot" />
+        <meta property="og:description" content="Unscreenshot terms of service. Beta service terms, acceptable use, liability, and governing law." />
+        <meta property="og:url" content="https://unscreenshot.ai/legal/terms" />
+        <meta property="og:type" content="article" />
       </Helmet>
       <p>
         By using Unscreenshot you agree to these terms. They're short on purpose.
