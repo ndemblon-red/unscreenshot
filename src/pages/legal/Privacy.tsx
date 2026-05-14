@@ -6,6 +6,11 @@ const CONTACT_EMAIL = "hello@unscreenshot.ai";
 export default function Privacy() {
   return (
     <LegalLayout title="Privacy Policy" effectiveDate="May 2026">
+      <Helmet>
+        <title>Privacy Policy — Unscreenshot</title>
+        <meta name="description" content="Unscreenshot privacy policy. What we collect, where your data lives, your rights, and how to contact us." />
+        <link rel="canonical" href="/legal/privacy" />
+      </Helmet>
       <p>
         Unscreenshot is a beta service that turns screenshots into reminders.
         This page explains what we collect, where it goes, and what you control.

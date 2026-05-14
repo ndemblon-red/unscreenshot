@@ -38,6 +38,9 @@ export default function ResetPassword() {
   if (!ready) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-page-x">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mx-auto mb-3" />
           <p className="text-label text-muted-foreground">Verifying reset link…</p>

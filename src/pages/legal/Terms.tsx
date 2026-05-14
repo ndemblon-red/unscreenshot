@@ -7,6 +7,11 @@ const CONTACT_EMAIL = "hello@unscreenshot.ai";
 export default function Terms() {
   return (
     <LegalLayout title="Terms of Service" effectiveDate="May 2026">
+      <Helmet>
+        <title>Terms of Service — Unscreenshot</title>
+        <meta name="description" content="Unscreenshot terms of service. Beta service terms, acceptable use, liability, and governing law." />
+        <link rel="canonical" href="/legal/terms" />
+      </Helmet>
       <p>
         By using Unscreenshot you agree to these terms. They're short on purpose.
       </p>
