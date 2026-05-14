@@ -16,7 +16,10 @@ export default function Pricing() {
         <Helmet>
           <title>Pricing — Unscreenshot</title>
           <meta name="description" content="Unscreenshot pricing. One plan with unlimited uploads, AI task extraction, automatic deadlines, and notifications." />
-          <link rel="canonical" href="/pricing" />
+        <link rel="canonical" href="/pricing" />
+        <meta property="og:title" content="Pricing — Unscreenshot" />
+        <meta property="og:description" content="Unscreenshot pricing. One plan with unlimited uploads, AI task extraction, automatic deadlines, and notifications." />
+        <meta property="og:url" content="https://unscreenshot.ai/pricing" />
         </Helmet>
       {/* Header */}
       <header className="w-full px-6 md:px-12 lg:px-20 py-5 flex items-center justify-between max-w-6xl mx-auto">

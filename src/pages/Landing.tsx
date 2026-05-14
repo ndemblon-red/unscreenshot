@@ -30,6 +30,9 @@ export default function Landing() {
         <title>Unscreenshot — Your camera roll, but useful</title>
         <meta name="description" content="Upload your screenshots. AI turns them into reminders with deadlines. You get nudged before they expire." />
         <link rel="canonical" href="/" />
+        <meta property="og:title" content="Unscreenshot — Your camera roll, but useful" />
+        <meta property="og:description" content="Upload your screenshots. AI turns them into reminders with deadlines. You get nudged before they expire." />
+        <meta property="og:url" content="https://unscreenshot.ai/" />
       </Helmet>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         {/* Header */}

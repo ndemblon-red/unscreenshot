@@ -10,6 +10,10 @@ export default function Privacy() {
         <title>Privacy Policy — Unscreenshot</title>
         <meta name="description" content="Unscreenshot privacy policy. What we collect, where your data lives, your rights, and how to contact us." />
         <link rel="canonical" href="/legal/privacy" />
+        <meta property="og:title" content="Privacy Policy — Unscreenshot" />
+        <meta property="og:description" content="Unscreenshot privacy policy. What we collect, where your data lives, your rights, and how to contact us." />
+        <meta property="og:url" content="https://unscreenshot.ai/legal/privacy" />
+        <meta property="og:type" content="article" />
       </Helmet>
       <p>
         Unscreenshot is a beta service that turns screenshots into reminders.
