@@ -1,5 +1,6 @@
 import { Camera, Brain, Bell, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const CONTACT_EMAIL = "hello@unscreenshot.ai";
 const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=Unscreenshot`;
