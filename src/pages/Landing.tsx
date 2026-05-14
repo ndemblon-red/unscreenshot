@@ -1,5 +1,6 @@
 import { Camera, Brain, Bell, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const CONTACT_EMAIL = "hello@unscreenshot.ai";
 const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=Unscreenshot`;
@@ -24,8 +25,14 @@ const steps = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Header */}
+    <>
+      <Helmet>
+        <title>Unscreenshot — Your camera roll, but useful</title>
+        <meta name="description" content="Upload your screenshots. AI turns them into reminders with deadlines. You get nudged before they expire." />
+        <link rel="canonical" href="/" />
+      </Helmet>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        {/* Header */}
       <header className="w-full px-6 md:px-12 lg:px-20 py-5 flex items-center justify-between max-w-6xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <img src="/icon.svg" alt="Unscreenshot" className="w-7 h-7 rounded-lg" />
@@ -290,5 +297,6 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+  </>
   );
 }

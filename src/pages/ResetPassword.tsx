@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -38,6 +39,9 @@ export default function ResetPassword() {
   if (!ready) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-page-x">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mx-auto mb-3" />
           <p className="text-label text-muted-foreground">Verifying reset link…</p>
@@ -48,6 +52,9 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-page-x">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="w-full max-w-sm">
         <h1 className="text-page-title tracking-tight text-center mb-2">Set new password</h1>
         <p className="text-label text-muted-foreground text-center mb-8">
