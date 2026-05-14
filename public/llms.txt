@@ -1,0 +1,12 @@
+# Unscreenshot
+
+> Upload your screenshots. AI turns them into reminders with deadlines. You get nudged before they expire.
+
+Unscreenshot is a web productivity tool that converts screenshots into actionable reminders. Users drag screenshots from their camera roll, an AI analyzes each image to extract intent, assigns a category, and sets an appropriate deadline. The app then notifies the user before each deadline expires.
+
+## Pages
+
+- [Home](/): Product landing page with feature overview and sign-up CTA.
+- [Pricing](/pricing): Beta pricing and plan details.
+- [Privacy Policy](/legal/privacy): Data collection, usage, and user rights.
+- [Terms of Service](/legal/terms): Service terms, acceptable use, and liability.
