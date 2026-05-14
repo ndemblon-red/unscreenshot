@@ -52,6 +52,9 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-page-x">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="w-full max-w-sm">
         <h1 className="text-page-title tracking-tight text-center mb-2">Set new password</h1>
         <p className="text-label text-muted-foreground text-center mb-8">
