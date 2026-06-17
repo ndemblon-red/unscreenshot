@@ -11,10 +11,30 @@ export default function ChangePasswordForm() {
     e.preventDefault();
     setLoading(true);
     try {
+      const { data: userData } = await supabase.auth.getUser();
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       toast.success("Password updated");
       setNewPassword("");
+
+      // Fire-and-forget security notice. Don't block UI on email outcome.
+      const recipient = userData?.user?.email;
+      const userId = userData?.user?.id;
+      if (recipient) {
+        supabase.functions
+          .invoke("send-transactional-email", {
+            body: {
+              templateName: "password-changed",
+              recipientEmail: recipient,
+              idempotencyKey: `pwd-changed-${userId ?? recipient}-${Date.now()}`,
+              templateData: { changedAt: new Date().toISOString() },
+            },
+          })
+          .then(({ error: emailErr }) => {
+            if (emailErr) console.error("password-changed email failed:", emailErr);
+          })
+          .catch((err) => console.error("password-changed email threw:", err));
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to update password");
     } finally {
