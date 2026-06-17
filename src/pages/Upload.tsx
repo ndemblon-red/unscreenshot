@@ -176,6 +176,12 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      <PageMeta
+        title="Upload Screenshots — Unscreenshot"
+        description="Drop up to 10 screenshots and let AI turn them into reminders with deadlines."
+        canonical="/upload"
+        noindex
+      />
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <button
