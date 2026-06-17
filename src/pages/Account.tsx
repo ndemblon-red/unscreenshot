@@ -52,6 +52,12 @@ export default function Account() {
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      <PageMeta
+        title="Account — Unscreenshot"
+        description="Manage your account, password, notification preferences and stats."
+        canonical="/account"
+        noindex
+      />
       <header className="flex items-center justify-between mb-8">
         <button
           onClick={() => navigate("/app")}
