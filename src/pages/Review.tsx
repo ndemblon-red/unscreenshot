@@ -192,6 +192,12 @@ export default function ReviewPage() {
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      <PageMeta
+        title="Review Reminders — Unscreenshot"
+        description="Review AI-suggested titles, categories and deadlines before saving your reminders."
+        canonical="/review"
+        noindex
+      />
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <button
