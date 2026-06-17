@@ -1,19 +1,22 @@
-# Fix: reminder emails missing from Cloud → App emails dropdown
+# Accept both ERROR findings, document in security memory, resume launch checklist
 
-## What's wrong
-The Cloud Emails UI lists app templates by calling `preview-transactional-email`, which renders each template in the registry with its `previewData`. Both reminder templates are registered correctly with `previewData` and `displayName`, but only `password-changed` is showing. Two likely causes:
+## Decisions
+- **Screenshots bucket public** → accepted. Documented in T&Cs / Privacy. URLs are random UUIDs; product allows sharing reminders externally which requires public-readable images.
+- **Realtime channel topic auth missing** → accepted. All three channels (`reminders_changes_<uid>`, `web-notifications-<uid>`, `notification_log_bell_<uid>`) use `postgres_changes`, which re-checks the source table's RLS under the subscriber's JWT before delivering events. An attacker can open a socket on someone else's topic but receives no payload. Existing RLS on `reminders` and `notification_log` is `user_id = auth.uid()`.
 
-1. **Stale deploy** — `preview-transactional-email` was last deployed before the reminder templates were finalized (only one boot log today), so the Cloud UI cached an old template list.
-2. **Render failure** — one or both reminder templates throw inside `renderAsync` (e.g. a missing nested field in `previewData`), so they're being returned with `status: render_failed` and the Cloud UI hides them.
+## Actions
 
-## Fix
-1. **Redeploy** `preview-transactional-email` so the latest registry is live.
-2. **Invoke it directly** with the `LOVABLE_API_KEY` bearer and inspect the JSON. For each template, confirm `status: "ready"`. For any that comes back `render_failed`, read the `errorMessage`.
-3. **If render fails:** open the failing template's `previewData` block and fill in whatever the component dereferences (titles, deadlines, URLs, sharer name, etc.) so it renders standalone. Redeploy.
-4. **Re-open Cloud → Emails → App emails** and confirm the dropdown shows all three: Reminder deadline, Reminder shared, Password changed.
+### 1. Mark both findings as ignored in the scanner
+- `PUBLIC_BUCKET_UNRESTRICTED` (screenshots) — ignore with rationale: "Intentionally public for shared-reminder use case; documented in Privacy + Terms; URLs are unguessable random UUIDs."
+- `REALTIME_MISSING_CHANNEL_AUTHORIZATION` — ignore with rationale: "Channels use postgres_changes, which enforces source-table RLS per subscriber. Topic enumeration yields no payload."
+
+### 2. Update `security-memory` doc
+Add a short "Accepted risks" section capturing the two decisions and the invariants that keep them safe ("must keep RLS on reminders/notification_log scoped to auth.uid()", "if any channel migrates from postgres_changes to broadcast, revisit"). Remove any stale advice.
+
+### 3. Resume pre-launch checklist
+- Run SEO scan on `/` (Landing).
+- Email smoke test: signup, password reset, password-changed, share-reminder to outside address, force a deadline reminder. Verify each lands as `sent` in `email_send_log`.
+- Publish.
 
 ## Out of scope
-No changes to the actual reminder-sending logic in `check-deadlines` or `share-reminder` — those keep working regardless of the preview dropdown. This is purely a Cloud UI visibility fix.
-
-## Then back to launch checklist
-Once the dropdown is correct, we resume the pre-launch list from the previous message (security scan, email smoke test, SEO/meta, lint, publish).
+- No code changes. No migration. No client changes.
