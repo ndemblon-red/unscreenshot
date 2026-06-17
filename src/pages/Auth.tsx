@@ -71,7 +71,7 @@ export default function Auth() {
       </Helmet>
       <div className="w-full max-w-sm">
         <Link to="/" className="flex items-center justify-center gap-2 mb-2">
-          <img src="/icon.svg" alt="Unscreenshot" className="w-8 h-8 rounded-lg" />
+          <img src="/icon.svg" alt="Unscreenshot logo" className="w-8 h-8 rounded-lg" />
           <h1 className="text-page-title tracking-tight">Unscreenshot — Your Reminders</h1>
         </Link>
         <p className="text-label text-muted-foreground text-center mb-8">

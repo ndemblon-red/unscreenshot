@@ -12,7 +12,7 @@ export default function LegalLayout({ title, effectiveDate, children }: LegalLay
       <header className="w-full px-6 md:px-12 lg:px-20 py-5">
         <div className="max-w-3xl mx-auto">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/icon.svg" alt="Unscreenshot" className="w-7 h-7 rounded-md" />
+            <img src="/icon.svg" alt="Unscreenshot logo" className="w-7 h-7 rounded-md" />
             <span className="text-[15px] font-medium">Unscreenshot</span>
           </Link>
         </div>
