@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import PageMeta from "@/components/PageMeta";
 
 type State = "loading" | "valid" | "confirming" | "success" | "already" | "invalid" | "error";
 
@@ -47,6 +48,12 @@ const Unsubscribe = () => {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-6">
+      <PageMeta
+        title="Unsubscribe — Unscreenshot"
+        description="Manage your email subscription preferences for Unscreenshot."
+        canonical="/unsubscribe"
+        noindex
+      />
       <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-foreground">
         <h1 className="text-2xl font-semibold tracking-tight mb-3">Unsubscribe</h1>
 

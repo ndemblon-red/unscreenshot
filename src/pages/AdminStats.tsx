@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import PageMeta from "@/components/PageMeta";
 
 interface Stats {
   generatedAt: string;
@@ -25,6 +26,12 @@ export default function AdminStats() {
 
   return (
     <div className="min-h-screen bg-background p-6">
+      <PageMeta
+        title="Admin Stats — Unscreenshot"
+        description="Internal admin metrics for Unscreenshot."
+        canonical="/admin/stats"
+        noindex
+      />
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Admin stats</h1>

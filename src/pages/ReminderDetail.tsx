@@ -10,6 +10,7 @@ import ShareReminderDialog from "@/components/ShareReminderDialog";
 import { toast } from "sonner";
 import { DEADLINE_OPTIONS, deadlineLabelToDate, dateToDeadlineLabel, isDateString, extractDate, extractTime } from "@/lib/deadlines";
 import TimePresetChips from "@/components/TimePresetChips";
+import PageMeta from "@/components/PageMeta";
 
 type Reminder = {
   id: string;
@@ -173,6 +174,12 @@ export default function ReminderDetail() {
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      <PageMeta
+        title={`${reminder.title} — Unscreenshot`}
+        description={`Reminder in ${reminder.category}. Due ${reminder.deadline}.`}
+        canonical={`/reminder/${reminder.id}`}
+        noindex
+      />
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

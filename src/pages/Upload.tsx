@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BETA_ANALYSIS_CAP, isOverCap } from "@/lib/beta-limits";
 import WaitlistDialog from "@/components/WaitlistDialog";
+import PageMeta from "@/components/PageMeta";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
@@ -175,6 +176,12 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      <PageMeta
+        title="Upload Screenshots — Unscreenshot"
+        description="Drop up to 10 screenshots and let AI turn them into reminders with deadlines."
+        canonical="/upload"
+        noindex
+      />
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <button
