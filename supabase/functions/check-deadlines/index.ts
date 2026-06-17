@@ -242,21 +242,21 @@ Deno.serve(async (req: Request) => {
         entry.notification_type === "due_today" || entry.notification_type === "shared_due_today"
           ? "today"
           : "tomorrow";
-      const subject = entry.is_share
-        ? `Shared reminder due ${dueWhen}: ${entry.reminder_title}`
-        : `Reminder due ${dueWhen}: ${entry.reminder_title}`;
       const link = `${APP_URL}/reminder/${entry.reminder_id}`;
-      const { html, text } = buildReminderEmail({
-        title: entry.reminder_title,
-        category: entry.reminder_category,
-        deadline: entry.reminder_deadline,
-        imageUrl: entry.reminder_image_url,
-        link,
-        dueWhen,
-        logoUrl: LOGO_URL,
-        appUrl: APP_URL,
-      });
-      const result = await sendEmail(entry.recipient_email, subject, html, text);
+      const result = await sendReminderEmail(
+        supabase,
+        entry.recipient_email,
+        {
+          title: entry.reminder_title,
+          category: entry.reminder_category,
+          deadline: entry.reminder_deadline,
+          imageUrl: entry.reminder_image_url,
+          link,
+          dueWhen,
+          isShare: !!entry.is_share,
+        },
+        `deadline-${entry.reminder_id}-${entry.notification_type}-${entry.recipient_email}`,
+      );
       if (result.ok) {
         entry.status = "sent";
         sentCount++;
