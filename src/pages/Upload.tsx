@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BETA_ANALYSIS_CAP, isOverCap } from "@/lib/beta-limits";
 import WaitlistDialog from "@/components/WaitlistDialog";
+import PageMeta from "@/components/PageMeta";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
