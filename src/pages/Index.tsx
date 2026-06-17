@@ -124,6 +124,12 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      <PageMeta
+        title="Dashboard — Unscreenshot"
+        description="Your screenshot-powered reminders. Browse, filter, and act on upcoming deadlines."
+        canonical="/app"
+        noindex
+      />
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-page-title tracking-tight">Unscreenshot — Your Reminders</h1>
