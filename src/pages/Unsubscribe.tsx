@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import PageMeta from "@/components/PageMeta";
 
 type State = "loading" | "valid" | "confirming" | "success" | "already" | "invalid" | "error";
 
