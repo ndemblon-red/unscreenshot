@@ -1,6 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.98.0/cors";
-import { buildReminderEmail } from "../_shared/reminder-email-template.ts";
 import {
   localParts,
   classifyDue,
@@ -8,42 +7,24 @@ import {
   deadlineDatePart,
 } from "../_shared/deadline-logic.ts";
 
-// Change this one line when you get a verified domain (e.g. "reminders@yourdomain.com")
-const SENDER_EMAIL = "Unscreenshot <onboarding@resend.dev>";
-const RESEND_GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-// NOTE: This is the Lovable preview URL — gated behind auth, so the
-// "Open reminder" link won't work for unauthenticated email clicks until
-// the project is published or moved to a custom domain.
-const APP_URL = "https://id-preview--6b3058fd-4727-4ff6-b954-440c6a622739.lovable.app";
-// Public Storage URL for the brand logo. Hosted in the `public-assets`
-// bucket so email clients can fetch it without auth.
-const LOGO_URL = "https://eialbbgpkyjjzcfkxbgc.supabase.co/storage/v1/object/public/public-assets/icon-128.png";
+const APP_URL = "https://unscreenshot.ai";
 
-async function sendEmail(
+async function sendReminderEmail(
+  supabase: ReturnType<typeof createClient>,
   to: string,
-  subject: string,
-  html: string,
-  text: string,
+  templateData: Record<string, unknown>,
+  idempotencyKey: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  const resendKey = Deno.env.get("RESEND_API_KEY");
-  if (!lovableKey) return { ok: false, error: "LOVABLE_API_KEY not configured" };
-  if (!resendKey) return { ok: false, error: "RESEND_API_KEY not configured" };
-
   try {
-    const res = await fetch(`${RESEND_GATEWAY_URL}/emails`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": resendKey,
+    const { error } = await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "reminder-deadline",
+        recipientEmail: to,
+        idempotencyKey,
+        templateData,
       },
-      body: JSON.stringify({ from: SENDER_EMAIL, to: [to], subject, html, text }),
     });
-    if (!res.ok) {
-      const body = await res.text();
-      return { ok: false, error: `Resend ${res.status}: ${body}` };
-    }
+    if (error) return { ok: false, error: error.message ?? "invoke failed" };
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "unknown" };

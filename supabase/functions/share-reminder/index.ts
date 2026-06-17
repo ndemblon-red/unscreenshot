@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.98.0/cors";
 import { z } from "https://esm.sh/zod@3.23.8";
-import { buildShareNotificationEmail } from "../_shared/share-notification-email-template.ts";
 import {
   MAX_RECIPIENTS_PER_REMINDER,
   normaliseEmails,
@@ -9,64 +8,10 @@ import {
   checkRecipientCap,
 } from "../_shared/share-logic.ts";
 
-// Mirrors check-deadlines: same sender, same gateway, same brand assets.
-const SENDER_EMAIL = "Unscreenshot <onboarding@resend.dev>";
-const RESEND_GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-const APP_URL = "https://id-preview--6b3058fd-4727-4ff6-b954-440c6a622739.lovable.app";
-const LOGO_URL = "https://eialbbgpkyjjzcfkxbgc.supabase.co/storage/v1/object/public/public-assets/icon-128.png";
-
 const BodySchema = z.object({
   reminderId: z.string().uuid(),
   recipientEmails: z.array(z.string().email()).min(1).max(MAX_RECIPIENTS_PER_REMINDER),
 });
-
-async function sendEmail(
-  to: string,
-  subject: string,
-  html: string,
-  text: string,
-  replyTo: string | null,
-  unsubscribeUrl: string,
-): Promise<{ ok: boolean; error?: string }> {
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  const resendKey = Deno.env.get("RESEND_API_KEY");
-  if (!lovableKey) return { ok: false, error: "LOVABLE_API_KEY not configured" };
-  if (!resendKey) return { ok: false, error: "RESEND_API_KEY not configured" };
-
-  try {
-    // List-Unsubscribe + List-Unsubscribe-Post enable Gmail/Outlook one-click
-    // unsubscribe UI in the inbox, which lowers spam-complaint rates.
-    const payload: Record<string, unknown> = {
-      from: SENDER_EMAIL,
-      to: [to],
-      subject,
-      html,
-      text,
-      headers: {
-        "List-Unsubscribe": `<${unsubscribeUrl}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-    };
-    if (replyTo) payload.reply_to = replyTo;
-
-    const res = await fetch(`${RESEND_GATEWAY_URL}/emails`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": resendKey,
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      return { ok: false, error: `Resend ${res.status}: ${body}` };
-    }
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "unknown" };
-  }
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -74,7 +19,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // ---- Auth (verify_jwt is false at the platform level; validate in code) ----
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
@@ -105,7 +49,6 @@ Deno.serve(async (req: Request) => {
     }
     const user = userData.user;
 
-    // ---- Validate body ----
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
@@ -117,10 +60,8 @@ Deno.serve(async (req: Request) => {
 
     const normalisedEmails = normaliseEmails(recipientEmails);
 
-    // ---- Service-role client for everything below ----
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    // ---- Verify reminder ownership ----
     const { data: reminder, error: remErr } = await admin
       .from("reminders")
       .select("id, user_id, title, category, deadline, image_url")
@@ -139,7 +80,6 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // ---- Fetch existing active shares for this reminder ----
     const { data: existingShares } = await admin
       .from("reminder_shares")
       .select("recipient_email")
@@ -149,10 +89,8 @@ Deno.serve(async (req: Request) => {
     const existingActive = (existingShares ?? []).map((s) => s.recipient_email);
     const activeCount = new Set(existingActive).size;
 
-    // Skip already-shared and sender's own email
     const filteredNew = selectNewRecipients(normalisedEmails, existingActive, user.email);
 
-    // ---- Enforce 10-recipient cap (per reminder) ----
     const cap = checkRecipientCap(activeCount, filteredNew.length);
     if (!cap.ok) {
       return new Response(
@@ -173,7 +111,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ---- Insert share rows ----
     const insertRows = filteredNew.map((email) => ({
       reminder_id: reminderId,
       shared_by_user_id: user.id,
@@ -188,36 +125,37 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // ---- Send "shared with you" emails ----
-    const subject = `${user.email ?? "Someone"} shared a reminder: ${reminder.title}`;
-    const signupLink = `${APP_URL}/auth`;
-    const replyTo = user.email ?? null;
-    // mailto unsubscribe: hits the sharer directly. Same effect as Reply, but
-    // explicit and surfaced via List-Unsubscribe in the inbox UI. A token-backed
-    // suppression list is deferred until we move off Resend test mode.
-    const unsubscribeUrl = replyTo
-      ? `mailto:${replyTo}?subject=${encodeURIComponent("Please stop sharing reminders with me")}`
-      : `${APP_URL}/`;
-    const { html, text } = buildShareNotificationEmail({
-      senderEmail: user.email ?? "A friend",
-      title: reminder.title,
-      category: reminder.category,
-      deadline: reminder.deadline,
-      imageUrl: reminder.image_url,
-      signupLink,
-      logoUrl: LOGO_URL,
-      appUrl: APP_URL,
-      unsubscribeUrl,
-    });
-
+    // Send via Lovable Emails (send-transactional-email handles queueing,
+    // suppression, and unsubscribe tokens).
+    const senderEmail = user.email ?? "A friend";
     let sentCount = 0;
     let failedCount = 0;
     for (const recipient of filteredNew) {
-      const result = await sendEmail(recipient, subject, html, text, replyTo, unsubscribeUrl);
-      if (result.ok) sentCount++;
-      else {
+      try {
+        const { error: sendErr } = await admin.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "reminder-shared",
+            recipientEmail: recipient,
+            idempotencyKey: `share-${reminderId}-${recipient}`,
+            templateData: {
+              senderEmail,
+              title: reminder.title,
+              category: reminder.category,
+              deadline: reminder.deadline,
+              imageUrl: reminder.image_url,
+              signupLink: "https://unscreenshot.ai/auth",
+            },
+          },
+        });
+        if (sendErr) {
+          failedCount++;
+          console.error(`Share email failed for ${recipient}:`, sendErr);
+        } else {
+          sentCount++;
+        }
+      } catch (err) {
         failedCount++;
-        console.error(`Share email failed for ${recipient}:`, result.error);
+        console.error(`Share email threw for ${recipient}:`, err);
       }
     }
 
