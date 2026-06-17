@@ -174,6 +174,12 @@ export default function ReminderDetail() {
 
   return (
     <div className="min-h-screen bg-background px-page-x py-page-y max-w-3xl mx-auto">
+      <PageMeta
+        title={`${reminder.title} — Unscreenshot`}
+        description={`Reminder in ${reminder.category}. Due ${reminder.deadline}.`}
+        canonical={`/reminder/${reminder.id}`}
+        noindex
+      />
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
