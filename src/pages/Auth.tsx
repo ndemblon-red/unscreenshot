@@ -67,6 +67,9 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-page-x">
       <Helmet>
+        <title>Sign In — Unscreenshot</title>
+        <meta name="description" content="Sign in or create an Unscreenshot account to turn screenshots into reminders." />
+        <link rel="canonical" href="/auth" />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="w-full max-w-sm">
