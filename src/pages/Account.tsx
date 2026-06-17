@@ -8,6 +8,7 @@ import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 import NotificationPreferences from "@/components/account/NotificationPreferences";
 import DangerZone from "@/components/account/DangerZone";
 import NotificationBell from "@/components/NotificationBell";
+import PageMeta from "@/components/PageMeta";
 
 interface Stats {
   total: number;
