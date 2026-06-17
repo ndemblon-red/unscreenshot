@@ -26,6 +26,12 @@ export default function AdminStats() {
 
   return (
     <div className="min-h-screen bg-background p-6">
+      <PageMeta
+        title="Admin Stats — Unscreenshot"
+        description="Internal admin metrics for Unscreenshot."
+        canonical="/admin/stats"
+        noindex
+      />
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Admin stats</h1>
