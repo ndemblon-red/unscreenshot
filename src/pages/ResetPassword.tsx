@@ -53,6 +53,9 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-page-x">
       <Helmet>
+        <title>Reset Password — Unscreenshot</title>
+        <meta name="description" content="Set a new password for your Unscreenshot account." />
+        <link rel="canonical" href="/reset-password" />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="w-full max-w-sm">
