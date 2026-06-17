@@ -1,17 +1,19 @@
-# Add "your password was changed" security email
+# Fix: reminder emails missing from Cloud → App emails dropdown
 
-## What it does
-After a user successfully changes their password on `/account`, send them a branded email confirming the change, with guidance to reset immediately if it wasn't them.
+## What's wrong
+The Cloud Emails UI lists app templates by calling `preview-transactional-email`, which renders each template in the registry with its `previewData`. Both reminder templates are registered correctly with `previewData` and `displayName`, but only `password-changed` is showing. Two likely causes:
 
-## Files to add
-- `supabase/functions/_shared/transactional-email-templates/password-changed.tsx` — React Email template matching the Unscreenshot brand (white bg, SF Pro, black CTA). Copy: confirms the change, timestamp, and a "Reset password" button pointing to `/auth` if it wasn't them.
+1. **Stale deploy** — `preview-transactional-email` was last deployed before the reminder templates were finalized (only one boot log today), so the Cloud UI cached an old template list.
+2. **Render failure** — one or both reminder templates throw inside `renderAsync` (e.g. a missing nested field in `previewData`), so they're being returned with `status: render_failed` and the Cloud UI hides them.
 
-## Files to edit
-- `supabase/functions/_shared/transactional-email-templates/registry.ts` — register `password-changed`.
-- `src/components/account/ChangePasswordForm.tsx` — after a successful `updateUser({ password })`, fire-and-forget `supabase.functions.invoke('send-transactional-email', { body: { templateName: 'password-changed', recipientEmail: <user email>, idempotencyKey: `pwd-changed-${user.id}-${Date.now()}`, templateData: { changedAt: new Date().toISOString() } } })`. Don't block the success toast on the email result; log failures to console.
-
-## Deploy
-- `send-transactional-email` (picks up the new registry entry).
+## Fix
+1. **Redeploy** `preview-transactional-email` so the latest registry is live.
+2. **Invoke it directly** with the `LOVABLE_API_KEY` bearer and inspect the JSON. For each template, confirm `status: "ready"`. For any that comes back `render_failed`, read the `errorMessage`.
+3. **If render fails:** open the failing template's `previewData` block and fill in whatever the component dereferences (titles, deadlines, URLs, sharer name, etc.) so it renders standalone. Redeploy.
+4. **Re-open Cloud → Emails → App emails** and confirm the dropdown shows all three: Reminder deadline, Reminder shared, Password changed.
 
 ## Out of scope
-- No new DB tables, no auth config changes, no UI changes besides the silent send.
+No changes to the actual reminder-sending logic in `check-deadlines` or `share-reminder` — those keep working regardless of the preview dropdown. This is purely a Cloud UI visibility fix.
+
+## Then back to launch checklist
+Once the dropdown is correct, we resume the pre-launch list from the previous message (security scan, email smoke test, SEO/meta, lint, publish).
